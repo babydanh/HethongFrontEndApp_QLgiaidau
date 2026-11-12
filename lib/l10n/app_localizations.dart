@@ -1787,7 +1787,7 @@ abstract class AppLocalizations {
   /// No description provided for @communityRecurringSchedulesTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Lịch tạo giải định kỳ (Cron)'**
+  /// **'Lịch giải định kỳ'**
   String get communityRecurringSchedulesTitle;
 
   /// No description provided for @communityRecurringActive.
@@ -35394,6 +35394,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.'**
   String get schedMgmt_emptyHint;
+
+  /// No description provided for @clubMatchSessionStatusOpenShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get clubMatchSessionStatusOpenShort;
+
+  /// No description provided for @clubMatchSessionStatusLiveShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get clubMatchSessionStatusLiveShort;
+
+  /// No description provided for @clubMatchSessionStatusClosedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng'**
+  String get clubMatchSessionStatusClosedShort;
+
+  /// No description provided for @clubMatchSessionStatusEndedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc'**
+  String get clubMatchSessionStatusEndedShort;
+
+  /// No description provided for @clubMatchSessionStatusCancelledShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get clubMatchSessionStatusCancelledShort;
+
+  /// No description provided for @clubManageSessionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi giao lưu'**
+  String get clubManageSessionsTitle;
 }
 
 class _AppLocalizationsDelegate

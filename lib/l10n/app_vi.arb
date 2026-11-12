@@ -282,7 +282,7 @@
   "communityComposerImageLimit": "Mỗi bài đăng tối đa {max} ảnh.",
   "communityComposerUploadFailedCount": "{count} ảnh không tải lên được.",
   "communityRecurringBadge": "Định kỳ",
-  "communityRecurringSchedulesTitle": "Lịch tạo giải định kỳ (Cron)",
+  "communityRecurringSchedulesTitle": "Lịch giải định kỳ",
   "communityRecurringActive": "Đang bật",
   "communityRecurringPaused": "Tạm dừng",
   "communityRecurringResume": "Đã tiếp tục lịch tạo giải định kỳ",
@@ -7817,5 +7817,11 @@
   "schedMgmt_hoursTooltip": "Khung giờ sân",
   "schedMgmt_arrangeTooltip": "Xếp lịch trận",
   "schedMgmt_createCourtCta": "Tạo sân",
-  "schedMgmt_emptyHint": "Chưa có sân nào. Tạo sân để bắt đầu xếp lịch."
+  "schedMgmt_emptyHint": "Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.",
+  "clubMatchSessionStatusOpenShort": "Đang mở",
+  "clubMatchSessionStatusLiveShort": "Đang diễn ra",
+  "clubMatchSessionStatusClosedShort": "Đã đóng",
+  "clubMatchSessionStatusEndedShort": "Kết thúc",
+  "clubMatchSessionStatusCancelledShort": "Đã hủy",
+  "clubManageSessionsTitle": "Buổi giao lưu"
 }

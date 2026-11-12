@@ -895,7 +895,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get communityRecurringBadge => 'Định kỳ';
 
   @override
-  String get communityRecurringSchedulesTitle => 'Lịch tạo giải định kỳ (Cron)';
+  String get communityRecurringSchedulesTitle => 'Lịch giải định kỳ';
 
   @override
   String get communityRecurringActive => 'Đang bật';
@@ -19669,4 +19669,22 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get schedMgmt_emptyHint =>
       'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.';
+
+  @override
+  String get clubMatchSessionStatusOpenShort => 'Đang mở';
+
+  @override
+  String get clubMatchSessionStatusLiveShort => 'Đang diễn ra';
+
+  @override
+  String get clubMatchSessionStatusClosedShort => 'Đã đóng';
+
+  @override
+  String get clubMatchSessionStatusEndedShort => 'Kết thúc';
+
+  @override
+  String get clubMatchSessionStatusCancelledShort => 'Đã hủy';
+
+  @override
+  String get clubManageSessionsTitle => 'Buổi giao lưu';
 }

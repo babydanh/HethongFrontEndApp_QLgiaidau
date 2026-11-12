@@ -21,6 +21,8 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_manage_sessions_section.dart';
+import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
 import 'package:intl/intl.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
@@ -184,6 +186,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                     const SizedBox(height: 16),
                     _buildReportsSection(colors),
                   ],
+                  const SizedBox(height: 16),
+                  ClubManageSessionsSection(clubId: widget.clubId),
                   const SizedBox(height: 16),
                   _buildTournamentsManagementSection(colors),
                   const SizedBox(height: 16),
@@ -543,7 +547,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     );
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 12),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(20),
@@ -552,296 +556,144 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(
-            l10n.club_tournamentManagement,
-            const Color(0xFF3B82F6),
-            colors,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.club_tournamentManagementDescription,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: colors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Nút Tạo giải đấu mới
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => context.push(
-                '/club/${widget.clubId}/create-tournament',
-              ),
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text(
-                l10n.club_createNewTournament,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.club_tournamentManagement,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-            ),
+              // Secondary create action: the primary CTA is the session button.
+              IconButton(
+                onPressed: () =>
+                    context.push('/club/${widget.clubId}/create-tournament'),
+                icon: const Icon(Icons.add_rounded),
+                tooltip: l10n.club_createNewTournament,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-
-          // Danh sách các giải đấu của CLB cần quản lý
-          Text(
-            l10n.club_managedTournamentsHeading,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.bold,
-              color: colors.textMuted,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 10),
-
           tourneysAsync.when(
             data: (tourneys) {
               if (tourneys.isEmpty) {
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.borderLight),
-                  ),
-                  child: Text(
-                    l10n.club_noManagedTournaments,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                    textAlign: TextAlign.center,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: Text(
+                      l10n.club_noManagedTournaments,
+                      style: TextStyle(fontSize: 13, color: colors.textMuted),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 );
               }
-
-              return ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: tourneys.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final t = tourneys[index];
-                  final isQuick = t.isLite;
-
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color:
-                                    (isQuick
-                                            ? const Color(0xFFF59E0B)
-                                            : AppTheme.primary)
-                                        .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                isQuick
-                                    ? Icons.bolt_rounded
-                                    : Icons.emoji_events_rounded,
-                                color: isQuick
-                                    ? const Color(0xFFF59E0B)
-                                    : AppTheme.primary,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    t.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13.5,
-                                      color: colors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '${t.teamCount}/${t.maxTeams} đội • ${isQuick ? l10n.club_liteTournamentShort : l10n.club_standardTournamentShort}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: colors.textSecondary,
-                                        ),
-                                      ),
-                                      if (t.isRecurring) ...[
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 5,
-                                            vertical: 1.5,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(
-                                              0xFF6366F1,
-                                            ).withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(
-                                                0xFF6366F1,
-                                              ).withValues(alpha: 0.3),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.sync_rounded,
-                                                size: 9,
-                                                color: Color(0xFF6366F1),
-                                              ),
-                                              const SizedBox(width: 2),
-                                              Text(
-                                                l10n.communityRecurringBadge,
-                                                style: const TextStyle(
-                                                  fontSize: 8.5,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: Color(0xFF6366F1),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => context.push('/intro/${t.id}'),
-                                icon: const Icon(
-                                  Icons.remove_red_eye_outlined,
-                                  size: 14,
-                                ),
-                                label: Text(
-                                  l10n.club_viewTournament,
-                                  style: const TextStyle(fontSize: 11.5),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: FilledButton.icon(
-                                // The legacy path resolves the product from
-                                // the server, so Lite/Quick and Advanced do
-                                // not get misrouted into the compact screen.
-                                onPressed: () =>
-                                    context.push('/lite-manage/${t.id}'),
-                                icon: Icon(
-                                  isQuick
-                                      ? Icons.bolt_rounded
-                                      : Icons.settings_rounded,
-                                  size: 14,
-                                ),
-                                label: Text(
-                                  isQuick
-                                      ? l10n.club_liteManage
-                                      : l10n.club_manageTournament,
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: isQuick
-                                      ? const Color(0xFFF59E0B)
-                                      : AppTheme.primary,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              onPressed: _deletingTournamentId == t.id
-                                  ? null
-                                  : () => _deleteTournament(t.id, t.name),
-                              icon: _deletingTournamentId == t.id
-                                  ? const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 18,
-                                      color: colors.error,
-                                    ),
-                              tooltip: l10n.deleteTournament,
-                              style: IconButton.styleFrom(
-                                padding: const EdgeInsets.all(8),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  side: BorderSide(
-                                    color: colors.error.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              return Column(
+                children: [
+                  for (final t in tourneys)
+                    _buildManagedTournamentRow(t, colors),
+                ],
               );
             },
-            loading: () => const ListPageSkeleton(itemCount: 2, leadingAvatar: false),
+            loading: () =>
+                const ListPageSkeleton(itemCount: 2, leadingAvatar: false),
             error: (e, st) => Text(
               l10n.club_loadTournamentsError,
-              style: const TextStyle(color: Colors.red, fontSize: 11),
+              style: TextStyle(color: colors.error, fontSize: 12),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// One tournament row: tap opens manage (the server resolves Lite/Advanced),
+  /// the trailing icon deletes.
+  Widget _buildManagedTournamentRow(
+    CommunityTournamentModel t,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final accent = t.isLite ? const Color(0xFFF59E0B) : AppTheme.primary;
+    final deleting = _deletingTournamentId == t.id;
+    return InkWell(
+      onTap: () => context.push('/lite-manage/${t.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              t.isLite ? Icons.bolt_rounded : Icons.emoji_events_rounded,
+              color: accent,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.groups_2_outlined,
+                        size: 14,
+                        color: colors.textMuted,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${t.teamCount}/${t.maxTeams}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      if (t.isRecurring) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.sync_rounded,
+                          size: 14,
+                          color: Color(0xFF6366F1),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: deleting
+                  ? null
+                  : () => _deleteTournament(t.id, t.name),
+              icon: deleting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    )
+                  : Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: colors.error,
+                    ),
+              tooltip: l10n.deleteTournament,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -858,6 +710,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
         final recurringTourneys = tourneys.where((t) {
           return t.isRecurring || t.recurringConfig != null;
         }).toList();
+        if (recurringTourneys.isEmpty) return const SizedBox.shrink();
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -907,9 +760,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   vertical: 1.5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF6366F1,
-                                  ).withValues(alpha: 0.15),
+                                  color: const Color(0xFF6366F1)
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
@@ -924,360 +776,303 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                             ],
                           ],
                         ),
-                        Text(
-                          l10n.createClubTournament_recurringDescription,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
-              if (recurringTourneys.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 20,
-                    horizontal: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.borderLight),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 28,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.communityRecurringEmpty,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.communityRecurringEmptyHint,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textMuted,
-                          height: 1.35,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: recurringTourneys.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final t = recurringTourneys[index];
-                    final rec = t.recurringConfig ?? <String, dynamic>{};
-                    final isEnabled = rec['enabled'] != false;
-                    final timeOfDay = rec['timeOfDay']?.toString() ?? '18:00';
-                    final advanceDays = rec['advanceDays'] ?? 0;
-                    final nextRunAtStr =
-                        rec['nextRunAt']?.toString() ??
-                        rec['nextEventAt']?.toString();
-                    DateTime? nextRunAt;
-                    if (nextRunAtStr != null && nextRunAtStr.isNotEmpty) {
-                      nextRunAt = DateTime.tryParse(nextRunAtStr)?.toLocal();
-                    }
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: recurringTourneys.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final t = recurringTourneys[index];
+                  final rec = t.recurringConfig ?? <String, dynamic>{};
+                  final isEnabled = rec['enabled'] != false;
+                  final timeOfDay = rec['timeOfDay']?.toString() ?? '18:00';
+                  final advanceDays = rec['advanceDays'] ?? 0;
+                  final nextRunAtStr =
+                      rec['nextRunAt']?.toString() ??
+                      rec['nextEventAt']?.toString();
+                  DateTime? nextRunAt;
+                  if (nextRunAtStr != null && nextRunAtStr.isNotEmpty) {
+                    nextRunAt = DateTime.tryParse(nextRunAtStr)?.toLocal();
+                  }
 
-                    List<int> days = [];
-                    if (rec['daysOfWeek'] is List) {
-                      days = (rec['daysOfWeek'] as List)
-                          .map((d) => int.tryParse(d.toString()) ?? 6)
-                          .toList();
-                    } else if (rec['dayOfWeek'] != null) {
-                      days = [int.tryParse(rec['dayOfWeek'].toString()) ?? 6];
-                    }
-                    if (days.isEmpty) days = [6];
+                  List<int> days = [];
+                  if (rec['daysOfWeek'] is List) {
+                    days = (rec['daysOfWeek'] as List)
+                        .map((d) => int.tryParse(d.toString()) ?? 6)
+                        .toList();
+                  } else if (rec['dayOfWeek'] != null) {
+                    days = [int.tryParse(rec['dayOfWeek'].toString()) ?? 6];
+                  }
+                  if (days.isEmpty) days = [6];
 
-                    final isToggling = _togglingRecurringId == t.id;
+                  final isToggling = _togglingRecurringId == t.id;
 
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isEnabled
-                              ? const Color(0xFF6366F1).withValues(alpha: 0.3)
-                              : colors.borderLight,
-                        ),
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isEnabled
+                            ? const Color(0xFF6366F1).withValues(alpha: 0.3)
+                            : colors.borderLight,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  t.name,
-                                  style: TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.textPrimary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                t.name,
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isEnabled
+                                    ? const Color(0xFF10B981)
+                                          .withValues(alpha: 0.12)
+                                    : const Color(0xFFF59E0B)
+                                          .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isEnabled
+                                      ? const Color(0xFF10B981)
+                                            .withValues(alpha: 0.3)
+                                      : const Color(0xFFF59E0B)
+                                            .withValues(alpha: 0.3),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isEnabled
-                                      ? const Color(
-                                          0xFF10B981,
-                                        ).withValues(alpha: 0.12)
-                                      : const Color(
-                                          0xFFF59E0B,
-                                        ).withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isEnabled
+                                        ? Icons.play_arrow_rounded
+                                        : Icons.pause_rounded,
+                                    size: 11,
                                     color: isEnabled
-                                        ? const Color(
-                                            0xFF10B981,
-                                          ).withValues(alpha: 0.3)
-                                        : const Color(
-                                            0xFFF59E0B,
-                                          ).withValues(alpha: 0.3),
+                                        ? const Color(0xFF10B981)
+                                        : const Color(0xFFF59E0B),
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isEnabled
-                                          ? Icons.play_arrow_rounded
-                                          : Icons.pause_rounded,
-                                      size: 11,
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    isEnabled
+                                        ? l10n.communityRecurringActive
+                                        : l10n.communityRecurringPaused,
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
                                       color: isEnabled
                                           ? const Color(0xFF10B981)
                                           : const Color(0xFFF59E0B),
                                     ),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      isEnabled
-                                          ? l10n.communityRecurringActive
-                                          : l10n.communityRecurringPaused,
-                                      style: TextStyle(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: isEnabled
-                                            ? const Color(0xFF10B981)
-                                            : const Color(0xFFF59E0B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              l10n.communityRecurringDays,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Wrap(
+                              spacing: 4,
+                              children: [1, 2, 3, 4, 5, 6, 0].map((d) {
+                                final isSelected = days.contains(d);
+                                final dayText = d == 0 ? 'CN' : 'T${d + 1}';
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? const Color(0xFF6366F1)
+                                        : colors.bgCard,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? const Color(0xFF6366F1)
+                                          : colors.borderLight,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    dayText,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : colors.textMuted,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 12,
+                              color: colors.textMuted,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              timeOfDay,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (nextRunAt != null) ...[
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               Text(
-                                l10n.communityRecurringDays,
+                                l10n.communityRecurringNextRun,
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   color: colors.textMuted,
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              Wrap(
-                                spacing: 4,
-                                children: [1, 2, 3, 4, 5, 6, 0].map((d) {
-                                  final isSelected = days.contains(d);
-                                  final dayText = d == 0 ? 'CN' : 'T${d + 1}';
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 5,
-                                      vertical: 1.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? const Color(0xFF6366F1)
-                                          : colors.bgCard,
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? const Color(0xFF6366F1)
-                                            : colors.borderLight,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      dayText,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w800,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : colors.textMuted,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(width: 10),
-                              Icon(
-                                Icons.schedule_rounded,
-                                size: 12,
-                                color: colors.textMuted,
-                              ),
-                              const SizedBox(width: 3),
+                              const SizedBox(width: 4),
                               Text(
-                                timeOfDay,
+                                DateFormat('HH:mm - dd/MM/yyyy')
+                                    .format(nextRunAt),
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
+                                  color: colors.textSecondary,
                                 ),
                               ),
-                            ],
-                          ),
-                          if (nextRunAt != null) ...[
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
+                              if (advanceDays > 0) ...[
+                                const SizedBox(width: 6),
                                 Text(
-                                  l10n.communityRecurringNextRun,
+                                  '(${l10n.createClubTournament_beforeDays(advanceDays)})',
                                   style: TextStyle(
-                                    fontSize: 10.5,
+                                    fontSize: 10,
                                     color: colors.textMuted,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  DateFormat(
-                                    'HH:mm - dd/MM/yyyy',
-                                  ).format(nextRunAt),
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textSecondary,
-                                  ),
-                                ),
-                                if (advanceDays > 0) ...[
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '(${l10n.createClubTournament_beforeDays(advanceDays)})',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: colors.textMuted,
-                                    ),
-                                  ),
-                                ],
                               ],
-                            ),
-                          ],
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed:
-                                    (isToggling || _deletingRecurringId == t.id)
-                                    ? null
-                                    : () => _toggleRecurringTournament(
-                                        t.id,
-                                        !isEnabled,
-                                      ),
-                                icon: isToggling
-                                    ? const SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.5,
-                                        ),
-                                      )
-                                    : Icon(
-                                        isEnabled
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                        size: 13,
-                                      ),
-                                label: Text(
-                                  isEnabled
-                                      ? l10n.communityRecurringPaused
-                                      : l10n.communityRecurringActive,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                onPressed:
-                                    (_deletingRecurringId == t.id || isToggling)
-                                    ? null
-                                    : () => _deleteRecurringTournament(
-                                        t.id,
-                                        t.name,
-                                      ),
-                                icon: _deletingRecurringId == t.id
-                                    ? const SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 1.5,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.delete_outline_rounded,
-                                        size: 18,
-                                        color: colors.error,
-                                      ),
-                                tooltip: l10n.communityRecurringDelete,
-                                style: IconButton.styleFrom(
-                                  padding: const EdgeInsets.all(6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    side: BorderSide(
-                                      color: colors.error.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ],
-                      ),
-                    );
-                  },
-                ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed:
+                                  (isToggling || _deletingRecurringId == t.id)
+                                  ? null
+                                  : () => _toggleRecurringTournament(
+                                      t.id,
+                                      !isEnabled,
+                                    ),
+                              icon: isToggling
+                                  ? const SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isEnabled
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      size: 13,
+                                    ),
+                              label: Text(
+                                isEnabled
+                                    ? l10n.communityRecurringPaused
+                                    : l10n.communityRecurringActive,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed:
+                                  (_deletingRecurringId == t.id || isToggling)
+                                  ? null
+                                  : () => _deleteRecurringTournament(
+                                      t.id,
+                                      t.name,
+                                    ),
+                              icon: _deletingRecurringId == t.id
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
+                                      color: colors.error,
+                                    ),
+                              tooltip: l10n.communityRecurringDelete,
+                              style: IconButton.styleFrom(
+                                padding: const EdgeInsets.all(6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  side: BorderSide(
+                                    color: colors.error.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         );

@@ -901,7 +901,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityRecurringBadge => 'Recurring';
 
   @override
-  String get communityRecurringSchedulesTitle => 'Recurring Schedules (Cron)';
+  String get communityRecurringSchedulesTitle => 'Recurring schedules';
 
   @override
   String get communityRecurringActive => 'Active';
@@ -19754,4 +19754,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schedMgmt_emptyHint =>
       'No courts yet. Create a court to start scheduling.';
+
+  @override
+  String get clubMatchSessionStatusOpenShort => 'Open';
+
+  @override
+  String get clubMatchSessionStatusLiveShort => 'Live';
+
+  @override
+  String get clubMatchSessionStatusClosedShort => 'Closed';
+
+  @override
+  String get clubMatchSessionStatusEndedShort => 'Ended';
+
+  @override
+  String get clubMatchSessionStatusCancelledShort => 'Cancelled';
+
+  @override
+  String get clubManageSessionsTitle => 'Sessions';
 }

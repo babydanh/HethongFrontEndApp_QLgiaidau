@@ -286,7 +286,7 @@
   "communityComposerImageLimit": "Each post can include up to {max} images.",
   "communityComposerUploadFailedCount": "{count} images failed to upload.",
   "communityRecurringBadge": "Recurring",
-  "communityRecurringSchedulesTitle": "Recurring Schedules (Cron)",
+  "communityRecurringSchedulesTitle": "Recurring schedules",
   "communityRecurringActive": "Active",
   "communityRecurringPaused": "Paused",
   "communityRecurringResume": "Resumed recurring tournament schedule",
@@ -7789,5 +7789,11 @@
   "schedMgmt_hoursTooltip": "Court hours",
   "schedMgmt_arrangeTooltip": "Schedule matches",
   "schedMgmt_createCourtCta": "Create court",
-  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling."
+  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling.",
+  "clubMatchSessionStatusOpenShort": "Open",
+  "clubMatchSessionStatusLiveShort": "Live",
+  "clubMatchSessionStatusClosedShort": "Closed",
+  "clubMatchSessionStatusEndedShort": "Ended",
+  "clubMatchSessionStatusCancelledShort": "Cancelled",
+  "clubManageSessionsTitle": "Sessions"
 }
