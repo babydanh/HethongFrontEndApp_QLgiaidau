@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
@@ -916,26 +917,16 @@ class _OverviewTabState extends State<OverviewTab> {
                           ),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundColor: AppTheme.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                                backgroundImage: resolvedAvatar.isNotEmpty
-                                    ? NetworkImage(resolvedAvatar)
-                                    : null,
-                                child: resolvedAvatar.isEmpty
-                                    ? Text(
-                                        creatorName.isNotEmpty
-                                            ? creatorName[0].toUpperCase()
-                                            : 'B',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.primary,
-                                        ),
-                                      )
-                                    : null,
+                              RankedUserAvatarTap(
+                                userId: t.creatorId,
+                                name: creatorName.isNotEmpty
+                                    ? creatorName
+                                    : 'B',
+                                imageUrl: resolvedAvatar.isEmpty
+                                    ? null
+                                    : resolvedAvatar,
+                                size: 36,
+                                minTouchTarget: 36,
                               ),
                               const SizedBox(width: 12),
                               Expanded(

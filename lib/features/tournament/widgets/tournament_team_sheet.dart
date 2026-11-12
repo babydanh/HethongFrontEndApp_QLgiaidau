@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamSheet extends StatelessWidget {
@@ -146,13 +146,14 @@ class TournamentTeamSheet extends StatelessWidget {
                   child: Row(
                     children: [
                       if (memberUserId.isNotEmpty)
-                        UserAvatarTap(
+                        ResolvedRankAvatar(
                           userId: memberUserId,
                           name: memberName,
                           imageUrl: memberInfo?.avatarUrl,
-                          elo: memberInfo?.eloPoints ?? 0,
+                          elo: memberInfo?.eloPoints,
                           tierName: memberInfo?.tierName,
                           size: 36,
+                          openProfile: true,
                         )
                       else
                         CircleAvatar(
@@ -333,13 +334,14 @@ class _MemberProfileScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (memberUserId.isNotEmpty)
-              UserAvatarTap(
+              ResolvedRankAvatar(
                 userId: memberUserId,
                 name: name,
                 imageUrl: memberInfo?.avatarUrl,
-                elo: memberInfo?.eloPoints ?? 0,
+                elo: memberInfo?.eloPoints,
                 tierName: memberInfo?.tierName,
                 size: 96,
+                openProfile: true,
               )
             else
               CircleAvatar(

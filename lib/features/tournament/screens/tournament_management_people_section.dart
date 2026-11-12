@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/participant_row_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/permission_rows.dart';
@@ -1184,7 +1183,7 @@ class _ParticipantCard extends StatelessWidget {
     final header = Row(
       children: [
         if (lead != null)
-          UserAvatarTap(
+          RankedUserAvatarTap(
             userId: lead.userId,
             name: lead.fullName,
             imageUrl: lead.avatarUrl,

@@ -24,7 +24,7 @@ import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/register/doubles_registration_member.dart';
 import 'package:app_quanly_giaidau/features/register/widgets/registration_attachment_field.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -1174,7 +1174,7 @@ class _DoublesRegistrationFlowState
                     final sel = _selectedPartner?.id == u.id;
                     return ListTile(
                       dense: true,
-                      leading: UserAvatarTap(
+                      leading: RankedUserAvatarTap(
                         userId: u.id,
                         name: u.fullName,
                         imageUrl: u.avatarUrl,
