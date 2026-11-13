@@ -83,6 +83,85 @@ class RallySetState {
   );
 }
 
+/// What the referee chose for badminton and tennis, kept in the session only:
+/// the team and player that serve first, who stands in the right cell, and
+/// whether the teams changed halves (by the rules or by hand).
+class RacketServePick {
+  const RacketServePick({
+    this.firstTeam = 1,
+    this.firstPlayerTeam1 = 0,
+    this.firstPlayerTeam2 = 0,
+    this.rightStarterTeam1 = 0,
+    this.rightStarterTeam2 = 0,
+    this.endsFlipped = false,
+  });
+
+  /// Team that serves the first game (tennis) or the first rally (badminton).
+  final int firstTeam;
+
+  /// Tennis: the player (0 or 1) of that team who serves its first service game.
+  final int firstPlayerTeam1;
+  final int firstPlayerTeam2;
+
+  /// Badminton: player standing in the right cell at 0 points. Tennis: player
+  /// who receives from the right while the team receives.
+  final int rightStarterTeam1;
+  final int rightStarterTeam2;
+
+  /// Team 2 on the first half (left/top) instead of team 1.
+  final bool endsFlipped;
+
+  int firstPlayerOf(int team) =>
+      team == 1 ? firstPlayerTeam1 : firstPlayerTeam2;
+  int rightStarterOf(int team) =>
+      team == 1 ? rightStarterTeam1 : rightStarterTeam2;
+
+  RacketServePick copyWith({
+    int? firstTeam,
+    int? firstPlayerTeam1,
+    int? firstPlayerTeam2,
+    int? rightStarterTeam1,
+    int? rightStarterTeam2,
+    bool? endsFlipped,
+  }) => RacketServePick(
+    firstTeam: firstTeam ?? this.firstTeam,
+    firstPlayerTeam1: firstPlayerTeam1 ?? this.firstPlayerTeam1,
+    firstPlayerTeam2: firstPlayerTeam2 ?? this.firstPlayerTeam2,
+    rightStarterTeam1: rightStarterTeam1 ?? this.rightStarterTeam1,
+    rightStarterTeam2: rightStarterTeam2 ?? this.rightStarterTeam2,
+    endsFlipped: endsFlipped ?? this.endsFlipped,
+  );
+
+  RacketServePick withFirstPlayer(int team, int player) => team == 1
+      ? copyWith(firstPlayerTeam1: player)
+      : copyWith(firstPlayerTeam2: player);
+
+  RacketServePick withRightStarter(int team, int player) => team == 1
+      ? copyWith(rightStarterTeam1: player)
+      : copyWith(rightStarterTeam2: player);
+}
+
+/// One badminton or tennis step the referee can take back: the score, the
+/// serve choice and the court as they were just before it.
+class RacketUndoStep {
+  const RacketUndoStep({
+    required this.rally,
+    required this.tennis,
+    required this.finishedSets,
+    required this.pick,
+    required this.closedSetCount,
+  });
+
+  final RallySetState? rally;
+  final TennisGameState? tennis;
+  final List<SetScoreData> finishedSets;
+  final RacketServePick pick;
+
+  /// Sets closed at that moment: a step from an earlier set can no longer be
+  /// restored once a set has been closed.
+  final int closedSetCount;
+}
+
 const Object _footballUnset = Object();
 
 const footballPhases = <String>{
@@ -219,6 +298,12 @@ class ScorePanelState {
   final String overrideReason;
   final bool isLite;
 
+  /// Badminton and tennis: first server, cell and ends choices (session only).
+  final RacketServePick racketPick;
+
+  /// Badminton and tennis steps that can be taken back, oldest first.
+  final List<RacketUndoStep> racketUndo;
+
   const ScorePanelState({
     required this.config,
     this.finishedSets = const [],
@@ -232,6 +317,8 @@ class ScorePanelState {
     this.overrideEnabled = false,
     this.overrideReason = '',
     this.isLite = false,
+    this.racketPick = const RacketServePick(),
+    this.racketUndo = const [],
   });
 
   /// Số set thắng.
@@ -312,6 +399,8 @@ class ScorePanelState {
     bool? overrideEnabled,
     String? overrideReason,
     bool? isLite,
+    RacketServePick? racketPick,
+    List<RacketUndoStep>? racketUndo,
   }) => ScorePanelState(
     config: config ?? this.config,
     finishedSets: finishedSets ?? this.finishedSets,
@@ -325,5 +414,7 @@ class ScorePanelState {
     overrideEnabled: overrideEnabled ?? this.overrideEnabled,
     overrideReason: overrideReason ?? this.overrideReason,
     isLite: isLite ?? this.isLite,
+    racketPick: racketPick ?? this.racketPick,
+    racketUndo: racketUndo ?? this.racketUndo,
   );
 }
