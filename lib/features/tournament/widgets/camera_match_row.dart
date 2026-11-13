@@ -243,15 +243,17 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
                 widget.label,
               ),
               excludeSemantics: true,
-              child: IconButton(
-                tooltip: l10n.tournamentManagementCameraStreamWatchLive,
-                constraints: const BoxConstraints.tightFor(
-                  width: kMinTouchTarget,
-                  height: kMinTouchTarget,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, kMinTouchTarget),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacingSM,
+                  ),
+                  foregroundColor: isLive ? _liveTone : null,
                 ),
                 onPressed: () => context.push('/live/${match.id}'),
-                color: isLive ? _liveTone : null,
                 icon: const Icon(Icons.play_circle_outline_rounded),
+                label: Text(l10n.tournamentManagementCameraStreamWatchLive),
               ),
             ),
             PopupMenuButton<String>(

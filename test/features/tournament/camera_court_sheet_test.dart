@@ -335,4 +335,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(admin.calls, ['delete:cam-1']);
   });
+
+  testWidgets('TC-CAMCARD-01 court card has no racket icon', (tester) async {
+    await _pumpTab(tester, [_match('open')]);
+
+    expect(
+      find.descendant(
+        of: find.byKey(_tile1),
+        matching: find.byIcon(Icons.sports_tennis_rounded),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: find.byKey(_tile1), matching: find.text('Sân 1')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('TC-CAMCARD-02 live button on a match row shows its name', (
+    tester,
+  ) async {
+    await _pumpTab(tester, [_match('open')]);
+    await tester.tap(find.byKey(_tile1));
+    await tester.pumpAndSettle();
+
+    // Visible text, not only a long-press tooltip.
+    expect(
+      find.descendant(of: _rowInSheet('open'), matching: find.text('Xem live')),
+      findsOneWidget,
+    );
+  });
 }

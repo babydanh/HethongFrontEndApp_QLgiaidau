@@ -54,13 +54,6 @@ class CameraCourtTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const ExcludeSemantics(
-                  child: Icon(
-                    Icons.sports_tennis_rounded,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacingSM),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
