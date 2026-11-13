@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.d
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_manager_bar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
@@ -331,6 +332,11 @@ class _TournamentScheduleCourtGridState
                   l10n.tournamentManagementVenuesEmpty,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: colors.textSecondary),
+                ),
+                // Chỉ người quản lý giải (không Lite) thấy; thanh tự ẩn với người khác.
+                ScheduleManagerBar(
+                  tournamentId: widget.tournamentId,
+                  createCourtCta: true,
                 ),
               ],
             ),

@@ -182,6 +182,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   // Ô cuối cùng ngón tay chạm/nhả: nút ✕ bỏ chọn hiện ngay tại đó.
   (int court, int slot)? _clearCell;
 
+  /// Góc đầu và góc hiện tại của khung kéo (toạ độ trong thân lưới); null khi
+  /// không đang kéo.
+  Offset? _marqueeStart;
+  Offset? _marqueeEnd;
+
   // Kéo tay nắm đổi thời lượng: trận đang kéo và quãng đã kéo (px).
   String? _resizeMatchId;
   double _resizeDeltaPx = 0;
@@ -208,14 +213,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     setState(() {
       _rangeAnchor = _cellAt(local);
       _rangeFocus = _rangeAnchor;
+      _marqueeStart = local;
+      _marqueeEnd = local;
     });
   }
 
   void _extendRange(Offset local) {
     if (_rangeAnchor == null) return;
     final cell = _cellAt(local);
-    if (cell == _rangeFocus) return;
-    setState(() => _rangeFocus = cell);
+    setState(() {
+      _marqueeEnd = local;
+      _rangeFocus = cell;
+    });
   }
 
   /// Chạm ô (court, slot) ở chế độ "Chọn nhiều": chạm đầu đánh dấu một ô, chạm
@@ -231,6 +240,24 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     }
     _tapAnchor = null;
     widget.onRangeSelected?.call(_normalizedRange(anchor, cell));
+  }
+
+  /// Bấm tiêu đề sân / nhãn giờ: chọn hết ô của sân (cột) hoặc của giờ (hàng)
+  /// qua đúng [ScheduleGrid.onRangeSelected] của vùng chọn thường.
+  void _selectLine({int? court, int? slot}) {
+    final onSelected = widget.onRangeSelected;
+    if (onSelected == null) return;
+    final range = (
+      firstCourt: court ?? 0,
+      lastCourt: court ?? widget.courts.length - 1,
+      firstSlot: slot ?? 0,
+      lastSlot: slot ?? _slotCount - 1,
+    );
+    setState(() {
+      _tapAnchor = null;
+      _clearCell = (range.firstCourt, range.firstSlot);
+    });
+    onSelected(range);
   }
 
   @override
@@ -256,6 +283,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     setState(() {
       _rangeAnchor = null;
       _rangeFocus = null;
+      _marqueeStart = null;
+      _marqueeEnd = null;
       _clearCell = focus;
     });
     if (anchor == null || focus == null) return;
@@ -441,7 +470,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                           )
                             SizedBox(
                               width: courtLayouts[index].laneCount * laneWidth,
-                              child: _courtHeader(widget.courts[index]),
+                              child: _courtHeader(widget.courts[index], index),
                             ),
                         ],
                       ),
@@ -454,50 +483,59 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             // Thân lưới — cột giờ khoá trái, khối sân cuộn ngang.
             SizedBox(
               height: _slotCount * _slotHeight,
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onLongPressStart: widget.onRangeSelected == null
-                    ? null
-                    : (details) => _beginRange(details.localPosition),
-                onLongPressMoveUpdate: widget.onRangeSelected == null
-                    ? null
-                    : (details) => _extendRange(details.localPosition),
-                onLongPressEnd: widget.onRangeSelected == null
-                    ? null
-                    : (_) => _commitRange(),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _timeColumn(colors),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: _bodyCtrl,
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (
-                              var index = 0;
-                              index < widget.courts.length;
-                              index++
-                            )
-                              SizedBox(
-                                width:
-                                    courtLayouts[index].laneCount * laneWidth,
-                                child: _courtColumn(
-                                  index,
-                                  courtLayouts[index],
-                                  colors,
-                                  laneWidth,
-                                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onLongPressStart: widget.onRangeSelected == null
+                          ? null
+                          : (details) => _beginRange(details.localPosition),
+                      onLongPressMoveUpdate: widget.onRangeSelected == null
+                          ? null
+                          : (details) => _extendRange(details.localPosition),
+                      onLongPressEnd: widget.onRangeSelected == null
+                          ? null
+                          : (_) => _commitRange(),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _timeColumn(colors),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              controller: _bodyCtrl,
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  for (
+                                    var index = 0;
+                                    index < widget.courts.length;
+                                    index++
+                                  )
+                                    SizedBox(
+                                      width:
+                                          courtLayouts[index].laneCount *
+                                          laneWidth,
+                                      child: _courtColumn(
+                                        index,
+                                        courtLayouts[index],
+                                        colors,
+                                        laneWidth,
+                                      ),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  _marqueeOverlay(),
+                ],
               ),
             ),
           ],
@@ -508,8 +546,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
 
   /// Blue band with just the court number ("Sân 1" -> "1"); the full name
   /// stays in the tooltip.
-  Widget _courtHeader(String court) {
-    return Container(
+  Widget _courtHeader(String court, int index) {
+    final header = Container(
       height: 38,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -533,6 +571,13 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           ),
         ),
       ),
+    );
+    if (widget.onRangeSelected == null) return header;
+    return GestureDetector(
+      key: ValueKey('schedule-court-header-$court'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _selectLine(court: index),
+      child: header,
     );
   }
 
@@ -579,35 +624,69 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Column(
         children: [
-          for (final label in _slotLabels)
-            Container(
-              height: _slotHeight,
-              alignment: Alignment.topRight,
-              padding: EdgeInsets.only(
-                right: widget.emphasizeTimeLabels ? 0 : 6,
-                top: 1,
-              ),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: label.endsWith(':00')
-                        ? colors.border
-                        : colors.border.withValues(alpha: 0.4),
+          for (final (index, label) in _slotLabels.indexed)
+            _timeRowTap(
+              index,
+              Container(
+                height: _slotHeight,
+                alignment: Alignment.topRight,
+                padding: EdgeInsets.only(
+                  right: widget.emphasizeTimeLabels ? 0 : 6,
+                  top: 1,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: label.endsWith(':00')
+                          ? colors.border
+                          : colors.border.withValues(alpha: 0.4),
+                    ),
                   ),
                 ),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: widget.emphasizeTimeLabels ? 12 : 10.5,
-                  fontWeight: label.endsWith(':00')
-                      ? FontWeight.w800
-                      : FontWeight.w600,
-                  color: colors.textPrimary,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: widget.emphasizeTimeLabels ? 12 : 10.5,
+                    fontWeight: label.endsWith(':00')
+                        ? FontWeight.w800
+                        : FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Nhãn giờ của hàng [index]: bấm để chọn hết ô của giờ đó trên mọi sân.
+  Widget _timeRowTap(int index, Widget label) {
+    if (widget.onRangeSelected == null) return label;
+    return GestureDetector(
+      key: ValueKey('schedule-time-row-$index'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _selectLine(slot: index),
+      child: label,
+    );
+  }
+
+  /// Khung chữ nhật đang kéo, vẽ theo ngón tay (ô trong khung được tô sáng
+  /// bởi [_rangeHighlight]). Không bắt cử chỉ.
+  Widget _marqueeOverlay() {
+    final start = _marqueeStart;
+    final end = _marqueeEnd;
+    if (start == null || end == null) return const SizedBox.shrink();
+    return Positioned.fromRect(
+      key: const ValueKey('schedule-marquee'),
+      rect: Rect.fromPoints(start, end),
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.10),
+            border: Border.all(color: AppTheme.primaryDark, width: 1.5),
+          ),
+        ),
       ),
     );
   }

@@ -333,8 +333,8 @@ class ParticipantLabel extends StatelessWidget {
   final TextAlign textAlign;
   final CrossAxisAlignment crossAxisAlignment;
 
-  /// Avatars show first+last initials in white on a name-based colour, like the
-  /// match board, instead of one muted letter.
+  /// Avatars are always white on the name-based colour; this flag only picks
+  /// first+last initials (match board) instead of the single first letter.
   final bool coloredAvatars;
 
   const ParticipantLabel({
@@ -409,7 +409,6 @@ class ParticipantLabel extends StatelessWidget {
     Widget text,
     TextStyle baseStyle,
   ) {
-    final colors = context.colors;
     final avatarRadius = compact ? 7.0 : 11.0;
     final rowGap = compact ? 4.0 : 6.0;
     final shown = players.take(_maxAvatars).toList(growable: false);
@@ -441,13 +440,11 @@ class ParticipantLabel extends StatelessWidget {
                           : _initials(shown[i].fullName),
                       avatarUrl: shown[i].avatarUrl,
                       radius: avatarRadius,
-                      backgroundColor: coloredAvatars
-                          ? avatarFallbackColor(shown[i].fullName)
-                          : colors.bgSurface,
+                      backgroundColor: avatarFallbackColor(shown[i].fullName),
                       textStyle: baseStyle.copyWith(
                         fontSize: avatarRadius * (coloredAvatars ? 0.8 : 0.9),
-                        fontWeight: coloredAvatars ? FontWeight.w800 : null,
-                        color: coloredAvatars ? Colors.white : colors.textMuted,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
                   ),
