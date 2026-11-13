@@ -1315,7 +1315,8 @@ class _ParticipantCard extends StatelessWidget {
   }
 
   /// Right side of the row: ✓/✕ while waiting for approval, the check-in
-  /// circle once approved, a yellow pill while waiting for a partner.
+  /// circle once approved. A row waiting for a partner gets nothing here: the
+  /// subtitle already says so and shows the fee status.
   List<Widget> _trailing(
     BuildContext context,
     AppLocalizations l10n,
@@ -1342,9 +1343,6 @@ class _ParticipantCard extends StatelessWidget {
           child: const Icon(Icons.close_rounded),
         ),
       ];
-    }
-    if (status == 'PENDING_PARTNER') {
-      return [LavishPill(l10n.athleteWaitingPill, tone: LavishTone.warn)];
     }
     if (status == 'COMPLETE' && showPresence) {
       final lavish = LavishColors.of(context);
