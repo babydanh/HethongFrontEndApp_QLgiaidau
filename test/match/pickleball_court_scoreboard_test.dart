@@ -50,14 +50,17 @@ Widget _board(
   bool flipped = false,
   DateTime? startedAt,
   int? setNumber = 1,
+  CourtContext context = _sideOutContext,
+  List<String> team1 = _team1,
+  List<String> team2 = _team2,
 }) {
   return PickleballCourtView(
     layout: resolveCourtLayout(
       CourtState(endsOverride: flipped ? true : null),
-      _sideOutContext,
+      context,
     ),
-    team1Players: _team1,
-    team2Players: _team2,
+    team1Players: team1,
+    team2Players: team2,
     team1Score: score1,
     team2Score: score2,
     axis: axis,
@@ -863,5 +866,57 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+  });
+
+  group('TC-PLF-RECV receiver is marked', () {
+    double gap(WidgetTester tester, String a, String b) =>
+        (tester.getCenter(find.text(a)) - tester.getCenter(find.text(b)))
+            .distance;
+
+    testWidgets('TC-PLF-RECV-05 doubles: one RECEIVE tag on the diagonal', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy()));
+      expect(find.text('RECEIVE'), findsOneWidget);
+      // Team 1 serves from the right cell, so team 2's right cell ("Bảo")
+      // receives, not its left cell ("Hà").
+      expect(
+        gap(tester, 'RECEIVE', 'Bảo'),
+        lessThan(gap(tester, 'RECEIVE', 'Hà')),
+      );
+    });
+
+    testWidgets('TC-PLF-RECV-06 singles: receiver is on the diagonal', (
+      tester,
+    ) async {
+      const singles = CourtContext(
+        score1: 1,
+        score2: 0,
+        isDoubles: false,
+        team1PlayerCount: 1,
+        team2PlayerCount: 1,
+        servingTeam: 1,
+        serverNumber: 1,
+        scoringMode: CourtScoringMode.sideOut,
+        setIndex: 0,
+        targetPoints: 11,
+        isDecidingSet: false,
+      );
+      await _pump(
+        tester,
+        _board(
+          _Spy(),
+          isDoubles: false,
+          context: singles,
+          team1: const ['Lan'],
+          team2: const ['Bảo'],
+        ),
+      );
+      expect(find.text('RECEIVE'), findsOneWidget);
+      expect(
+        gap(tester, 'RECEIVE', 'Bảo'),
+        lessThan(gap(tester, 'RECEIVE', 'Lan')),
+      );
+    });
   });
 }
