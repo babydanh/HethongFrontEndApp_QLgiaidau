@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_scree
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_create_flow.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_match_filter.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_card.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_list_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_header.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -410,6 +411,16 @@ class _TournamentManagementCameraSectionState
                   onAssign: _assignToCourt,
                 ),
               ],
+            ],
+            // Wait for the first read so an empty list is not shown by mistake.
+            if (camerasAsync.hasValue) ...[
+              const SizedBox(height: AppTheme.spacingMD),
+              CameraListSection(
+                tournamentId: widget.tournamentId,
+                cameras: cameras,
+                courts: courts,
+                readOnly: widget.readOnly,
+              ),
             ],
           ],
         );

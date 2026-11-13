@@ -168,9 +168,20 @@ void main() {
         expect(start.enabled, isFalse);
         await tester.tapAt(const Offset(1, 1));
         await tester.pumpAndSettle();
-        // Camera sân OFFLINE hiện badge chữ.
-        expect(find.byType(CameraStatusBadge), findsOneWidget);
-        expect(find.text('Offline'), findsOneWidget);
+        // Camera sân OFFLINE hiện badge chữ ngay trên thẻ Sân 1 (danh sách
+        // camera bên dưới có badge riêng, nên chỉ đếm trong thẻ sân).
+        final courtTile = find.byKey(const ValueKey('camera-court-tile-court-1'));
+        expect(
+          find.descendant(
+            of: courtTile,
+            matching: find.byType(CameraStatusBadge),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: courtTile, matching: find.text('Offline')),
+          findsOneWidget,
+        );
       },
     );
   }
