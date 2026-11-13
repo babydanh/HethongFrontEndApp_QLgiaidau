@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -257,11 +258,24 @@ class _TournamentManagementCameraSectionState
         final assignable = _assignableMatches(matches);
         final cameras =
             camerasAsync.asData?.value ?? const <TournamentCameraModel>[];
+        // Same stage label as the rest of the app ("Bảng A • Lượt 1", "Tứ
+        // kết"), named against every match so bracket size is right.
+        final stageLabels = {
+          for (final match in assignable)
+            match.id: MatchRoundLabel.formatRound(
+              match: match,
+              allMatches: matches,
+              includeMatchCode: false,
+              l10n: l10n,
+            ),
+        };
+        String stageOf(MatchModel match) => stageLabels[match.id] ?? '';
         final visible = filterCameraMatches(
           matches: assignable,
           query: _filter.query,
-          round: _filter.round,
+          stage: _filter.stage,
           onlyNoCamera: _filter.onlyNoCamera,
+          stageOf: stageOf,
           labelOf: (match) => _matchLabel(l10n, match),
           hasCameraOnCourt: (courtId) =>
               cameraForCourt(cameras, courtId) != null,
@@ -276,7 +290,7 @@ class _TournamentManagementCameraSectionState
             CameraTabHeader(
               cameras: camerasAsync.asData == null ? null : cameras,
               filter: _filter,
-              rounds: cameraMatchRounds(assignable),
+              stages: cameraMatchStages(assignable, stageOf),
               onFilterChanged: (value) => setState(() => _filter = value),
               onCreateCamera: widget.readOnly || courts.isEmpty
                   ? null

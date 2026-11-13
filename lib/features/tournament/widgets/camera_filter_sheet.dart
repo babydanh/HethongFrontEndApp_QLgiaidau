@@ -1,32 +1,34 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/camera_match_filter.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Lựa chọn của bảng lọc: vòng (null = tất cả) và "Chưa có cam".
-typedef CameraFilterChoice = ({int? round, bool onlyNoCamera});
+/// Lựa chọn của bảng lọc: nhãn chặng (null = tất cả) và "Chưa có cam".
+typedef CameraFilterChoice = ({String? stage, bool onlyNoCamera});
 
-/// Hiện tối đa ~3,5 dòng vòng rồi cuộn, để nhiều vòng cũng không đẩy cao bảng.
+/// Hiện tối đa ~3,5 dòng chặng rồi cuộn, để nhiều bảng/lượt cũng không đẩy cao
+/// bảng.
 const double _listMaxHeight = kMinTouchTarget * 3.5;
 
-/// Bảng dưới "Lọc trận": danh sách vòng (chọn 1), công tắc "Chưa có cam", nút
-/// "Xoá lọc" / "Áp dụng". Trả về lựa chọn khi Áp dụng hoặc Xoá lọc; vuốt/đóng
-/// bảng thì trả null và bộ lọc hiện tại không đổi.
+/// Bảng dưới "Lọc trận": danh sách chặng (bảng/lượt/vòng playoff, chọn 1, kèm
+/// số trận), công tắc "Chưa có cam", nút "Xoá lọc" / "Áp dụng". Trả về lựa chọn
+/// khi Áp dụng hoặc Xoá lọc; vuốt/đóng bảng thì trả null và bộ lọc không đổi.
 Future<CameraFilterChoice?> showCameraFilterSheet(
   BuildContext context, {
-  required List<int> rounds,
+  required List<CameraStage> stages,
   required CameraFilterChoice current,
 }) => showModalBottomSheet<CameraFilterChoice>(
   context: context,
   showDragHandle: true,
   isScrollControlled: true,
-  builder: (_) => _CameraFilterSheet(rounds: rounds, current: current),
+  builder: (_) => _CameraFilterSheet(stages: stages, current: current),
 );
 
 class _CameraFilterSheet extends StatefulWidget {
-  const _CameraFilterSheet({required this.rounds, required this.current});
+  const _CameraFilterSheet({required this.stages, required this.current});
 
-  final List<int> rounds;
+  final List<CameraStage> stages;
   final CameraFilterChoice current;
 
   @override
@@ -34,14 +36,14 @@ class _CameraFilterSheet extends StatefulWidget {
 }
 
 class _CameraFilterSheetState extends State<_CameraFilterSheet> {
-  late int? _round = widget.current.round;
+  late String? _stage = widget.current.stage;
   late bool _onlyNoCamera = widget.current.onlyNoCamera;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final options = <int?>[null, ...widget.rounds];
+    final options = <CameraStage?>[null, ...widget.stages];
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -76,8 +78,8 @@ class _CameraFilterSheetState extends State<_CameraFilterSheet> {
                     itemCount: options.length,
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final round = options[index];
-                      final selected = round == _round;
+                      final stage = options[index];
+                      final selected = stage?.label == _stage;
                       return ListTile(
                         dense: true,
                         selected: selected,
@@ -88,11 +90,10 @@ class _CameraFilterSheetState extends State<_CameraFilterSheet> {
                               : Icons.radio_button_unchecked_rounded,
                         ),
                         title: Text(
-                          round == null
-                              ? l10n.camTabAllRounds
-                              : l10n.camTabRound(round),
+                          stage == null ? l10n.camTabAllStages : stage.label,
                         ),
-                        onTap: () => setState(() => _round = round),
+                        trailing: stage == null ? null : Text('${stage.count}'),
+                        onTap: () => setState(() => _stage = stage?.label),
                       );
                     },
                   ),
@@ -111,7 +112,7 @@ class _CameraFilterSheetState extends State<_CameraFilterSheet> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(
                       context,
-                    ).pop((round: null, onlyNoCamera: false)),
+                    ).pop((stage: null, onlyNoCamera: false)),
                     child: Text(l10n.camTabClearFilter),
                   ),
                 ),
@@ -120,7 +121,7 @@ class _CameraFilterSheetState extends State<_CameraFilterSheet> {
                   child: FilledButton(
                     onPressed: () => Navigator.of(
                       context,
-                    ).pop((round: _round, onlyNoCamera: _onlyNoCamera)),
+                    ).pop((stage: _stage, onlyNoCamera: _onlyNoCamera)),
                     child: Text(l10n.camTabApplyFilter),
                   ),
                 ),

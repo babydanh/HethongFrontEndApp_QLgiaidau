@@ -35557,17 +35557,11 @@ abstract class AppLocalizations {
   /// **'Áp dụng'**
   String get camTabApplyFilter;
 
-  /// No description provided for @camTabAllRounds.
+  /// No description provided for @camTabAllStages.
   ///
   /// In vi, this message translates to:
-  /// **'Tất cả vòng'**
-  String get camTabAllRounds;
-
-  /// No description provided for @camTabRound.
-  ///
-  /// In vi, this message translates to:
-  /// **'Vòng {n}'**
-  String camTabRound(int n);
+  /// **'Tất cả bảng / vòng'**
+  String get camTabAllStages;
 
   /// No description provided for @camTabNoCamera.
   ///

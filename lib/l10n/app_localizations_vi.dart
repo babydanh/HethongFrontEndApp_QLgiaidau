@@ -19759,12 +19759,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get camTabApplyFilter => 'Áp dụng';
 
   @override
-  String get camTabAllRounds => 'Tất cả vòng';
-
-  @override
-  String camTabRound(int n) {
-    return 'Vòng $n';
-  }
+  String get camTabAllStages => 'Tất cả bảng / vòng';
 
   @override
   String get camTabNoCamera => 'Chưa có cam';

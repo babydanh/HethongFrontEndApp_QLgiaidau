@@ -9,18 +9,18 @@ const double _pillIcon = 36;
 
 /// Viên thuốc tìm kiếm thay chính hàng đầu tab Camera: nút đóng, ô nhập
 /// (tự focus), nút xoá chữ và phễu lọc nằm trong viên. Phễu có chấm đỏ khi
-/// đang lọc vòng hoặc "Chưa có cam".
+/// đang lọc chặng hoặc "Chưa có cam".
 class CameraSearchPill extends StatefulWidget {
   const CameraSearchPill({
     super.key,
     required this.filter,
-    required this.rounds,
+    required this.stages,
     required this.onChanged,
     required this.onClose,
   });
 
   final CameraMatchFilter filter;
-  final List<int> rounds;
+  final List<CameraStage> stages;
   final ValueChanged<CameraMatchFilter> onChanged;
   final VoidCallback onClose;
 
@@ -51,16 +51,16 @@ class _CameraSearchPillState extends State<CameraSearchPill> {
   Future<void> _openFilterSheet() async {
     final choice = await showCameraFilterSheet(
       context,
-      rounds: widget.rounds,
+      stages: widget.stages,
       current: (
-        round: widget.filter.round,
+        stage: widget.filter.stage,
         onlyNoCamera: widget.filter.onlyNoCamera,
       ),
     );
     if (choice == null || !mounted) return;
     widget.onChanged(
       widget.filter.copyWith(
-        round: () => choice.round,
+        stage: () => choice.stage,
         onlyNoCamera: choice.onlyNoCamera,
       ),
     );
@@ -70,7 +70,7 @@ class _CameraSearchPillState extends State<CameraSearchPill> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final filter = widget.filter;
-    final filtering = filter.round != null || filter.onlyNoCamera;
+    final filtering = filter.stage != null || filter.onlyNoCamera;
     const glyph = Icon(Icons.filter_list_rounded);
     return Row(
       children: [

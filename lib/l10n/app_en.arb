@@ -7831,13 +7831,7 @@
   "camTabCloseSearch": "Close search",
   "camTabClearText": "Clear text",
   "camTabApplyFilter": "Apply",
-  "camTabAllRounds": "All rounds",
-  "camTabRound": "Round {n}",
-  "@camTabRound": {
-    "placeholders": {
-      "n": { "type": "int" }
-    }
-  },
+  "camTabAllStages": "All groups / rounds",
   "camTabNoCamera": "No camera yet",
   "camTabNoMatchFound": "No matching matches",
   "camTabClearFilter": "Clear filter",

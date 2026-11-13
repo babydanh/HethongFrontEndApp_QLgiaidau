@@ -1,28 +1,32 @@
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
-/// Bộ lọc trận ở tab Camera: ô tìm, vòng, công tắc "Chưa có cam".
+/// Một chặng của giải (vd "Bảng A • Lượt 1", "Tứ kết") và số trận thuộc chặng.
+typedef CameraStage = ({String label, int count});
+
+/// Bộ lọc trận ở tab Camera: ô tìm, chặng (bảng/lượt/vòng playoff), công tắc
+/// "Chưa có cam".
 class CameraMatchFilter {
   const CameraMatchFilter({
     this.query = '',
-    this.round,
+    this.stage,
     this.onlyNoCamera = false,
   });
 
   final String query;
 
-  /// Null = tất cả vòng.
-  final int? round;
+  /// Nhãn chặng đang chọn; null = tất cả.
+  final String? stage;
   final bool onlyNoCamera;
 
-  bool get isActive => query.trim().isNotEmpty || round != null || onlyNoCamera;
+  bool get isActive => query.trim().isNotEmpty || stage != null || onlyNoCamera;
 
   CameraMatchFilter copyWith({
     String? query,
-    int? Function()? round,
+    String? Function()? stage,
     bool? onlyNoCamera,
   }) => CameraMatchFilter(
     query: query ?? this.query,
-    round: round == null ? this.round : round(),
+    stage: stage == null ? this.stage : stage(),
     onlyNoCamera: onlyNoCamera ?? this.onlyNoCamera,
   );
 }
@@ -53,24 +57,36 @@ String _fold(String value) {
   return buffer.toString();
 }
 
-/// Các `round` có trong [matches], tăng dần, không trùng.
-List<int> cameraMatchRounds(List<MatchModel> matches) =>
-    (matches.map((match) => match.round).toSet().toList()..sort());
+/// Các chặng có trong [matches] theo thứ tự xuất hiện, không trùng, kèm số
+/// trận. [stageOf] cho nhãn chặng của một trận.
+List<CameraStage> cameraMatchStages(
+  List<MatchModel> matches,
+  String Function(MatchModel match) stageOf,
+) {
+  final counts = <String, int>{};
+  for (final match in matches) {
+    counts.update(stageOf(match), (count) => count + 1, ifAbsent: () => 1);
+  }
+  return [
+    for (final entry in counts.entries) (label: entry.key, count: entry.value),
+  ];
+}
 
-/// Lọc [matches] theo vòng, ô tìm (nhãn 2 bên hoặc mã trận) và "chưa có cam".
+/// Lọc [matches] theo chặng, ô tìm (nhãn 2 bên hoặc mã trận) và "chưa có cam".
 /// Trận chưa gán sân không bao giờ tính là "chưa có cam". Giữ nguyên thứ tự.
 List<MatchModel> filterCameraMatches({
   required List<MatchModel> matches,
   required String Function(MatchModel match) labelOf,
+  required String Function(MatchModel match) stageOf,
   required bool Function(String courtId) hasCameraOnCourt,
   String query = '',
-  int? round,
+  String? stage,
   bool onlyNoCamera = false,
 }) {
   final needle = _fold(query);
   return matches
       .where((match) {
-        if (round != null && match.round != round) return false;
+        if (stage != null && stageOf(match) != stage) return false;
         if (onlyNoCamera) {
           final courtId = match.courtId;
           if (courtId == null || courtId.isEmpty) return false;

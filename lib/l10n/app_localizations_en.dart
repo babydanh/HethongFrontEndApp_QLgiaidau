@@ -19843,12 +19843,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get camTabApplyFilter => 'Apply';
 
   @override
-  String get camTabAllRounds => 'All rounds';
-
-  @override
-  String camTabRound(int n) {
-    return 'Round $n';
-  }
+  String get camTabAllStages => 'All groups / rounds';
 
   @override
   String get camTabNoCamera => 'No camera yet';

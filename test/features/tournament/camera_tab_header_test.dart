@@ -39,6 +39,13 @@ Widget _app(Widget body, {bool disableAnimations = false}) => MaterialApp(
   ),
 );
 
+/// Bảng A có 2 lượt, rồi tới playoff: đúng kiểu nhãn thật của app.
+const _stages = <CameraStage>[
+  (label: 'Bảng A • Lượt 1', count: 2),
+  (label: 'Bảng A • Lượt 2', count: 1),
+  (label: 'Playoff • Tứ kết', count: 1),
+];
+
 void _setWidth(WidgetTester tester, double width) {
   tester.view.physicalSize = Size(width, 800);
   tester.view.devicePixelRatio = 1;
@@ -52,7 +59,7 @@ Future<_Harness> _pump(
   bool canCreate = true,
   CameraMatchFilter filter = const CameraMatchFilter(),
   bool disableAnimations = false,
-  List<int> rounds = const [1, 2],
+  List<CameraStage> stages = _stages,
 }) async {
   _setWidth(tester, 390);
   final h = _Harness()..filter = filter;
@@ -62,7 +69,7 @@ Future<_Harness> _pump(
         builder: (context, setState) => CameraTabHeader(
           cameras: cameras ?? [_camera(1), _camera(2, status: 'IDLE')],
           filter: h.filter,
-          rounds: rounds,
+          stages: stages,
           onFilterChanged: (value) => setState(() => h.filter = value),
           onRefresh: () => h.refreshes++,
           onWatchCameras: () => h.watches++,
@@ -152,7 +159,7 @@ void main() {
         CameraTabHeader(
           cameras: null,
           filter: const CameraMatchFilter(),
-          rounds: const [],
+          stages: const [],
           onFilterChanged: (_) {},
           onRefresh: () {},
           onWatchCameras: () {},
@@ -211,10 +218,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    // Không còn dải chip vòng bung sẵn.
+    // Không có dải chip chặng bung sẵn.
     expect(find.byType(ChoiceChip), findsNothing);
     expect(find.byType(FilterChip), findsNothing);
-    expect(find.text('Vòng 1'), findsNothing);
+    expect(find.text('Bảng A • Lượt 1'), findsNothing);
   });
 
   testWidgets('TC-CAMHEAD-APP-10 filter dot and tags appear only when active', (
@@ -222,15 +229,18 @@ void main() {
   ) async {
     await _pump(tester);
     expect(find.byKey(const ValueKey('camTabFilterDot')), findsNothing);
-    expect(find.byKey(const ValueKey('camTabTagRound')), findsNothing);
+    expect(find.byKey(const ValueKey('camTabTagStage')), findsNothing);
 
     await _pump(
       tester,
-      filter: const CameraMatchFilter(round: 1, onlyNoCamera: true),
+      filter: const CameraMatchFilter(
+        stage: 'Bảng A • Lượt 1',
+        onlyNoCamera: true,
+      ),
     );
-    expect(find.byKey(const ValueKey('camTabTagRound')), findsOneWidget);
+    expect(find.byKey(const ValueKey('camTabTagStage')), findsOneWidget);
     expect(find.byKey(const ValueKey('camTabTagNoCamera')), findsOneWidget);
-    expect(find.text('Vòng 1'), findsOneWidget);
+    expect(find.text('Bảng A • Lượt 1'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Tìm trận'));
     await tester.pumpAndSettle();
@@ -262,33 +272,37 @@ void main() {
     expect(find.text('Camera của giải'), findsOneWidget);
   });
 
-  testWidgets('TC-CAMPILL-APP-01 sheet: rounds, no-camera switch, 2 buttons', (
+  testWidgets('TC-CAMPILL-APP-01 sheet: stages, no-camera switch, 2 buttons', (
     tester,
   ) async {
     await _pump(tester);
     await _openSheet(tester);
-    expect(find.text('Tất cả vòng'), findsOneWidget);
-    expect(find.text('Vòng 1'), findsOneWidget);
-    expect(find.text('Vòng 2'), findsOneWidget);
+    expect(find.text('Tất cả bảng / vòng'), findsOneWidget);
+    // Mỗi chặng kèm số trận.
+    expect(find.text('Bảng A • Lượt 1'), findsOneWidget);
+    expect(find.text('Bảng A • Lượt 2'), findsOneWidget);
+    expect(find.text('Playoff • Tứ kết'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('1'), findsNWidgets(2));
     expect(find.byType(Switch), findsOneWidget);
     expect(find.text('Chưa có cam'), findsOneWidget);
     expect(find.text('Xoá lọc'), findsOneWidget);
     expect(find.text('Áp dụng'), findsOneWidget);
   });
 
-  testWidgets('TC-CAMPILL-APP-02 Áp dụng reports round and no-camera flag', (
+  testWidgets('TC-CAMPILL-APP-02 Áp dụng reports stage and no-camera flag', (
     tester,
   ) async {
     final h = await _pump(tester);
     await _openSheet(tester);
-    await tester.tap(find.text('Vòng 2'));
+    await tester.tap(find.text('Bảng A • Lượt 2'));
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
     // Chưa bấm Áp dụng thì chưa đổi.
-    expect(h.filter.round, isNull);
+    expect(h.filter.stage, isNull);
     await tester.tap(find.text('Áp dụng'));
     await tester.pumpAndSettle();
-    expect(h.filter.round, 2);
+    expect(h.filter.stage, 'Bảng A • Lượt 2');
     expect(h.filter.onlyNoCamera, isTrue);
     expect(find.byKey(const ValueKey('camTabFilterDot')), findsOneWidget);
   });
@@ -296,14 +310,17 @@ void main() {
   testWidgets('TC-CAMPILL-APP-03 dismissing the sheet keeps the filter', (
     tester,
   ) async {
-    final h = await _pump(tester, filter: const CameraMatchFilter(round: 1));
+    final h = await _pump(
+      tester,
+      filter: const CameraMatchFilter(stage: 'Bảng A • Lượt 1'),
+    );
     await _openSheet(tester);
-    await tester.tap(find.text('Vòng 2'));
+    await tester.tap(find.text('Bảng A • Lượt 2'));
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(10, 10)); // barrier
     await tester.pumpAndSettle();
     expect(find.text('Áp dụng'), findsNothing);
-    expect(h.filter.round, 1);
+    expect(h.filter.stage, 'Bảng A • Lượt 1');
   });
 
   testWidgets('TC-CAMPILL-APP-04 Xoá lọc in the sheet clears both filters', (
@@ -311,12 +328,15 @@ void main() {
   ) async {
     final h = await _pump(
       tester,
-      filter: const CameraMatchFilter(round: 2, onlyNoCamera: true),
+      filter: const CameraMatchFilter(
+        stage: 'Bảng A • Lượt 2',
+        onlyNoCamera: true,
+      ),
     );
     await _openSheet(tester);
     await tester.tap(find.text('Xoá lọc'));
     await tester.pumpAndSettle();
-    expect(h.filter.round, isNull);
+    expect(h.filter.stage, isNull);
     expect(h.filter.onlyNoCamera, isFalse);
   });
 
@@ -325,18 +345,21 @@ void main() {
   ) async {
     final h = await _pump(
       tester,
-      filter: const CameraMatchFilter(round: 2, onlyNoCamera: true),
+      filter: const CameraMatchFilter(
+        stage: 'Bảng A • Lượt 2',
+        onlyNoCamera: true,
+      ),
     );
     await tester.tap(
       find.descendant(
-        of: find.byKey(const ValueKey('camTabTagRound')),
+        of: find.byKey(const ValueKey('camTabTagStage')),
         matching: find.byIcon(Icons.close_rounded),
       ),
     );
     await tester.pumpAndSettle();
-    expect(h.filter.round, isNull);
+    expect(h.filter.stage, isNull);
     expect(h.filter.onlyNoCamera, isTrue);
-    expect(find.byKey(const ValueKey('camTabTagRound')), findsNothing);
+    expect(find.byKey(const ValueKey('camTabTagStage')), findsNothing);
 
     await tester.tap(
       find.descendant(
@@ -349,10 +372,13 @@ void main() {
     expect(find.byKey(const ValueKey('camTabTagNoCamera')), findsNothing);
   });
 
-  testWidgets('TC-CAMPILL-APP-06 closing the pill keeps round/no-camera', (
+  testWidgets('TC-CAMPILL-APP-06 closing the pill keeps stage/no-camera', (
     tester,
   ) async {
-    final h = await _pump(tester, filter: const CameraMatchFilter(round: 2));
+    final h = await _pump(
+      tester,
+      filter: const CameraMatchFilter(stage: 'Bảng A • Lượt 2'),
+    );
     await tester.tap(find.byTooltip('Tìm trận'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'a');
@@ -360,12 +386,12 @@ void main() {
     await tester.tap(find.byTooltip('Đóng tìm kiếm'));
     await tester.pumpAndSettle();
     expect(h.filter.query, isEmpty);
-    expect(h.filter.round, 2);
-    expect(find.byKey(const ValueKey('camTabTagRound')), findsOneWidget);
+    expect(h.filter.stage, 'Bảng A • Lượt 2');
+    expect(find.byKey(const ValueKey('camTabTagStage')), findsOneWidget);
   });
 
   testWidgets(
-    'TC-CAMPILL-APP-07 12 rounds: header stays one row, list scrolls',
+    'TC-CAMPILL-APP-07 12 stages: header stays one row, list scrolls',
     (tester) async {
       _setWidth(tester, 320);
       await tester.pumpWidget(
@@ -373,7 +399,10 @@ void main() {
           CameraTabHeader(
             cameras: [_camera(1)],
             filter: const CameraMatchFilter(),
-            rounds: [for (var i = 1; i <= 12; i++) i],
+            stages: [
+              for (var i = 1; i <= 12; i++)
+                (label: 'Bảng $i • Lượt 1', count: 1),
+            ],
             onFilterChanged: (_) {},
             onRefresh: () {},
             onWatchCameras: () {},
@@ -391,7 +420,7 @@ void main() {
         lessThanOrEqualTo(closedHeight),
       );
       await tester.scrollUntilVisible(
-        find.text('Vòng 12'),
+        find.text('Bảng 12 • Lượt 1'),
         60,
         scrollable: find
             .descendant(
@@ -400,7 +429,7 @@ void main() {
             )
             .first,
       );
-      expect(find.text('Vòng 12'), findsOneWidget);
+      expect(find.text('Bảng 12 • Lượt 1'), findsOneWidget);
     },
   );
 
@@ -414,8 +443,11 @@ void main() {
           CameraTabHeader(
             key: ValueKey(width), // fresh state per width
             cameras: [_camera(1)],
-            filter: const CameraMatchFilter(round: 1, onlyNoCamera: true),
-            rounds: const [1, 2],
+            filter: const CameraMatchFilter(
+              stage: 'Bảng A • Lượt 1',
+              onlyNoCamera: true,
+            ),
+            stages: _stages,
             onFilterChanged: (_) {},
             onRefresh: () {},
             onWatchCameras: () {},

@@ -14,7 +14,8 @@ const _swapDuration = Duration(milliseconds: 180);
 
 /// Đầu tab Camera: một hàng chỉ icon (tìm, tạo camera, xem camera, menu ⋯).
 /// Bấm tìm thì [CameraSearchPill] thay chính hàng đó (phễu lọc nằm trong viên);
-/// vòng / "Chưa có cam" đang lọc hiện thành một dòng thẻ nhỏ bên dưới.
+/// chặng (bảng/lượt/playoff) / "Chưa có cam" đang lọc hiện thành một dòng thẻ
+/// nhỏ bên dưới.
 /// [cameras] null nghĩa là danh sách chưa tải xong — chưa có số thì không in
 /// số, tránh khẳng định "0 cam" khi đang tải. [onCreateCamera] null thì ẩn nút
 /// ＋ (tab chỉ xem).
@@ -23,7 +24,7 @@ class CameraTabHeader extends StatefulWidget {
     super.key,
     required this.cameras,
     required this.filter,
-    required this.rounds,
+    required this.stages,
     required this.onFilterChanged,
     required this.onRefresh,
     required this.onWatchCameras,
@@ -32,7 +33,7 @@ class CameraTabHeader extends StatefulWidget {
 
   final List<TournamentCameraModel>? cameras;
   final CameraMatchFilter filter;
-  final List<int> rounds;
+  final List<CameraStage> stages;
   final ValueChanged<CameraMatchFilter> onFilterChanged;
   final VoidCallback onRefresh;
   final VoidCallback onWatchCameras;
@@ -147,7 +148,7 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
         ? CameraSearchPill(
             key: const ValueKey('camTabPillRow'),
             filter: widget.filter,
-            rounds: widget.rounds,
+            stages: widget.stages,
             onChanged: widget.onFilterChanged,
             onClose: _closeSearch,
           )
@@ -179,7 +180,7 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
   }
 }
 
-/// Một dòng thẻ nhỏ cuộn ngang cho lọc vòng / "Chưa có cam"; không lọc thì
+/// Một dòng thẻ nhỏ cuộn ngang cho lọc chặng / "Chưa có cam"; không lọc thì
 /// không chiếm chỗ. Bấm ✕ trên thẻ bỏ đúng lọc đó.
 class _FilterTags extends StatelessWidget {
   const _FilterTags({required this.filter, required this.onChanged});
@@ -189,8 +190,8 @@ class _FilterTags extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final round = filter.round;
-    if (round == null && !filter.onlyNoCamera) {
+    final stage = filter.stage;
+    if (stage == null && !filter.onlyNoCamera) {
       return const SizedBox(width: double.infinity);
     }
     final l10n = AppLocalizations.of(context)!;
@@ -210,11 +211,11 @@ class _FilterTags extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            if (round != null)
+            if (stage != null)
               tag(
-                const ValueKey('camTabTagRound'),
-                l10n.camTabRound(round),
-                () => onChanged(filter.copyWith(round: () => null)),
+                const ValueKey('camTabTagStage'),
+                stage,
+                () => onChanged(filter.copyWith(stage: () => null)),
               ),
             if (filter.onlyNoCamera)
               tag(

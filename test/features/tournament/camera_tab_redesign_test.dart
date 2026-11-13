@@ -383,17 +383,16 @@ void main() {
     expect(find.byType(CameraWallScreen), findsNothing);
   });
 
-  testWidgets('TC-CAMFILTER-APP-20 round filter narrows the pool, Xoá lọc', (
+  testWidgets('TC-CAMFILTER-APP-20 stage filter narrows the pool, Xoá lọc', (
     tester,
   ) async {
     await _size(tester, const Size(390, 1600));
-    MatchModel round(String id, int n) => _match(id).copyWith(round: n);
+    // Cùng bảng A, hai lượt khác nhau: lọc theo "Bảng A • Lượt 2", không theo
+    // số vòng thô.
+    MatchModel leg(String id, int n) =>
+        _match(id).copyWith(stageType: 'GROUP_STAGE', groupName: 'A', leg: n);
     await tester.pumpWidget(
-      _app(
-        _tab,
-        _Cameras([_camera(1)]),
-        matches: [round('m1', 1), round('m2', 2)],
-      ),
+      _app(_tab, _Cameras([_camera(1)]), matches: [leg('m1', 1), leg('m2', 2)]),
     );
     await tester.pumpAndSettle();
     expect(_row('m1'), findsWidgets);
@@ -403,7 +402,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Lọc trận'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Vòng 2'));
+    expect(find.text('Bảng A • Lượt 1'), findsOneWidget);
+    await tester.tap(find.text('Bảng A • Lượt 2'));
     await tester.tap(find.text('Áp dụng'));
     await tester.pumpAndSettle();
     expect(_row('m1'), findsNothing);

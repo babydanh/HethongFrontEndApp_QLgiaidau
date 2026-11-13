@@ -7859,13 +7859,7 @@
   "camTabCloseSearch": "Đóng tìm kiếm",
   "camTabClearText": "Xoá chữ",
   "camTabApplyFilter": "Áp dụng",
-  "camTabAllRounds": "Tất cả vòng",
-  "camTabRound": "Vòng {n}",
-  "@camTabRound": {
-    "placeholders": {
-      "n": { "type": "int" }
-    }
-  },
+  "camTabAllStages": "Tất cả bảng / vòng",
   "camTabNoCamera": "Chưa có cam",
   "camTabNoMatchFound": "Không có trận khớp",
   "camTabClearFilter": "Xoá lọc",
