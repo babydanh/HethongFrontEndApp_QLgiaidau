@@ -11,10 +11,10 @@ import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.d
 import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/live_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
@@ -76,17 +76,41 @@ void main() {
         ),
       ),
     );
-    await shooter.snap('livestream-camera');
+    await shooter.snap('livestream-phien-dien-thoai');
+  });
 
-    await scrollTo(tester, find.byType(TournamentCameraPanel));
-    await shooter.snap('livestream-khoi-camera');
-    await scrollBy(tester, 420);
-    await shooter.snap('livestream-khoi-san');
+  testWidgets('xem: popup san o tab Camera', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(
+      xemApp(
+        overrides: [
+          courtCameraRepositoryProvider.overrideWithValue(_cameraServer),
+          cameraAdminRepositoryProvider.overrideWithValue(_cameraServer),
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            _VenueRepository(),
+          ),
+          managedMatchesWithDivisionProvider.overrideWith(
+            (ref, args) => Stream.value(const <MatchModel>[]),
+          ),
+        ],
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            child: TournamentManagementCameraSection(
+              tournamentId: _tournamentId,
+              communityId: _communityId,
+            ),
+          ),
+        ),
+      ),
+    );
+    await shooter.snap('camera-tab');
+    await tester.tap(find.byKey(const ValueKey('camera-court-tile-court-1')));
+    await settle(tester);
+    await shooter.snap('camera-popup-san');
 
-    // Design 11: tapping the QR box only asks for confirmation; the stream
-    // key is never requested here. The dialog is dismissed afterwards.
+    // The QR button only asks for confirmation; the stream key is never
+    // requested here. The dialog is dismissed afterwards.
     final qrBox = find.byKey(const ValueKey('camera-stream-key-cam-1'));
-    await scrollTo(tester, qrBox);
     await tester.tap(qrBox);
     await settle(tester);
     await shooter.snap('livestream-xac-nhan-khoa-phat');

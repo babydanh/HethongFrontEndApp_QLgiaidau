@@ -137,13 +137,22 @@ void main() {
         // Các nút chữ đã gom: không còn OutlinedButton Dừng/Bắt đầu/MP4 ở dòng.
         expect(find.widgetWithText(OutlinedButton, 'Dừng'), findsNothing);
         expect(find.widgetWithText(OutlinedButton, 'MP4'), findsNothing);
-        // Trận đang LIVE: menu ⋯ có Dừng và Bản ghi.
+        // Trận đang LIVE đã có sân: nằm trong popup Sân 1, menu ⋯ có Dừng
+        // và Bản ghi.
+        await tester.tap(
+          find.byKey(const ValueKey('camera-court-tile-court-1')),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
         await _openMoreMenu(
           tester,
           'Live Alpha dài dài dài – Live Beta dài dài dài',
         );
         expect(find.text('Dừng'), findsOneWidget);
         expect(find.text('Bản ghi'), findsOneWidget);
+        await tester.tapAt(const Offset(1, 1));
+        await tester.pumpAndSettle();
+        // Close the court popup too.
         await tester.tapAt(const Offset(1, 1));
         await tester.pumpAndSettle();
         // Trận chưa xếp sân: Bắt đầu bị khoá (kèm lý do) trong menu.

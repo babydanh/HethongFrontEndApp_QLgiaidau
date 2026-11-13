@@ -23689,7 +23689,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementCameraMatchPool.
   ///
   /// In vi, this message translates to:
-  /// **'Trận đấu'**
+  /// **'Trận chưa có sân'**
   String get tournamentManagementCameraMatchPool;
 
   /// No description provided for @tournamentManagementCameraMatchPoolHint.
@@ -35646,6 +35646,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hướng dẫn'**
   String get camTabMenuHelp;
+
+  /// No description provided for @camTabMenuStreaming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại & phiên phát'**
+  String get camTabMenuStreaming;
+
+  /// No description provided for @camCourtEditUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa URL phát'**
+  String get camCourtEditUrl;
 
   /// No description provided for @camTabSearchTooltip.
   ///

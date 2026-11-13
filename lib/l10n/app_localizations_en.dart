@@ -13079,7 +13079,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This tournament has no courts yet. Add one in Venues first.';
 
   @override
-  String get tournamentManagementCameraMatchPool => 'Matches';
+  String get tournamentManagementCameraMatchPool => 'Matches without a court';
 
   @override
   String get tournamentManagementCameraMatchPoolHint =>
@@ -19905,6 +19905,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camTabMenuHelp => 'How to use';
+
+  @override
+  String get camTabMenuStreaming => 'Phones & live sessions';
+
+  @override
+  String get camCourtEditUrl => 'Edit stream URL';
 
   @override
   String get camTabSearchTooltip => 'Search matches';

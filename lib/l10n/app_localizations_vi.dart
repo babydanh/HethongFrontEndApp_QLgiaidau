@@ -13033,7 +13033,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Giải này chưa có sân nào. Hãy thêm sân ở mục Cơ sở trước.';
 
   @override
-  String get tournamentManagementCameraMatchPool => 'Trận đấu';
+  String get tournamentManagementCameraMatchPool => 'Trận chưa có sân';
 
   @override
   String get tournamentManagementCameraMatchPoolHint =>
@@ -19820,6 +19820,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get camTabMenuHelp => 'Hướng dẫn';
+
+  @override
+  String get camTabMenuStreaming => 'Điện thoại & phiên phát';
+
+  @override
+  String get camCourtEditUrl => 'Sửa URL phát';
 
   @override
   String get camTabSearchTooltip => 'Tìm trận';

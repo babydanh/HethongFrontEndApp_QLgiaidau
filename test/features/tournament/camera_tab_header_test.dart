@@ -23,6 +23,7 @@ class _Harness {
   int refreshes = 0;
   int watches = 0;
   int creates = 0;
+  int streams = 0;
 }
 
 Widget _app(Widget body, {bool disableAnimations = false}) => MaterialApp(
@@ -57,6 +58,7 @@ Future<_Harness> _pump(
   WidgetTester tester, {
   List<TournamentCameraModel>? cameras,
   bool canCreate = true,
+  bool canStream = false,
   CameraMatchFilter filter = const CameraMatchFilter(),
   bool disableAnimations = false,
   List<CameraStage> stages = _stages,
@@ -74,6 +76,7 @@ Future<_Harness> _pump(
           onRefresh: () => h.refreshes++,
           onWatchCameras: () => h.watches++,
           onCreateCamera: canCreate ? () => h.creates++ : null,
+          onOpenStreaming: canStream ? () => h.streams++ : null,
         ),
       ),
       disableAnimations: disableAnimations,
@@ -257,6 +260,26 @@ void main() {
     await tester.tap(find.text('Làm mới'));
     await tester.pumpAndSettle();
     expect(h.refreshes, 1);
+  });
+
+  testWidgets('TC-CAMMERGE-03 menu opens phones & live sessions', (
+    tester,
+  ) async {
+    final h = await _pump(tester, canStream: true);
+    await tester.tap(find.byTooltip('Thêm tuỳ chọn'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Điện thoại & phiên phát'));
+    await tester.pumpAndSettle();
+    expect(h.streams, 1);
+  });
+
+  testWidgets('TC-CAMMERGE-04 no streaming callback, no menu item', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(find.byTooltip('Thêm tuỳ chọn'));
+    await tester.pumpAndSettle();
+    expect(find.text('Điện thoại & phiên phát'), findsNothing);
   });
 
   testWidgets('TC-CAMHEAD-APP-12 reduced motion swaps without animating', (

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_create_flow.dart';
@@ -38,20 +39,22 @@ bool _matchHasCamera(MatchModel match, List<TournamentCameraModel> cameras) {
   return cameraForCourt(cameras, courtId)?.hasPlaybackUrl ?? false;
 }
 
-/// Matches that can be moved onto a court: real fixtures that have not
-/// finished. BYE and completed rows have nothing left to schedule.
-List<MatchModel> _assignableMatches(List<MatchModel> matches) => matches
+/// Real fixtures still to play that have no court yet. A match already on a
+/// court is listed in that court's popup, so it is not repeated here.
+List<MatchModel> _unscheduledMatches(List<MatchModel> matches) => matches
     .where(
       (match) =>
           match.hasTeams &&
           !match.isByeMatch &&
           !match.isFullByeMatch &&
-          !match.isCompleted,
+          !match.isCompleted &&
+          (match.courtId ?? '').isEmpty,
     )
     .toList(growable: false);
 
 /// Organizer camera board: one collapsed card per court (tap for the court
-/// popup with its matches), one pool of matches.
+/// popup with its matches), then the matches that have no court yet (hidden
+/// when there are none). Phones and live sessions open from the ⋯ menu.
 ///
 /// Assigning a match to a court goes through `PATCH /matches/{id}/schedule`
 /// with the court id — the backend then hands the match that court's camera.
@@ -65,11 +68,15 @@ class TournamentManagementCameraSection extends ConsumerStatefulWidget {
     super.key,
     required this.tournamentId,
     this.divisionId,
+    this.communityId,
     this.readOnly = false,
   });
 
   final String tournamentId;
   final String? divisionId;
+
+  /// Community owning the phone cameras; null hides the phone block.
+  final String? communityId;
   final bool readOnly;
 
   @override
@@ -248,9 +255,7 @@ class _TournamentManagementCameraSectionState
         context,
         tournamentId: widget.tournamentId,
         court: court,
-        camera: courtCamera,
         courtMatches: courtMatches,
-        allMatches: matches,
         cameras: cameras,
         readOnly: widget.readOnly,
         labelOf: (match) => _matchLabel(l10n, match),
@@ -289,7 +294,7 @@ class _TournamentManagementCameraSectionState
           tournamentCamerasProvider(widget.tournamentId),
         );
         final matches = matchesAsync.asData?.value ?? const <MatchModel>[];
-        final assignable = _assignableMatches(matches);
+        final assignable = _unscheduledMatches(matches);
         final cameras =
             camerasAsync.asData?.value ?? const <TournamentCameraModel>[];
         // Same stage label as the rest of the app ("Bảng A • Lượt 1", "Tứ
@@ -320,9 +325,10 @@ class _TournamentManagementCameraSectionState
         final shownCourts = activeCourtId == null
             ? courts
             : courts.where((court) => court.id == activeCourtId).toList();
-        final poolMatches = activeCourtId == null
-            ? visible
-            : visible.where((match) => match.courtId == activeCourtId).toList();
+        // Pool matches have no court, so a court chip leaves only that court.
+        final filterActive = _filter.isActive && assignable.isNotEmpty;
+        final showPool =
+            activeCourtId == null && (visible.isNotEmpty || filterActive);
 
         // Sized to its content and never scrolls on its own: the host page
         // scrolls, so the tournament header moves with it like on other tabs.
@@ -355,6 +361,11 @@ class _TournamentManagementCameraSectionState
               onRefresh: () => ref
                   .read(tournamentCamerasProvider(widget.tournamentId).notifier)
                   .refresh(),
+              onOpenStreaming: () => showLivestreamToolsSheet(
+                context,
+                tournamentId: widget.tournamentId,
+                communityId: widget.communityId,
+              ),
               onWatchCameras: () => showCameraWall(
                 context,
                 tournamentId: widget.tournamentId,
@@ -381,23 +392,23 @@ class _TournamentManagementCameraSectionState
                 icon: Icons.sports_tennis_rounded,
               )
             else ...[
-              _MatchPool(
-                tournamentId: widget.tournamentId,
-                cameras: cameras,
-                matches: poolMatches,
-                filterActive: _filter.isActive && assignable.isNotEmpty,
-                onClearFilter: () =>
-                    setState(() => _filter = const CameraMatchFilter()),
-                isLoading: matchesAsync.isLoading,
-                courts: courts,
-                busyMatchIds: _busyMatchIds,
-                readOnly: widget.readOnly,
-                onAssign: _assignToCourt,
-              ),
-              const SizedBox(height: AppTheme.spacingMD),
               for (final court in shownCourts) ...[
                 _courtTile(l10n, court, matches, cameras),
                 const SizedBox(height: AppTheme.spacingSM),
+              ],
+              if (showPool) ...[
+                const SizedBox(height: AppTheme.spacingSM),
+                _MatchPool(
+                  tournamentId: widget.tournamentId,
+                  cameras: cameras,
+                  matches: visible,
+                  onClearFilter: () =>
+                      setState(() => _filter = const CameraMatchFilter()),
+                  courts: courts,
+                  busyMatchIds: _busyMatchIds,
+                  readOnly: widget.readOnly,
+                  onAssign: _assignToCourt,
+                ),
               ],
             ],
           ],
@@ -444,15 +455,14 @@ class _CourtChips extends StatelessWidget {
   }
 }
 
-/// Matches that can be given a court from the row's ⋯ menu.
+/// Matches without a court, each given one from the row's ⋯ menu. Empty only
+/// while a filter hides them all.
 class _MatchPool extends StatelessWidget {
   const _MatchPool({
     required this.tournamentId,
     required this.cameras,
     required this.matches,
-    required this.filterActive,
     required this.onClearFilter,
-    required this.isLoading,
     required this.courts,
     required this.busyMatchIds,
     required this.readOnly,
@@ -462,11 +472,7 @@ class _MatchPool extends StatelessWidget {
   final String tournamentId;
   final List<TournamentCameraModel> cameras;
   final List<MatchModel> matches;
-
-  /// Có lọc đang bật trong khi vẫn còn trận để gán: danh sách rỗng là do lọc.
-  final bool filterActive;
   final VoidCallback onClearFilter;
-  final bool isLoading;
   final List<TournamentCourtRef> courts;
   final Set<String> busyMatchIds;
   final bool readOnly;
@@ -476,11 +482,8 @@ class _MatchPool extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementCameraMatchPool,
-      subtitle: l10n.tournamentManagementCameraMatchPoolHint,
-      child: isLoading && matches.isEmpty
-          ? const BoneListLoading(itemCount: 3, leadingAvatar: false)
-          : matches.isEmpty && filterActive
+      title: '${l10n.tournamentManagementCameraMatchPool} · ${matches.length}',
+      child: matches.isEmpty
           ? Column(
               children: [
                 Text(l10n.camTabNoMatchFound),
@@ -489,11 +492,6 @@ class _MatchPool extends StatelessWidget {
                   child: Text(l10n.camTabClearFilter),
                 ),
               ],
-            )
-          : matches.isEmpty
-          ? TournamentManagementEmpty(
-              title: l10n.tournamentManagementCameraMatchPoolEmpty,
-              icon: Icons.sports_score_rounded,
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

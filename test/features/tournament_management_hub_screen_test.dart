@@ -1432,7 +1432,6 @@ void main() {
     for (final label in [
       l10n.tournamentManagementSponsors,
       l10n.tournamentManagementFinance,
-      l10n.tournamentManagementLivestream,
     ]) {
       final entry = find.text(label);
       await tester.ensureVisible(entry);
@@ -1449,6 +1448,16 @@ void main() {
       );
     }
     expect(tester.takeException(), isNull);
+
+    // TC-CAMMERGE-09: "Phát trực tiếp" has no page of its own any more; it
+    // switches to the Camera tab, where cameras, phones and sessions live.
+    final livestream = find.text(l10n.tournamentManagementLivestream);
+    await tester.ensureVisible(livestream);
+    await tester.tap(livestream);
+    await tester.pump();
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
+    final tabs = tester.widget<TabBar>(find.byType(TabBar).first);
+    expect(tabs.controller?.index, 6, reason: 'Camera is the 7th hub tab');
   });
 
   testWidgets('tablet navigation updates the management detail section', (

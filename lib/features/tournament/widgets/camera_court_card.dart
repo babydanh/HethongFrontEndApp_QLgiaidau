@@ -8,7 +8,9 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_status_badge.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Collapsed court card of the Camera tab: name, camera status and match
 /// count. Everything else (camera line, URL, matches) lives in the popup that
@@ -100,15 +102,14 @@ class CameraCourtTile extends StatelessWidget {
   }
 }
 
-/// Popup of one court: camera line, playback URL, then its matches with the
-/// ones still to play first and the finished ones below.
+/// Popup of one court: title with the preview ⏻, one camera line (Đổi / QR),
+/// signal check, the playback URL folded under "Sửa URL phát", then its
+/// matches with the ones still to play first and the finished ones below.
 Future<void> showCameraCourtSheet(
   BuildContext context, {
   required String tournamentId,
   required TournamentCourtRef court,
-  required TournamentCameraModel? camera,
   required List<MatchModel> courtMatches,
-  required List<MatchModel> allMatches,
   required List<TournamentCameraModel> cameras,
   required bool readOnly,
   required String Function(MatchModel match) labelOf,
@@ -124,9 +125,7 @@ Future<void> showCameraCourtSheet(
     builder: (sheetContext) => _CameraCourtSheet(
       tournamentId: tournamentId,
       court: court,
-      camera: camera,
       courtMatches: courtMatches,
-      allMatches: allMatches,
       cameras: cameras,
       readOnly: readOnly,
       labelOf: labelOf,
@@ -140,9 +139,7 @@ class _CameraCourtSheet extends StatelessWidget {
   const _CameraCourtSheet({
     required this.tournamentId,
     required this.court,
-    required this.camera,
     required this.courtMatches,
-    required this.allMatches,
     required this.cameras,
     required this.readOnly,
     required this.labelOf,
@@ -152,9 +149,7 @@ class _CameraCourtSheet extends StatelessWidget {
 
   final String tournamentId;
   final TournamentCourtRef court;
-  final TournamentCameraModel? camera;
   final List<MatchModel> courtMatches;
-  final List<MatchModel> allMatches;
   final List<TournamentCameraModel> cameras;
   final bool readOnly;
   final String Function(MatchModel match) labelOf;
@@ -167,7 +162,6 @@ class _CameraCourtSheet extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final title = court.name.isEmpty ? court.id : court.name;
-    final cam = camera;
     final open = courtMatches.where((match) => !match.isCompleted).toList()
       ..sort(_byScheduledTime);
     final finished = courtMatches.where((match) => match.isCompleted).toList()
@@ -199,7 +193,9 @@ class _CameraCourtSheet extends StatelessWidget {
                 readOnly: readOnly || done,
                 showCourtChip: false,
                 cameras: done ? const [] : cameras,
-                onPickCamera: done ? null : (value) => onPickCamera(rows[i], value),
+                onPickCamera: done
+                    ? null
+                    : (value) => onPickCamera(rows[i], value),
               ),
             ],
           ],
@@ -214,39 +210,69 @@ class _CameraCourtSheet extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         shrinkWrap: true,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ),
+              _WithCourtCamera(
+                tournamentId: tournamentId,
+                courtId: court.id,
+                builder: (cam) => CameraPreviewToggle(cameraId: cam.id),
+              ),
+            ],
           ),
-          if (court.venueName.isNotEmpty)
-            Text(
-              court.venueName,
-              style: TextStyle(color: colors.textSecondary, fontSize: 12),
-            ),
-          if (cam != null) ...[
-            const SizedBox(height: AppTheme.spacingXS),
-            CameraCourtInfo(
-              tournamentId: tournamentId,
-              camera: cam,
-              matches: allMatches,
-              matchLabelOf: labelOf,
-            ),
-          ],
-          const SizedBox(height: AppTheme.spacingSM),
-          CourtCameraUrlRow(
+          CameraCourtInfo(
             tournamentId: tournamentId,
-            courtId: court.id,
-            courtName: title,
+            court: court,
             readOnly: readOnly,
           ),
-          if (cam != null) ...[
-            const SizedBox(height: AppTheme.spacingSM),
-            CameraLiveStatusAction(cameraId: cam.id),
-          ],
+          _WithCourtCamera(
+            tournamentId: tournamentId,
+            courtId: court.id,
+            builder: (cam) => Padding(
+              padding: const EdgeInsets.only(top: AppTheme.spacingXS),
+              child: CameraLiveStatusAction(
+                key: ValueKey('camera-live-status-${cam.id}'),
+                cameraId: cam.id,
+              ),
+            ),
+          ),
+          Theme(
+            // No divider lines around the folded section.
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              key: const ValueKey('camera-court-url-toggle'),
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(
+                bottom: AppTheme.spacingSM,
+              ),
+              title: Text(
+                l10n.camCourtEditUrl,
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              children: [
+                CourtCameraUrlRow(
+                  tournamentId: tournamentId,
+                  courtId: court.id,
+                  courtName: title,
+                  readOnly: readOnly,
+                  showStatus: false,
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: AppTheme.spacingSM),
           Divider(height: 1, color: colors.border),
           if (courtMatches.isEmpty)
@@ -257,12 +283,37 @@ class _CameraCourtSheet extends StatelessWidget {
                 style: TextStyle(color: colors.textMuted, fontSize: 12),
               ),
             ),
-          if (open.isNotEmpty) group(l10n.camCourtOpenMatches, open, done: false),
+          if (open.isNotEmpty)
+            group(l10n.camCourtOpenMatches, open, done: false),
           if (finished.isNotEmpty)
             group(l10n.camCourtFinishedMatches, finished, done: true),
         ],
       ),
     );
+  }
+}
+
+/// Builds [builder] with the court's *current* camera, read from the camera
+/// list, so the popup follows a change made from its own Đổi picker. Nothing
+/// is shown while the court has no camera.
+class _WithCourtCamera extends ConsumerWidget {
+  const _WithCourtCamera({
+    required this.tournamentId,
+    required this.courtId,
+    required this.builder,
+  });
+
+  final String tournamentId;
+  final String courtId;
+  final Widget Function(TournamentCameraModel camera) builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cameras =
+        ref.watch(tournamentCamerasProvider(tournamentId)).asData?.value ??
+        const <TournamentCameraModel>[];
+    final camera = cameraForCourt(cameras, courtId);
+    return camera == null ? const SizedBox.shrink() : builder(camera);
   }
 }
 

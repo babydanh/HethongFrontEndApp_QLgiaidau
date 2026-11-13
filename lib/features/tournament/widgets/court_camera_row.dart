@@ -29,6 +29,7 @@ class CourtCameraUrlRow extends ConsumerStatefulWidget {
     required this.courtName,
     this.dense = false,
     this.readOnly = false,
+    this.showStatus = true,
   });
 
   final String tournamentId;
@@ -42,6 +43,10 @@ class CourtCameraUrlRow extends ConsumerStatefulWidget {
   /// Read-only tournaments still show the camera state, but every write
   /// control is disabled instead of failing server-side on submit.
   final bool readOnly;
+
+  /// False when the host already shows the camera line (court popup), so the
+  /// "Camera đã sẵn sàng · name" line is not repeated.
+  final bool showStatus;
 
   @override
   ConsumerState<CourtCameraUrlRow> createState() => _CourtCameraUrlRowState();
@@ -145,44 +150,48 @@ class _CourtCameraUrlRowState extends ConsumerState<CourtCameraUrlRow> {
       children: [
         // Icon + wording, never colour alone: the badge reads the same in
         // greyscale, in dark mode and to a screen reader.
-        Row(
-          children: [
-            ExcludeSemantics(
-              child: Icon(
-                isReady ? Icons.videocam_rounded : Icons.videocam_off_outlined,
-                size: 18,
-                color: isReady ? colors.success : colors.textMuted,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacingSM),
-            Expanded(
-              child: Text(
-                isReady
-                    ? '${l10n.tournamentManagementCameraReady} · ${camera!.name}'
-                    : l10n.tournamentManagementCameraNotReady,
-                style: TextStyle(
-                  color: isReady ? colors.textPrimary : colors.textMuted,
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (camera != null) ...[
-              const SizedBox(width: AppTheme.spacingXS),
-              Flexible(
-                flex: 0,
-                child: CameraStatusBadge(
-                  key: ValueKey('court-camera-status-${widget.courtId}'),
-                  status: camera.status,
+        if (widget.showStatus) ...[
+          Row(
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  isReady
+                      ? Icons.videocam_rounded
+                      : Icons.videocam_off_outlined,
+                  size: 18,
+                  color: isReady ? colors.success : colors.textMuted,
                 ),
               ),
+              const SizedBox(width: AppTheme.spacingSM),
+              Expanded(
+                child: Text(
+                  isReady
+                      ? '${l10n.tournamentManagementCameraReady} · ${camera!.name}'
+                      : l10n.tournamentManagementCameraNotReady,
+                  style: TextStyle(
+                    color: isReady ? colors.textPrimary : colors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (camera != null) ...[
+                const SizedBox(width: AppTheme.spacingXS),
+                Flexible(
+                  flex: 0,
+                  child: CameraStatusBadge(
+                    key: ValueKey('court-camera-status-${widget.courtId}'),
+                    status: camera.status,
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
-        SizedBox(
-          height: widget.dense ? AppTheme.spacingSM : AppTheme.spacingMD,
-        ),
+          ),
+          SizedBox(
+            height: widget.dense ? AppTheme.spacingSM : AppTheme.spacingMD,
+          ),
+        ],
         AppTextFormField(
           // Re-seeds the field whenever the server value changes, which is the
           // only writer besides the organizer's own typing.

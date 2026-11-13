@@ -8,7 +8,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-enum _MenuAction { refresh, help }
+enum _MenuAction { streaming, refresh, help }
 
 const _swapDuration = Duration(milliseconds: 180);
 
@@ -18,7 +18,8 @@ const _swapDuration = Duration(milliseconds: 180);
 /// nhỏ bên dưới.
 /// [cameras] null nghĩa là danh sách chưa tải xong — chưa có số thì không in
 /// số, tránh khẳng định "0 cam" khi đang tải. [onCreateCamera] null thì ẩn nút
-/// ＋ (tab chỉ xem).
+/// ＋ (tab chỉ xem). [onOpenStreaming] null thì menu ⋯ không có mục
+/// "Điện thoại & phiên phát".
 class CameraTabHeader extends StatefulWidget {
   const CameraTabHeader({
     super.key,
@@ -29,6 +30,7 @@ class CameraTabHeader extends StatefulWidget {
     required this.onRefresh,
     required this.onWatchCameras,
     this.onCreateCamera,
+    this.onOpenStreaming,
   });
 
   final List<TournamentCameraModel>? cameras;
@@ -38,6 +40,7 @@ class CameraTabHeader extends StatefulWidget {
   final VoidCallback onRefresh;
   final VoidCallback onWatchCameras;
   final VoidCallback? onCreateCamera;
+  final VoidCallback? onOpenStreaming;
 
   @override
   State<CameraTabHeader> createState() => _CameraTabHeaderState();
@@ -122,10 +125,17 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
           constraints: const BoxConstraints(minWidth: kMinTouchTarget),
           icon: const Icon(Icons.more_vert_rounded),
           onSelected: (action) => switch (action) {
+            _MenuAction.streaming => widget.onOpenStreaming?.call(),
             _MenuAction.refresh => widget.onRefresh(),
             _MenuAction.help => showCameraTabHelpDialog(context),
           },
           itemBuilder: (_) => [
+            if (widget.onOpenStreaming != null)
+              PopupMenuItem(
+                key: const ValueKey('camTabMenuStreaming'),
+                value: _MenuAction.streaming,
+                child: Text(l10n.camTabMenuStreaming),
+              ),
             PopupMenuItem(
               value: _MenuAction.refresh,
               child: Text(l10n.camTabMenuRefresh),

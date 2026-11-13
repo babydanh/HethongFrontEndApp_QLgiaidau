@@ -195,6 +195,11 @@ class _TournamentManagementHubScreenState
       _tabController.animateTo(_HubTab.divisions.index);
       return;
     }
+    // Cameras, phones and live sessions all live in the Camera tab.
+    if (section == TournamentManagementSection.livestream) {
+      _tabController.animateTo(_HubTab.camera.index);
+      return;
+    }
     final isTablet = !ResponsiveLayout.isMobile(context);
     setState(() {
       _selectedSection = section;
@@ -649,6 +654,7 @@ class _TournamentManagementHubScreenState
               child: TournamentManagementCameraSection(
                 tournamentId: tournament.id,
                 divisionId: _divisionId,
+                communityId: tournament.communityId,
                 readOnly: isReadOnlyTournamentStatus(tournament.status),
               ),
             ),
@@ -944,7 +950,7 @@ class _TournamentManagementHubScreenState
         ),
       ],
       onTap: () {
-        if (isTablet) {
+        if (isTablet && section != TournamentManagementSection.livestream) {
           setState(() => _selectedSection = section);
         } else {
           _openSection(section);

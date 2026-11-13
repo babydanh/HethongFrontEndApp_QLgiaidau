@@ -75,7 +75,11 @@ TournamentCameraModel _camera(
   playbackUrl: 'https://p.example/$n.m3u8',
 );
 
-MatchModel _match(String id, {String status = 'SCHEDULED'}) => MatchModel(
+MatchModel _match(
+  String id, {
+  String status = 'SCHEDULED',
+  String? courtId = 'court-1',
+}) => MatchModel(
   updatedAt: DateTime(2026, 1, 1),
   id: id,
   round: 1,
@@ -86,7 +90,7 @@ MatchModel _match(String id, {String status = 'SCHEDULED'}) => MatchModel(
   team2Name: 'Beta $id',
   status: status,
   bracketPosition: BracketPosition(round: 1, position: 1),
-  courtId: 'court-1',
+  courtId: courtId,
 );
 
 Widget _app(
@@ -358,8 +362,15 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('camera-court-tile-court-1')));
     await tester.pumpAndSettle();
     expect(find.byType(CameraCourtInfo), findsOneWidget);
-    expect(find.text('Camera: Camera 1'), findsOneWidget);
-    expect(find.text('Đang chiếu: Alpha now – Beta now'), findsOneWidget);
+    // One camera line with the name; the match is only in its own row.
+    expect(
+      find.descendant(
+        of: find.byType(CameraCourtInfo),
+        matching: find.text('Camera 1'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Đang chiếu'), findsNothing);
 
     final container = ProviderScope.containerOf(
       tester.element(find.byType(CameraCourtInfo)),
@@ -409,7 +420,7 @@ void main() {
           ),
         ),
         _Cameras([_camera(1)]),
-        matches: [for (var i = 0; i < 10; i++) _match('m$i')],
+        matches: [for (var i = 0; i < 10; i++) _match('m$i', courtId: null)],
       ),
     );
     await tester.pumpAndSettle();
@@ -427,8 +438,10 @@ void main() {
     await _size(tester, const Size(390, 1600));
     // Cùng bảng A, hai lượt khác nhau: lọc theo "Bảng A • Lượt 2", không theo
     // số vòng thô.
-    MatchModel leg(String id, int n) =>
-        _match(id).copyWith(stageType: 'GROUP_STAGE', groupName: 'A', leg: n);
+    MatchModel leg(String id, int n) => _match(
+      id,
+      courtId: null,
+    ).copyWith(stageType: 'GROUP_STAGE', groupName: 'A', leg: n);
     await tester.pumpWidget(
       _app(_tab, _Cameras([_camera(1)]), matches: [leg('m1', 1), leg('m2', 2)]),
     );
@@ -463,13 +476,48 @@ void main() {
     expect(_row('m1'), findsWidgets);
   });
 
+  testWidgets('TC-CAMMERGE-01 pool lists only matches without a court', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 1600));
+    await tester.pumpWidget(
+      _app(
+        _tab,
+        _Cameras([_camera(1)]),
+        matches: [_match('m1'), _match('m2', courtId: null)],
+      ),
+    );
+    await tester.pumpAndSettle();
+    // m1 is on Sân 1: only its popup lists it, the pool does not.
+    expect(_row('m1'), findsNothing);
+    expect(_row('m2'), findsOneWidget);
+    expect(find.text('Trận chưa có sân · 1'), findsOneWidget);
+    expect(find.text('Trận đấu'), findsNothing);
+  });
+
+  testWidgets('TC-CAMMERGE-02 pool is hidden when every match has a court', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 1600));
+    await tester.pumpWidget(
+      _app(_tab, _Cameras([_camera(1)]), matches: [_match('m1')]),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Trận chưa có sân'), findsNothing);
+    expect(find.text('Sân 1'), findsWidgets);
+  });
+
   testWidgets('TC-CAMFILTER-APP-21 "Chưa có cam" keeps courts w/o camera', (
     tester,
   ) async {
     await _size(tester, const Size(390, 1600));
-    // Sân court-1 có camera → trận m1 không còn hiện khi bật "Chưa có cam".
+    // Trận chưa có sân không tính là "chưa có cam" nên bị lọc đi.
     await tester.pumpWidget(
-      _app(_tab, _Cameras([_camera(1)]), matches: [_match('m1')]),
+      _app(
+        _tab,
+        _Cameras([_camera(1)]),
+        matches: [_match('m1', courtId: null)],
+      ),
     );
     await tester.pumpAndSettle();
     expect(_row('m1'), findsWidgets);
@@ -483,7 +531,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(_row('m1'), findsNothing);
     expect(find.text('Không có trận khớp'), findsOneWidget);
-    // Thẻ sân vẫn hiện đủ để còn kéo thả/gán được.
+    // Thẻ sân vẫn hiện đủ để còn gán được.
     expect(find.text('Sân 1'), findsWidgets);
   });
 
