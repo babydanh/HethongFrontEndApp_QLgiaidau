@@ -14,6 +14,9 @@ TournamentSponsor _sponsor(String id, String tier, {int order = 0}) =>
       displayOrder: order,
     );
 
+/// Tablet width: regular tiers show five logos per row from here up.
+const double _tablet = 700;
+
 Finder _card(String id) => find.byKey(ValueKey('sponsor-card-$id'));
 
 Future<void> _pump(
@@ -90,7 +93,7 @@ void main() {
     final sponsors = [
       for (var i = 0; i < 5; i++) _sponsor('c$i', 'COMPANION', order: i),
     ];
-    await _pump(tester, sponsors);
+    await _pump(tester, sponsors, width: _tablet);
 
     final dys = [for (final s in sponsors) tester.getCenter(_card(s.id)).dy];
     final widths = [
@@ -100,10 +103,10 @@ void main() {
     for (final w in widths) {
       expect(w, closeTo(widths.first, 0.01));
     }
-    // The row fills the 368dp content width and is centered.
+    // The row fills the content width and is centered.
     final left = tester.getTopLeft(_card('c0')).dx;
     final right = tester.getTopRight(_card('c4')).dx;
-    expect((left + right) / 2, closeTo(200, 0.5));
+    expect((left + right) / 2, closeTo(_tablet / 2, 0.5));
   });
 
   testWidgets(
@@ -112,7 +115,7 @@ void main() {
       final sponsors = [
         for (var i = 0; i < 6; i++) _sponsor('c$i', 'COMPANION', order: i),
       ];
-      await _pump(tester, sponsors);
+      await _pump(tester, sponsors, width: _tablet);
 
       expect(
         tester.getCenter(_card('c5')).dy,
@@ -130,15 +133,18 @@ void main() {
     final five = [
       for (var i = 0; i < 5; i++) _sponsor('f$i', 'SILVER', order: i),
     ];
-    await _pump(tester, five);
+    await _pump(tester, five, width: _tablet);
     final fullRowWidth = tester.getSize(_card('f0')).width;
 
-    await _pump(tester, [_sponsor('s1', 'SILVER'), _sponsor('s2', 'SILVER')]);
+    await _pump(tester, [
+      _sponsor('s1', 'SILVER'),
+      _sponsor('s2', 'SILVER'),
+    ], width: _tablet);
 
     expect(tester.getSize(_card('s1')).width, closeTo(fullRowWidth, 0.01));
     final left = tester.getTopLeft(_card('s1')).dx;
     final right = tester.getTopRight(_card('s2')).dx;
-    expect((left + right) / 2, closeTo(200, 0.5));
+    expect((left + right) / 2, closeTo(_tablet / 2, 0.5));
     expect(tester.getCenter(_card('s1')).dy, tester.getCenter(_card('s2')).dy);
   });
 
@@ -167,5 +173,19 @@ void main() {
     ], width: 320);
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TC-APP-SPONSOR-TIER-09 phones show three regular logos per row '
+      'so they stay readable', (tester) async {
+    final sponsors = [
+      for (var i = 0; i < 4; i++) _sponsor('p$i', 'COMPANION', order: i),
+    ];
+    await _pump(tester, sponsors);
+
+    final firstRow = tester.getCenter(_card('p0')).dy;
+    expect(tester.getCenter(_card('p2')).dy, firstRow);
+    expect(tester.getCenter(_card('p3')).dy, greaterThan(firstRow));
+    // A third of the 368dp content width, minus the two gaps.
+    expect(tester.getSize(_card('p0')).width, closeTo((368 - 16) / 3, 0.5));
   });
 }

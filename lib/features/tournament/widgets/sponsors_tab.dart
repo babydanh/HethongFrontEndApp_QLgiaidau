@@ -20,7 +20,11 @@ const _kFeaturedTiers = {'TITLE', 'MAIN', 'DIAMOND'};
 
 const _kFeaturedMaxWidth = 320.0;
 const _kFeaturedHeight = 150.0;
-const _kGridColumns = 5;
+// Regular tiers: three logos per row on phones so they stay readable,
+// five per row once the content is at least tablet wide (like the Web sm breakpoint).
+const _kGridColumnsPhone = 3;
+const _kGridColumnsWide = 5;
+const _kGridWideMinWidth = 560.0;
 const _kGridSpacing = 8.0;
 
 class _TierStyle {
@@ -314,7 +318,8 @@ class SponsorsTab extends StatelessWidget {
 }
 
 /// Centered wrap of logo cards: large cells for featured tiers, otherwise
-/// square cells sized so that exactly [_kGridColumns] fit on one row.
+/// square cells sized so that exactly [_kGridColumnsPhone] (phones) or
+/// [_kGridColumnsWide] (from [_kGridWideMinWidth]) fit on one row.
 class _TierLogos extends StatelessWidget {
   final List<TournamentSponsor> sponsors;
   final _TierStyle tierStyle;
@@ -331,9 +336,12 @@ class _TierLogos extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
+        final columns = maxWidth >= _kGridWideMinWidth
+            ? _kGridColumnsWide
+            : _kGridColumnsPhone;
         final width = isFeatured
             ? (maxWidth < _kFeaturedMaxWidth ? maxWidth : _kFeaturedMaxWidth)
-            : (maxWidth - (_kGridColumns - 1) * _kGridSpacing) / _kGridColumns;
+            : (maxWidth - (columns - 1) * _kGridSpacing) / columns;
         final height = isFeatured ? _kFeaturedHeight : width;
         // Full width so the centered alignment applies to the whole row.
         return SizedBox(
