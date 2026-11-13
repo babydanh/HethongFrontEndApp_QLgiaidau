@@ -80,7 +80,7 @@ Thứ tự làm: 1.1, 1.2, 1.3, 1.4, 1.5 → 2.1 → 4.1 → 3.1 → 3.2, 3.3 �
 
 ## 5. E2E (cloud)
 
-- [ ] 5.1 Sửa E2E hai môn khớp màn mới. Tiêu chí: `python C:/Users/GIGABYTE/.omp/scripts/cloud-test-runner.py run --target app-e2e --app-ref <nhánh đã push> --specs integration_test/xem_bam_diem_rally_test.dart integration_test/xem_bam_diem_tennis_test.dart` → exit 0 trên cloud (không chạy máy này)
+- [x] 5.1 Sửa E2E hai môn khớp màn mới. Tiêu chí: `python C:/Users/GIGABYTE/.omp/scripts/cloud-test-runner.py run --target app-e2e --app-ref <nhánh đã push> --specs integration_test/xem_bam_diem_rally_test.dart integration_test/xem_bam_diem_tennis_test.dart` → exit 0 trên cloud (không chạy máy này)
   - Files: sửa `integration_test/xem_bam_diem_rally_test.dart`, `integration_test/xem_bam_diem_tennis_test.dart` (chỉ chỗ khẳng định text GIAO/ô cũ, giữ ID TC-CBD-APP-03..07); `integration_test/support/bam_diem.dart` giữ nguyên `_probeNoShots`
   - Giao: (không) · Nhận: `RacketCourtPanel` từ 3.2
   - Chủ file chung: 5.1 giữ hai file integration
@@ -88,7 +88,7 @@ Thứ tự làm: 1.1, 1.2, 1.3, 1.4, 1.5 → 2.1 → 4.1 → 3.1 → 3.2, 3.3 �
 
 ## 6. Kiểm cuối
 
-- [ ] 6.1 Phân tích tĩnh và test liên quan. Tiêu chí: `flutter analyze --no-pub lib/domain lib/features/match lib/core/participants` → exit 0; `flutter test --no-pub` cho mọi file test của task 1–3 (kể cả `test/match/pickleball_court_test.dart`, `court_drag_test.dart`) → exit 0; `openspec validate app-bam-diem-san-cau-long-tennis --strict` → exit 0
+- [x] 6.1 Phân tích tĩnh và test liên quan. Tiêu chí: `flutter analyze --no-pub lib/domain lib/features/match lib/core/participants` → exit 0; `flutter test --no-pub` cho mọi file test của task 1–3 (kể cả `test/match/pickleball_court_test.dart`, `court_drag_test.dart`) → exit 0; `openspec validate app-bam-diem-san-cau-long-tennis --strict` → exit 0
   - Files: không sửa file mới ngoài sửa lỗi phát hiện
   - Giao/Nhận: (không)
   - Chủ file chung: (không)
@@ -104,3 +104,5 @@ Thứ tự làm: 1.1, 1.2, 1.3, 1.4, 1.5 → 2.1 → 4.1 → 3.1 → 3.2, 3.3 �
 - 4.1: dùng lại khoá pickleball (`pickleballCourtActionSwapPlaces`, `pickleballCourtActionServeHere`, `pickleballCourtServeTag`...) thay vì tạo bản `racket*` trùng.
 - Đánh số test: B-01/B-02 cho hàm cầu lông; phần còn lại theo bảng trong từng task.
 - Hạn chế đã biết: trạng thái người giao đầu/đổi ô/Hoàn tác chỉ nằm trong phiên (mở lại màn thì về mặc định: đội 1 giao đầu); cầu lông đôi sau `−` chỉ biết đội giao đến khi sửa hoặc có điểm kế.
+
+Ghi chú kiểm 2026-11-13: 5.1 đạt trên cloud (run 43392877208, `app-e2e`, 15,6 phút, success). 6.1: `flutter analyze` còn 1 info `prefer_if_null_operators` ở `lib/domain/entities/tournament.dart:675` có sẵn trên `origin/main` (file không nằm trong diff nhánh này) nên lệnh thoát 1; 228 test của nhánh + `pickleball_court_test`, `court_drag_test` → exit 0; `openspec validate --strict` → exit 0.
