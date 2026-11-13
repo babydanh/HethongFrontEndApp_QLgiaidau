@@ -226,20 +226,17 @@ class _OverviewTabState extends State<OverviewTab> {
     // A manager can always set the closing date; viewers only see a set one.
     final showClosingRow =
         t.endDate != null || widget.onEditTimelineDate != null;
-    final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final sportKey = t.sport.trim().toLowerCase();
     final categoryName = t.category?.trim();
     final sportName = categoryName != null && categoryName.isNotEmpty
         ? categoryName
         : AppConstants.sportNames[sportKey] ?? t.sport;
-    final venueName = t.venueName?.trim();
-    final locationTitle = venueName != null && venueName.isNotEmpty
-        ? venueName
-        : (locationStr.isNotEmpty
-              ? locationStr.split(',').first.trim()
-              : 'Đang cập nhật');
-    final locationSubtitle = locationStr.isNotEmpty
-        ? locationStr.split(',').last.trim()
+    final locationLines = TournamentLocationFormatter.tournamentLocationLines(t);
+    final locationTitle = locationLines.title.isNotEmpty
+        ? locationLines.title
+        : 'Đang cập nhật';
+    final locationSubtitle = locationLines.subtitle.isNotEmpty
+        ? locationLines.subtitle
         : 'Việt Nam';
 
     final contentTop = widget.compact

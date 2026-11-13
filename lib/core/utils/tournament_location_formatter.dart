@@ -39,19 +39,43 @@ class TournamentLocationFormatter {
     return tournamentFullLocation(tournament);
   }
 
-  static String tournamentFullLocation(Tournament tournament) {
-    final location = tournament.locationConfig;
-    return _uniqueParts([
+  static String tournamentFullLocation(Tournament tournament) =>
+      _tournamentLocationParts(tournament).join(', ');
+
+  /// Two display lines of the tournament location: the venue (or first part)
+  /// and the address that follows it. Empty strings when there is no data.
+  static ({String title, String subtitle}) tournamentLocationLines(
+    Tournament tournament,
+  ) {
+    final parts = _tournamentLocationParts(tournament);
+    if (parts.isEmpty) return (title: '', subtitle: '');
+    final venueName = tournament.venueName?.trim() ?? '';
+    final titleParts = venueName.isEmpty ? 1 : _uniqueParts([venueName]).length;
+    return (
+      title: venueName.isEmpty ? parts.first : venueName,
+      subtitle: parts.skip(titleParts).join(', '),
+    );
+  }
+
+  // Same precedence as the Web: the venue / address of the tournament is what
+  // is shown; the older `locationConfig` snapshot is only a fallback and is
+  // never mixed in (it can hold text typed before a saved venue was picked).
+  static List<String> _tournamentLocationParts(Tournament tournament) {
+    final own = _uniqueParts([
       tournament.venueName,
       tournament.locationAddress,
+      tournament.city,
+    ]);
+    if (own.isNotEmpty) return own;
+    final location = tournament.locationConfig;
+    return _uniqueParts([
       location?['display']?.toString(),
       location?['venueName']?.toString(),
       location?['address']?.toString(),
       location?['ward']?.toString(),
       location?['district']?.toString(),
       location?['province']?.toString(),
-      tournament.city,
-    ]).join(', ');
+    ]);
   }
 
   static String matchCourtLabel(String? courtName) => courtName?.trim() ?? '';

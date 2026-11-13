@@ -380,7 +380,8 @@ void main() {
     expect(locationRect.top, greaterThan(sportRect.bottom));
     expect(find.text('Pickleball'), findsOneWidget);
     expect(find.text('Central Pickleball Hall'), findsOneWidget);
-    expect(find.text('Ho Chi Minh City'), findsOneWidget);
+    // The subtitle is the full venue address (same as the Web), not its last comma segment.
+    expect(find.text('District 1, Ho Chi Minh City'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
