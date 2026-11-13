@@ -9,8 +9,10 @@ import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
+import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -548,6 +550,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void tennisAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return;
+    _racketRemember();
+    final gamesBefore = _tennisGames();
     final current = state.tennis ?? const TennisGameState();
     // A match tie-break has no game to start it: it begins with the first point.
     final t = state.tennisMatchTiebreakDue && !current.isTiebreak
@@ -561,6 +565,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       errorMessage: null,
     );
     _checkTennisGameEnd();
+    _racketEndsAfterTennisPoint(gamesBefore);
     if (state.isMatchComplete) {
       // Strict tennis completes only after the configured number of sets.
       // Open/Lite tennis never reaches this branch from a set count.
@@ -571,6 +576,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void tennisRemovePoint(bool isTeam1) {
+    _racketRemember();
     final t = state.tennis ?? const TennisGameState();
     state = state.copyWith(
       tennis: t.copyWith(
@@ -837,11 +843,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (_rejectIfMaxSetsReached()) return;
     final r = state.rally ?? const RallySetState();
     if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return;
+    _racketRemember();
+    final closedBefore = state.finishedSets.length;
     state = state.copyWith(
       rally: _rallyAfterPoint(r, isTeam1),
       errorMessage: null,
     );
     _checkRallySetEnd();
+    _racketEndsAfterRally(r, closedBefore);
     _scheduleLiveSync();
   }
 
@@ -862,6 +871,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? rallyGameFirstServer(
             kind: kind,
             gameIndex: state.finishedSets.length,
+            firstServer: state.racketPick.firstTeam,
             prevGameWinner: prev == null
                 ? null
                 : (prev.score1 > prev.score2 ? 1 : 2),
@@ -883,6 +893,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void rallyRemovePoint(bool isTeam1) {
+    _racketRemember();
     final r = state.rally ?? const RallySetState();
     // A correction makes the serve history unknown; the panel hides the serve
     // line until the next point instead of showing a wrong server.
@@ -922,6 +933,211 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       );
       _syncSetsToBackend();
     }
+  }
+
+  // ════════════════ RACKET (badminton, tennis) ════════════════
+
+  int _tennisGames() => state.finishedSets.fold<int>(
+    0,
+    (total, set) => total + set.score1 + set.score2,
+  );
+
+  /// Saves what Undo needs before a badminton or tennis step. Only the field
+  /// of the sport in play is kept, so restoring never invents the other one.
+  void _racketRemember() {
+    if (!state.isRacket) return;
+    final tennis = state.config.kind == SportRuleKind.tennis;
+    final step = RacketUndoStep(
+      rally: tennis ? null : (state.rally ?? const RallySetState()),
+      tennis: tennis ? (state.tennis ?? const TennisGameState()) : null,
+      finishedSets: state.finishedSets,
+      pick: state.racketPick,
+      closedSetCount: state.racketClosedSetCount,
+    );
+    state = state.copyWith(
+      racketUndo: pushRacketUndo(state.racketUndo, step),
+    );
+  }
+
+  void _racketFlipEnds() {
+    final pick = state.racketPick;
+    state = state.copyWith(
+      racketPick: pick.copyWith(endsFlipped: !pick.endsFlipped),
+    );
+  }
+
+  /// Badminton: the teams change ends after every game and in the deciding
+  /// game when the first side reaches 11.
+  void _racketEndsAfterRally(RallySetState before, int closedBefore) {
+    if (state.config.kind != SportRuleKind.badminton) return;
+    if (state.finishedSets.length > closedBefore) {
+      _racketFlipEnds();
+      return;
+    }
+    final after = state.rally;
+    if (after == null) return;
+    final deciding =
+        state.config.bestOf > 1 && closedBefore == state.config.bestOf - 1;
+    final highBefore = before.currentP1 > before.currentP2
+        ? before.currentP1
+        : before.currentP2;
+    final highAfter = after.currentP1 > after.currentP2
+        ? after.currentP1
+        : after.currentP2;
+    if (deciding && highBefore == 10 && highAfter == 11) _racketFlipEnds();
+  }
+
+  /// Tennis: change ends after every odd game of a set (a tie-break counts as
+  /// one game) and every 6 points of a tie-break.
+  void _racketEndsAfterTennisPoint(int gamesBefore) {
+    if (state.config.kind != SportRuleKind.tennis) return;
+    final games = _tennisGames();
+    if (games > gamesBefore) {
+      final set = state.finishedSets.isEmpty ? null : state.finishedSets.last;
+      final inSet = set == null ? 0 : set.score1 + set.score2;
+      if (tennisChangeEndsAfterGame(inSet)) _racketFlipEnds();
+      return;
+    }
+    final t = state.tennis;
+    if (t != null &&
+        t.isTiebreak &&
+        tennisTiebreakChangeEnds(t.team1GamePoints + t.team2GamePoints)) {
+      _racketFlipEnds();
+    }
+  }
+
+  /// Picks who serves first. Only before the first point of the match;
+  /// returns false (and changes nothing) otherwise.
+  bool racketPickFirstServer(int team, int playerIndex) {
+    if (!state.racketCanPickFirstServer) return false;
+    _racketRemember();
+    var pick = state.racketPick
+        .copyWith(firstTeam: team)
+        .withFirstPlayer(team, playerIndex);
+    if (state.config.kind == SportRuleKind.badminton) {
+      pick = pick.withRightStarter(team, playerIndex);
+    }
+    state = state.copyWith(racketPick: pick, errorMessage: null);
+    return true;
+  }
+
+  /// Referee correction of the server at any time. Returns false when it
+  /// changes nothing. Badminton: the history becomes known again (no swaps
+  /// yet). A later game cannot change the serving team, the rules decide it.
+  bool racketCorrectServer(int team, int playerIndex) {
+    if (!state.isRacket || state.isMatchComplete) return false;
+    if (state.racketCanPickFirstServer) {
+      return racketPickFirstServer(team, playerIndex);
+    }
+    if (state.config.kind == SportRuleKind.tennis) {
+      return _racketCorrectTennisServer(team, playerIndex);
+    }
+    return _racketCorrectBadmintonServer(team, playerIndex);
+  }
+
+  bool _racketCorrectBadmintonServer(int team, int playerIndex) {
+    final r = state.rally ?? const RallySetState();
+    final opening = r.currentP1 + r.currentP2 == 0;
+    if (opening && state.racketServerTeam != team) return false;
+    _racketRemember();
+    final score = team == 1 ? r.currentP1 : r.currentP2;
+    state = state.copyWith(
+      rally: RallySetState(
+        currentP1: r.currentP1,
+        currentP2: r.currentP2,
+        lastWinner: team,
+        swaps1: 0,
+        swaps2: 0,
+      ),
+      racketPick: state.racketPick.withRightStarter(
+        team,
+        score.isEven ? playerIndex : 1 - playerIndex,
+      ),
+      errorMessage: null,
+    );
+    return true;
+  }
+
+  bool _racketCorrectTennisServer(int team, int playerIndex) {
+    _racketRemember();
+    var pick = state.racketPick;
+    if (team != state.tennisServerTeam) {
+      pick = pick.copyWith(firstTeam: 3 - pick.firstTeam);
+    }
+    final games = _tennisGames();
+    final points =
+        (state.tennis?.team1GamePoints ?? 0) +
+        (state.tennis?.team2GamePoints ?? 0);
+    final turns = state.tennisInTiebreak
+        ? tennisTiebreakTurnsServed(
+            tiebreakPoints: points,
+            isGameServer:
+                team ==
+                tennisServer(
+                  gamesPlayed: games,
+                  tiebreak: false,
+                  firstServer: pick.firstTeam,
+                ),
+          )
+        : 0;
+    final served = tennisTeamServiceGames(
+      gamesPlayed: games,
+      team: team,
+      firstServer: pick.firstTeam,
+    );
+    state = state.copyWith(
+      racketPick: pick.withFirstPlayer(team, (playerIndex - served - turns) % 2),
+      errorMessage: null,
+    );
+    return true;
+  }
+
+  /// Changes the halves by hand (the swap button or a drag onto the other half).
+  void racketSwitchEnds() {
+    if (!state.isRacket) return;
+    _racketRemember();
+    _racketFlipEnds();
+  }
+
+  /// Applies a drop already accepted by `racketResolveDrop`.
+  bool racketApplyDrop(CourtDropAction action) {
+    if (!state.isRacket) return false;
+    switch (action) {
+      case SwapPlaces(:final team):
+        _racketRemember();
+        state = state.copyWith(
+          racketPick: state.racketPick.withRightStarter(
+            team,
+            1 - state.racketPick.rightStarterOf(team),
+          ),
+        );
+        return true;
+      case SwitchEnds():
+        racketSwitchEnds();
+        return true;
+      case SetServer(:final team, :final playerIndex):
+        return racketCorrectServer(team, playerIndex);
+      case SetServerNumber():
+        return false;
+    }
+  }
+
+  /// Takes back the newest step. Returns false when there is nothing to undo
+  /// (or a set was closed since).
+  bool racketUndoStep() {
+    if (!state.canRacketUndo) return false;
+    final stack = state.racketUndo;
+    final step = stack.last;
+    state = state.copyWith(
+      rally: step.rally,
+      tennis: step.tennis,
+      finishedSets: step.finishedSets,
+      racketPick: step.pick,
+      racketUndo: stack.sublist(0, stack.length - 1),
+      errorMessage: null,
+    );
+    _scheduleLiveSync();
+    return true;
   }
 
   // ════════════════ COMMON ════════════════

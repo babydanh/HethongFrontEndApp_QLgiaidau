@@ -29,7 +29,8 @@ extension ScorePanelTennis on ScorePanelState {
   bool get tennisInTiebreak =>
       (tennis?.isTiebreak ?? false) || tennisMatchTiebreakDue;
 
-  /// Team (1 or 2) serving now. Team 1 serves the first game of the match.
+  /// Team (1 or 2) serving now: [RacketServePick.firstTeam] serves the first
+  /// game of the match (team 1 unless the referee picked the other).
   int get tennisServerTeam => tennisServer(
     gamesPlayed: finishedSets.fold<int>(
       0,
@@ -38,5 +39,6 @@ extension ScorePanelTennis on ScorePanelState {
     tiebreak: tennisInTiebreak,
     tiebreakPoints:
         (tennis?.team1GamePoints ?? 0) + (tennis?.team2GamePoints ?? 0),
+    firstServer: racketPick.firstTeam,
   );
 }
