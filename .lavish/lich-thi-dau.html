@@ -1,0 +1,96 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lịch thi đấu – bản vẽ</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet"><style>:root{--ac:#1D8BF5;--acbg:#E8F3FF;--ok:#12B76A;--okbg:#DCFAE6;--okt:#067647;--bad:#F04438;--badbg:#FEE4E2;--badt:#B42318;--warn:#F79009;--warnbg:#FEF0C7;--warnt:#B54708;--acT:#175CD3;
+--surface:#fff;--page:#F2F4F7;--text:#101828;--muted:#475467;--faint:#98A2B3;--line:#E4E7EC;--row:#F2F4F7;--chipline:#D0D5DD;--soft:#F2F4F7;--px:16px}
+body.dark{--surface:#0F172A;--page:#020617;--text:#F1F5F9;--muted:#94A3B8;--faint:#64748B;--line:#334155;--row:#1E293B;--chipline:#475569;--soft:#1E293B;--acbg:#1D8BF52e;--okbg:#12B76A2e;--badbg:#F044382e;--warnbg:#F790092e;--okt:#12B76A;--badt:#F04438;--warnt:#F79009;--acT:#60A5FA}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--text);display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 12px 40px;font-size:13px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:390px}
+.tools button{font:600 12px Inter,sans-serif;border:1px solid var(--chipline);background:var(--surface);color:var(--text);border-radius:99px;padding:6px 12px;cursor:pointer}
+.tools button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.phone{width:390px;max-width:100%;min-height:760px;background:var(--surface);border-radius:28px;border:1px solid var(--line);box-shadow:0 10px 30px #0001;overflow:hidden;position:relative}
+.status{height:28px}
+.appbar{padding:4px var(--px) 10px;display:flex;align-items:center;gap:10px}
+.appbar h1{font-size:15px;font-weight:800;flex:1}
+.appbar .sub{font-size:11px;color:var(--muted);font-weight:500;display:block;margin-top:1px}
+.ib{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--soft);color:var(--muted);border:0;cursor:pointer}
+.ib.ac{background:var(--acbg);color:var(--ac)}
+.ib svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs{display:flex;gap:18px;padding:0 var(--px);border-bottom:1px solid var(--line);font-weight:700;color:var(--faint);overflow:hidden}
+.tabs span{padding:8px 0;white-space:nowrap}.tabs .cur{color:var(--ac);border-bottom:2px solid var(--ac)}
+.chips{display:flex;gap:8px;padding:12px var(--px);overflow-x:auto;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--chipline);background:var(--surface);color:var(--text);border-radius:99px;padding:6px 12px;font:600 12px Inter,sans-serif;display:flex;gap:6px;align-items:center;cursor:pointer}
+.chip.on{background:var(--acbg);border-color:var(--ac);color:var(--acT)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.dot.live{background:var(--bad);box-shadow:0 0 0 3px #F0443833}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;background:var(--soft);color:var(--muted)}
+.pill.ok{background:var(--okbg);color:var(--okt)}.pill.bad{background:var(--badbg);color:var(--badt)}.pill.warn{background:var(--warnbg);color:var(--warnt)}.pill.ac{background:var(--acbg);color:var(--acT)}
+.hd{padding:10px var(--px) 4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.btn{font:700 13px Inter,sans-serif;border:0;border-radius:12px;background:var(--ac);color:#fff;height:44px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.note{margin:14px var(--px) 0;padding:10px 12px;border-radius:12px;background:var(--soft);color:var(--muted);font-size:11px;line-height:1.5}
+.sheet-bg{position:absolute;inset:0;background:#0006;display:none;align-items:flex-end}.sheet-bg.show{display:flex}
+.sheet{background:var(--surface);width:100%;border-radius:20px 20px 0 0;padding:8px 0 20px}
+.sheet .grab{width:36px;height:4px;border-radius:9px;background:var(--chipline);margin:0 auto 8px}
+.opt{display:flex;align-items:center;gap:11px;padding:12px var(--px);border-bottom:1px solid var(--row);font-weight:700;cursor:pointer}
+.opt small{margin-left:auto;font-weight:600;color:var(--muted)}
+</style></head><body><svg viewBox="0 0 24 24" style="display:none"><defs>
+<symbol id="i-search"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+<symbol id="i-plus"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-grid"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-cam"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/></symbol>
+<symbol id="i-camoff"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M3 3l18 18"/></symbol>
+<symbol id="i-refresh"><path d="M20 11a8 8 0 1 0-2 5.3M20 4v7h-7"/></symbol>
+<symbol id="i-edit"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+<symbol id="i-link"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></symbol>
+<symbol id="i-unlink"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6M3 3l18 18"/></symbol>
+<symbol id="i-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-court"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14M3 12h18"/></symbol>
+<symbol id="i-cal"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-back"><path d="m15 5-7 7 7 7"/></symbol>
+<symbol id="i-chev"><path d="m9 6 6 6-6 6"/></symbol>
+</defs></svg><div class="tools"><button id="theme">Tối / Sáng</button><button class="on" data-s="has">Có lịch</button><button data-s="nocourt">Chưa có sân</button><button data-s="nosched">Có sân, chưa xếp lịch</button></div>
+<div class="phone">
+ <div class="status"></div>
+ <div class="appbar"><button class="ib"><svg><use href="#i-back"/></svg></button><h1>Quản lý giải<span class="sub">Giải Pickleball Mùa Xuân</span></h1></div>
+ <div class="tabs"><span>Thông tin</span><span class="cur">Lịch</span><span>Camera</span><span>Live</span></div>
+
+ <div id="has" class="st">
+  <div class="appbar" style="padding-top:12px;padding-bottom:0"><h1 style="font-size:16px">Lịch thi đấu<span class="sub">12 trận · 4 sân · 2 ngày</span></h1>
+   <button class="ib" title="Khung giờ sân"><svg><use href="#i-clock"/></svg></button>
+   <button class="ib" title="Quản lý sân"><svg><use href="#i-court"/></svg></button>
+   <button class="ib ac" title="Xếp lịch"><svg><use href="#i-cal"/></svg></button></div>
+  <div class="chips" style="padding-bottom:4px"><button class="chip on">Thứ 7 · 15/11</button><button class="chip">CN · 16/11</button></div>
+  <div class="chips" style="padding-top:4px"><button class="chip on">Tất cả sân</button><button class="chip">Sân 1</button><button class="chip">Sân 2</button><button class="chip">Sân 3</button><button class="chip">Sân 4</button></div>
+  <div class="hd"><span>Buổi sáng</span></div>
+  <div class="m"><div class="tm">08:00</div><div class="mi"><b>A1 · Nam đôi</b><small>Bảng A · Lượt 1</small></div><span class="pill ac">Sân 1</span></div>
+  <div class="m"><div class="tm">08:00</div><div class="mi"><b>A2 · Nam đôi</b><small>Bảng A · Lượt 1</small></div><span class="pill ac">Sân 2</span></div>
+  <div class="m"><div class="tm">09:00</div><div class="mi"><b>B1 · Nữ đôi</b><small>Bảng B · Lượt 1</small></div><span class="pill ac">Sân 1</span></div>
+  <div class="m"><div class="tm">09:00</div><div class="mi"><b>B2 · Nữ đôi</b><small>Bảng B · Lượt 1</small></div><span class="pill warn">Chưa xếp sân</span></div>
+  <div class="hd"><span>Buổi chiều</span></div>
+  <div class="m"><div class="tm">14:00</div><div class="mi"><b>C1 · Đôi nam nữ</b><small>Bảng C · Lượt 1</small></div><span class="pill ac">Sân 3</span></div>
+  <div class="m"><div class="tm">15:00</div><div class="mi"><b>C2 · Đôi nam nữ</b><small>Bảng C · Lượt 1</small></div><span class="pill ac">Sân 3</span></div>
+ </div>
+
+ <div id="nocourt" class="st" style="display:none">
+  <div class="appbar" style="padding-top:12px"><h1 style="font-size:16px">Lịch thi đấu</h1></div>
+  <div class="empt"><div class="big"><svg><use href="#i-court"/></svg></div><b>Chưa có sân</b><p>Tạo sân để bắt đầu xếp lịch.</p>
+   <button class="btn"><svg><use href="#i-plus"/></svg>Tạo sân</button></div></div>
+
+ <div id="nosched" class="st" style="display:none">
+  <div class="appbar" style="padding-top:12px"><h1 style="font-size:16px">Lịch thi đấu<span class="sub">4 sân</span></h1>
+   <button class="ib"><svg><use href="#i-court"/></svg></button></div>
+  <div class="empt"><div class="big"><svg><use href="#i-cal"/></svg></div><b>Chưa có lịch</b><p>Đã có 4 sân. Xếp trận vào sân và khung giờ.</p>
+   <button class="btn"><svg><use href="#i-cal"/></svg>Xếp lịch</button>
+   <button class="btn" style="background:none;color:var(--ac);height:36px"><svg style="stroke:var(--ac)"><use href="#i-plus"/></svg>Tạo thêm sân</button></div></div>
+</div>
+<style>
+.m{display:flex;align-items:center;padding:11px var(--px);border-bottom:1px solid var(--row);gap:12px}.mi{flex:1}.mi b{display:block;font-size:13px}.mi small{color:var(--muted);font-size:11px}
+.tm{width:42px;font-weight:800;font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.empt{text-align:center;padding:90px 32px;display:flex;flex-direction:column;gap:10px;align-items:center}.empt p{color:var(--muted);font-size:12px;margin-bottom:8px}
+.big{width:64px;height:64px;border-radius:20px;background:var(--acbg);display:grid;place-items:center;margin-bottom:6px}.big svg{width:30px;height:30px;stroke:var(--ac);fill:none;stroke-width:1.8}
+</style>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+$('#theme').onclick=()=>document.body.classList.toggle('dark');
+$$('.tools [data-s]').forEach(b=>b.onclick=()=>{$$('.tools [data-s]').forEach(x=>x.classList.toggle('on',x==b));$$('.st').forEach(s=>s.style.display=s.id==b.dataset.s?'':'none')});
+$$('.chips').forEach(g=>$$('.chip').length&&[...g.children].forEach(c=>c.onclick=()=>[...g.children].forEach(x=>x.classList.toggle('on',x==c))));
+</script>
+</body></html>
