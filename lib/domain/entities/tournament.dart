@@ -5,6 +5,14 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 
+/// Maps a raw backend value to 'DIRECT' or 'PAYOS'; missing/unknown -> PAYOS.
+String normalizeFeeCollectionMode(Object? raw) =>
+    raw?.toString().trim().toUpperCase() == 'DIRECT' ? 'DIRECT' : 'PAYOS';
+
+/// True when [raw] (a backend `feeCollectionMode` value) means direct collection.
+bool isDirectFeeCollectionMode(Object? raw) =>
+    normalizeFeeCollectionMode(raw) == 'DIRECT';
+
 class Tournament {
   final String id;
   final String name;
@@ -42,6 +50,10 @@ class Tournament {
 
   // Web parity fields
   final double? entryFee;
+
+  /// Fee collection snapshot: 'PAYOS' (default) or 'DIRECT' (pay organizer
+  /// directly; the app never starts a platform payment for the entry fee).
+  final String feeCollectionMode;
   final String? logoUrl;
   final String? bannerUrl;
   final List<String> galleryImages;
@@ -119,6 +131,7 @@ class Tournament {
     required this.createdAt,
     required this.updatedAt,
     this.entryFee,
+    this.feeCollectionMode = 'PAYOS',
     this.logoUrl,
     this.bannerUrl,
     this.galleryImages = const [],
@@ -426,6 +439,7 @@ class Tournament {
       createdAt: DateParser.parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: DateParser.parseDate(json['updatedAt'] ?? json['updated_at']),
       entryFee: parsedEntryFee,
+      feeCollectionMode: normalizeFeeCollectionMode(json['feeCollectionMode']),
       logoUrl: json['logoUrl'] ?? json['logo_url'],
       bannerUrl: json['bannerUrl'] ?? json['banner_url'],
       galleryImages:
@@ -602,6 +616,9 @@ class Tournament {
     };
   }
 
+  /// True when the entry fee is collected directly by the organizer.
+  bool get isDirectFeeCollection => feeCollectionMode == 'DIRECT';
+
   Tournament copyWith({
     String? id,
     String? name,
@@ -628,6 +645,7 @@ class Tournament {
     DateTime? createdAt,
     DateTime? updatedAt,
     double? entryFee,
+    String? feeCollectionMode,
     String? logoUrl,
     String? bannerUrl,
     List<String>? galleryImages,
@@ -691,6 +709,7 @@ class Tournament {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       entryFee: entryFee ?? this.entryFee,
+      feeCollectionMode: feeCollectionMode ?? this.feeCollectionMode,
       logoUrl: logoUrl ?? this.logoUrl,
       bannerUrl: bannerUrl ?? this.bannerUrl,
       galleryImages: galleryImages ?? this.galleryImages,

@@ -825,6 +825,20 @@ class _TournamentRegisterScreenState
             customResponses: _customResponses,
           );
       if (!mounted) return;
+      // Read before the invalidate below: DIRECT fee collection must never
+      // route to the platform checkout.
+      final isDirectFee =
+          ref
+              .read(
+                registerTournamentProvider((
+                  id: widget.tournamentId,
+                  invite: _localInviteCode ?? widget.inviteCode,
+                )),
+              )
+              .asData
+              ?.value
+              ?.isDirectFeeCollection ??
+          false;
       // Refresh the detail streams so the participant count reflects the
       // successful registration when the user returns to the tournament.
       ref.invalidate(tournamentProvider(widget.tournamentId));
@@ -834,7 +848,7 @@ class _TournamentRegisterScreenState
       _registrationTeamStatus = result.teamStatus;
       _registeredDivision = selectedDiv;
       final canProceedToPayment =
-          !result.isWaitlisted && result.paymentEligible;
+          !isDirectFee && !result.isWaitlisted && result.paymentEligible;
 
       if (effectiveFee > 0 &&
           result.participantId.isNotEmpty &&
@@ -1092,7 +1106,9 @@ class _TournamentRegisterScreenState
     final isPendingPartner = status == 'PENDING_PARTNER';
     final isWaitlisted = status == 'WAITLISTED';
     final isComplete = status == 'COMPLETE' || status == 'CONFIRMED' || status == 'APPROVED';
-    final canPay = !_existingIsPaid &&
+    final isDirectFee = tournament.isDirectFeeCollection;
+    final canPay = !isDirectFee &&
+        !_existingIsPaid &&
         fee > 0 &&
         (_existingPaymentEligible || isComplete) &&
         !isWaitlisted &&
@@ -1103,6 +1119,7 @@ class _TournamentRegisterScreenState
       'PENDING_PARTNER' => l10n.registerStatusPendingPartner,
       'PENDING_APPROVAL' => l10n.registerStatusPendingApproval,
       'WAITLISTED' => l10n.registerStatusWaitlisted,
+      'COMPLETE' when isDirectFee => l10n.registerAlreadyRegistered,
       'COMPLETE' when _existingIsPaid => l10n.registerStatusCompletePaid,
       'COMPLETE' => l10n.registerStatusCompleteUnpaid,
       _ => l10n.registerAlreadyRegistered,
@@ -1239,7 +1256,12 @@ class _TournamentRegisterScreenState
               existingDivision,
               status,
               _existingIsPaid,
+              isDirectFee: isDirectFee,
             ),
+          ],
+          if (isDirectFee && fee > 0) ...[
+            const SizedBox(height: 12),
+            _buildDirectFeeNote(fee),
           ],
           if (status == 'PENDING_PARTNER') ...[
             const SizedBox(height: 16),
@@ -1314,11 +1336,40 @@ class _TournamentRegisterScreenState
     );
   }
 
+  /// Fee shown as information only (DIRECT collection: pay the organizer).
+  Widget _buildDirectFeeNote(num fee) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.payments_outlined, color: AppTheme.primary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '${_formatFee(fee)} · ${l10n.feeDirectNote}',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: context.colors.textPrimary,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRegistrationDetails(
     TournamentDivisionOption division,
     String status,
-    bool isPaid,
-  ) {
+    bool isPaid, {
+    bool isDirectFee = false,
+  }) {
     final rows = <String, String>{
       l10n.registerDetailsContent: division.name,
       l10n.registerDetailsFormat: _divisionTypeLabel(division),
@@ -1328,7 +1379,9 @@ class _TournamentRegisterScreenState
         'COMPLETE' => l10n.registerDetailsApproved,
         _ => status.isEmpty ? l10n.registerDetailsRegistered : status,
       },
-      l10n.registerDetailsPayment: isPaid
+      l10n.registerDetailsPayment: isDirectFee
+          ? l10n.feeDirectStatus
+          : isPaid
           ? l10n.registerDetailsPaid
           : l10n.registerDetailsUnpaid,
     };
@@ -1380,7 +1433,10 @@ class _TournamentRegisterScreenState
 
   // Nhánh này nằm trong SingleChildScrollView của Scaffold ngoài (build). Không bọc
   // Scaffold thứ hai: Scaffold lồng nhận chiều cao vô hạn và ném lỗi layout (run 39123946327).
-  Widget _buildSuccess(Tournament? t) => Center(
+  Widget _buildSuccess(Tournament? t) {
+    final isDirectFee = t?.isDirectFeeCollection ?? false;
+    final directFee = _registeredDivision?.entryFee ?? t?.entryFee ?? 0;
+    return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -1405,7 +1461,11 @@ class _TournamentRegisterScreenState
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            if (_registeredEntryFee != null && _registeredEntryFee! > 0)
+            if (isDirectFee && directFee > 0)
+              _buildDirectFeeNote(directFee)
+            else if (!isDirectFee &&
+                _registeredEntryFee != null &&
+                _registeredEntryFee! > 0)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -1434,6 +1494,7 @@ class _TournamentRegisterScreenState
                 _registeredDivision!,
                 _registrationTeamStatus ?? '',
                 false,
+                isDirectFee: isDirectFee,
               ),
             ],
             if (_registrationTeamStatus == 'PENDING_APPROVAL') ...[
@@ -1463,7 +1524,8 @@ class _TournamentRegisterScreenState
                 ),
               ),
             ],
-            if (_registeredEntryFee != null &&
+            if (!isDirectFee &&
+                _registeredEntryFee != null &&
                 _registeredEntryFee! > 0 &&
                 _registrationTeamStatus != 'WAITLISTED' &&
                 _registrationTeamStatus != 'PENDING_APPROVAL') ...[
@@ -1524,6 +1586,7 @@ class _TournamentRegisterScreenState
         ),
       ),
     );
+  }
 
   Widget _buildHeader(Tournament t) {
     final colors = context.colors;
@@ -1592,7 +1655,9 @@ class _TournamentRegisterScreenState
                 ),
                 child: Text(
                   hasFee
-                      ? l10n.doublesRegEntryFee(_formatFee(t.entryFee!))
+                      ? t.isDirectFeeCollection
+                            ? '${l10n.doublesRegEntryFee(_formatFee(t.entryFee!))} · ${l10n.feeDirectNote}'
+                            : l10n.doublesRegEntryFee(_formatFee(t.entryFee!))
                       : l10n.registerFree,
                   style: TextStyle(
                     color: hasFee ? AppTheme.primary : colors.textMuted,

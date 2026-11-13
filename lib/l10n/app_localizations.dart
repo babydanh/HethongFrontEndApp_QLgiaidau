@@ -35838,6 +35838,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa gắn sân'**
   String get camWallNoCourt;
+
+  /// No description provided for @feeDirectNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán trực tiếp cho BTC'**
+  String get feeDirectNote;
+
+  /// No description provided for @feeDirectStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu trực tiếp'**
+  String get feeDirectStatus;
 }
 
 class _AppLocalizationsDelegate
