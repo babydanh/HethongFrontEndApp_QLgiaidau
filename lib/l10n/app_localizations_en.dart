@@ -1342,6 +1342,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sponsorTierTitle => 'Title sponsor';
 
   @override
+  String get sponsorTierMain => 'Main sponsor';
+
+  @override
   String get sponsorTierDiamond => 'Diamond sponsor';
 
   @override
@@ -1352,6 +1355,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sponsorTierBronze => 'Bronze sponsor';
+
+  @override
+  String get sponsorTierCompanion => 'Supporting sponsor';
 
   @override
   String get sponsorTierInKind => 'In-kind partner';
@@ -15202,6 +15208,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementSponsorTierTitle => 'Title';
+
+  @override
+  String get tournamentManagementSponsorTierMain => 'Main';
+
+  @override
+  String get tournamentManagementSponsorTierCompanion => 'Supporting';
 
   @override
   String tournamentManagementSponsorTierRank(String tier) {

@@ -6,12 +6,22 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 const _kTierOrder = [
   'TITLE',
+  'MAIN',
   'DIAMOND',
   'GOLD',
   'SILVER',
   'BRONZE',
+  'COMPANION',
   'IN_KIND',
 ];
+
+/// Tiers drawn with large, centered logos; every other tier is a 5-per-row grid.
+const _kFeaturedTiers = {'TITLE', 'MAIN', 'DIAMOND'};
+
+const _kFeaturedMaxWidth = 320.0;
+const _kFeaturedHeight = 150.0;
+const _kGridColumns = 5;
+const _kGridSpacing = 8.0;
 
 class _TierStyle {
   final Color accent;
@@ -40,6 +50,16 @@ _TierStyle _getTierStyle(String tier, bool isDark) {
             : const Color(0xFFF5F3FF),
         badgeBg: isDark ? const Color(0xFF4C1D95) : const Color(0xFFEDE9FE),
         badgeText: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF6D28D9),
+      );
+    case 'MAIN':
+      return _TierStyle(
+        accent: const Color(0xFFE11D48),
+        border: isDark ? const Color(0xFF9F1239) : const Color(0xFFFECDD3),
+        background: isDark
+            ? const Color(0xFF4C0519).withValues(alpha: 0.3)
+            : const Color(0xFFFFF1F2),
+        badgeBg: isDark ? const Color(0xFF881337) : const Color(0xFFFFE4E6),
+        badgeText: isDark ? const Color(0xFFFECDD3) : const Color(0xFFBE123C),
       );
     case 'DIAMOND':
       return _TierStyle(
@@ -81,6 +101,16 @@ _TierStyle _getTierStyle(String tier, bool isDark) {
         badgeBg: isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5),
         badgeText: isDark ? const Color(0xFFFED7AA) : const Color(0xFFC2410C),
       );
+    case 'COMPANION':
+      return _TierStyle(
+        accent: const Color(0xFF2563EB),
+        border: isDark ? const Color(0xFF1E40AF) : const Color(0xFFBFDBFE),
+        background: isDark
+            ? const Color(0xFF172554).withValues(alpha: 0.3)
+            : const Color(0xFFEFF6FF),
+        badgeBg: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE),
+        badgeText: isDark ? const Color(0xFFBFDBFE) : const Color(0xFF1D4ED8),
+      );
     case 'IN_KIND':
     default:
       return _TierStyle(
@@ -99,6 +129,8 @@ String _getTierLabel(String tier, AppLocalizations l10n) {
   switch (tier) {
     case 'TITLE':
       return l10n.sponsorTierTitle;
+    case 'MAIN':
+      return l10n.sponsorTierMain;
     case 'DIAMOND':
       return l10n.sponsorTierDiamond;
     case 'GOLD':
@@ -107,6 +139,8 @@ String _getTierLabel(String tier, AppLocalizations l10n) {
       return l10n.sponsorTierSilver;
     case 'BRONZE':
       return l10n.sponsorTierBronze;
+    case 'COMPANION':
+      return l10n.sponsorTierCompanion;
     case 'IN_KIND':
     default:
       return l10n.sponsorTierInKind;
@@ -215,7 +249,7 @@ class SponsorsTab extends StatelessWidget {
           // Sponsor Groups by Tier
           ...groups.map((group) {
             final tierStyle = _getTierStyle(group.tier, isDark);
-            final isFeatured = group.tier == 'TITLE' || group.tier == 'DIAMOND';
+            final isFeatured = _kFeaturedTiers.contains(group.tier);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 24),
@@ -264,25 +298,10 @@ class SponsorsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Responsive Grid of neat sponsor cards
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isFeatured ? 2 : 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: isFeatured ? 1.4 : 1.6,
-                    ),
-                    itemCount: group.sponsors.length,
-                    itemBuilder: (context, index) {
-                      final sponsor = group.sponsors[index];
-                      return _SponsorLogoCard(
-                        sponsor: sponsor,
-                        tierStyle: tierStyle,
-                        isFeatured: isFeatured,
-                      );
-                    },
+                  _TierLogos(
+                    sponsors: group.sponsors,
+                    tierStyle: tierStyle,
+                    isFeatured: isFeatured,
                   ),
                 ],
               ),
@@ -294,12 +313,62 @@ class SponsorsTab extends StatelessWidget {
   }
 }
 
+/// Centered wrap of logo cards: large cells for featured tiers, otherwise
+/// square cells sized so that exactly [_kGridColumns] fit on one row.
+class _TierLogos extends StatelessWidget {
+  final List<TournamentSponsor> sponsors;
+  final _TierStyle tierStyle;
+  final bool isFeatured;
+
+  const _TierLogos({
+    required this.sponsors,
+    required this.tierStyle,
+    required this.isFeatured,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final width = isFeatured
+            ? (maxWidth < _kFeaturedMaxWidth ? maxWidth : _kFeaturedMaxWidth)
+            : (maxWidth - (_kGridColumns - 1) * _kGridSpacing) / _kGridColumns;
+        final height = isFeatured ? _kFeaturedHeight : width;
+        // Full width so the centered alignment applies to the whole row.
+        return SizedBox(
+          width: maxWidth,
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: isFeatured ? 12 : _kGridSpacing,
+            runSpacing: isFeatured ? 12 : _kGridSpacing,
+            children: [
+              for (final sponsor in sponsors)
+                SizedBox(
+                  width: width,
+                  height: height,
+                  child: _SponsorLogoCard(
+                    key: ValueKey('sponsor-card-${sponsor.id}'),
+                    sponsor: sponsor,
+                    tierStyle: tierStyle,
+                    isFeatured: isFeatured,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _SponsorLogoCard extends StatelessWidget {
   final TournamentSponsor sponsor;
   final _TierStyle tierStyle;
   final bool isFeatured;
 
   const _SponsorLogoCard({
+    super.key,
     required this.sponsor,
     required this.tierStyle,
     required this.isFeatured,
@@ -334,7 +403,9 @@ class _SponsorLogoCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final card = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: isFeatured
+          ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
+          : const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark ? colors.bgCard : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -366,54 +437,57 @@ class _SponsorLogoCard extends StatelessWidget {
                   : _buildFallbackInitials(),
             ),
           ),
-          const SizedBox(height: 6),
-
-          // Name and Website icon
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  sponsor.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: isFeatured ? 12 : 11,
-                    fontWeight: FontWeight.w800,
+          // Regular cells are too small for a caption: the name is a tooltip.
+          if (isFeatured) ...[
+            const SizedBox(height: 6),
+            // Name and Website icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    sponsor.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ),
-              if (hasWebsite) ...[
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.open_in_new_rounded,
-                  size: 11,
-                  color: tierStyle.accent,
-                ),
+                if (hasWebsite) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.open_in_new_rounded,
+                    size: 11,
+                    color: tierStyle.accent,
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );
 
-    if (hasWebsite) {
-      return InkWell(
-        onTap: _openWebsite,
-        borderRadius: BorderRadius.circular(12),
-        child: card,
-      );
-    }
-    return card;
+    final tappable = hasWebsite
+        ? InkWell(
+            onTap: _openWebsite,
+            borderRadius: BorderRadius.circular(12),
+            child: card,
+          )
+        : card;
+    if (isFeatured) return tappable;
+    return Tooltip(message: sponsor.displayName, child: tappable);
   }
 
   Widget _buildFallbackInitials() {
     return Container(
-      width: 42,
-      height: 42,
+      width: isFeatured ? 56 : 30,
+      height: isFeatured ? 56 : 30,
       decoration: BoxDecoration(
         color: tierStyle.badgeBg,
         shape: BoxShape.circle,
@@ -423,7 +497,7 @@ class _SponsorLogoCard extends StatelessWidget {
         _initials,
         style: TextStyle(
           color: tierStyle.badgeText,
-          fontSize: 14,
+          fontSize: isFeatured ? 18 : 11,
           fontWeight: FontWeight.w900,
         ),
       ),

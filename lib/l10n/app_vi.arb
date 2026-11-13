@@ -475,10 +475,12 @@
   "sponsorsDescription": "Cảm ơn các đối tác đã đồng hành cùng giải đấu.",
   "sponsorVisitWebsite": "Xem website",
   "sponsorTierTitle": "Nhà tài trợ danh hiệu",
+  "sponsorTierMain": "Nhà tài trợ chính",
   "sponsorTierDiamond": "Nhà tài trợ kim cương",
   "sponsorTierGold": "Nhà tài trợ vàng",
   "sponsorTierSilver": "Nhà tài trợ bạc",
   "sponsorTierBronze": "Nhà tài trợ đồng",
+  "sponsorTierCompanion": "Nhà tài trợ đồng hành",
   "sponsorTierInKind": "Đối tác hỗ trợ hiện vật/dịch vụ",
   "deleteTournamentTitle": "Xóa giải đấu?",
   "deleteTournamentContent": "Thao tác này không thể hoàn tác.",
@@ -6147,6 +6149,8 @@
   "tournamentManagementSponsorTierInKind": "Hiện vật",
   "tournamentManagementSponsorTierSilver": "Bạc",
   "tournamentManagementSponsorTierTitle": "Nhà tài trợ danh xưng",
+  "tournamentManagementSponsorTierMain": "Chính",
+  "tournamentManagementSponsorTierCompanion": "Đồng hành",
   "tournamentManagementSponsorTierRank": "Hạng {tier}",
   "@tournamentManagementSponsorTierRank": {
     "placeholders": {

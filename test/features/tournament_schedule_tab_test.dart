@@ -282,7 +282,7 @@ void main() {
     await _tapTab(tester, find.widgetWithText(Tab, 'Tài trợ'));
     // TabBarView chỉ giữ trang đang chọn: thấy SponsorsTab = tab và trang khớp.
     expect(find.byType(SponsorsTab), findsOneWidget);
-    expect(find.text('Fixture Sponsor'), findsOneWidget);
+    expect(find.byTooltip('Fixture Sponsor'), findsOneWidget);
     expect(find.byType(TextField).hitTestable(), findsNothing);
     expect(tester.takeException(), isNull);
   });

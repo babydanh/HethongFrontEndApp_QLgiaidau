@@ -473,10 +473,12 @@
   "sponsorsDescription": "Thank you to the partners supporting this tournament.",
   "sponsorVisitWebsite": "Visit website",
   "sponsorTierTitle": "Title sponsor",
+  "sponsorTierMain": "Main sponsor",
   "sponsorTierDiamond": "Diamond sponsor",
   "sponsorTierGold": "Gold sponsor",
   "sponsorTierSilver": "Silver sponsor",
   "sponsorTierBronze": "Bronze sponsor",
+  "sponsorTierCompanion": "Supporting sponsor",
   "sponsorTierInKind": "In-kind partner",
   "deleteTournamentTitle": "Delete tournament?",
   "deleteTournamentContent": "This action cannot be undone.",
@@ -5974,6 +5976,8 @@
   "tournamentManagementSponsorTierInKind": "In kind",
   "tournamentManagementSponsorTierSilver": "Silver",
   "tournamentManagementSponsorTierTitle": "Title",
+  "tournamentManagementSponsorTierMain": "Main",
+  "tournamentManagementSponsorTierCompanion": "Supporting",
   "tournamentManagementSponsorTierRank": "{tier} tier",
   "@tournamentManagementSponsorTierRank": {
     "placeholders": {

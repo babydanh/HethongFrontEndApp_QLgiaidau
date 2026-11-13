@@ -1333,6 +1333,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sponsorTierTitle => 'Nhà tài trợ danh hiệu';
 
   @override
+  String get sponsorTierMain => 'Nhà tài trợ chính';
+
+  @override
   String get sponsorTierDiamond => 'Nhà tài trợ kim cương';
 
   @override
@@ -1343,6 +1346,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sponsorTierBronze => 'Nhà tài trợ đồng';
+
+  @override
+  String get sponsorTierCompanion => 'Nhà tài trợ đồng hành';
 
   @override
   String get sponsorTierInKind => 'Đối tác hỗ trợ hiện vật/dịch vụ';
@@ -15142,6 +15148,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementSponsorTierTitle => 'Nhà tài trợ danh xưng';
+
+  @override
+  String get tournamentManagementSponsorTierMain => 'Chính';
+
+  @override
+  String get tournamentManagementSponsorTierCompanion => 'Đồng hành';
 
   @override
   String tournamentManagementSponsorTierRank(String tier) {

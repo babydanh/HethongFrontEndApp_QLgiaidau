@@ -599,28 +599,35 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
 
 const _sponsorTiers = [
   'TITLE',
+  'MAIN',
   'DIAMOND',
   'GOLD',
   'SILVER',
   'BRONZE',
+  'COMPANION',
   'IN_KIND',
 ];
 
 String _sponsorTierLabel(AppLocalizations l10n, String tier) =>
     switch (tier.toUpperCase()) {
       'TITLE' => l10n.tournamentManagementSponsorTierTitle,
+      'MAIN' => l10n.tournamentManagementSponsorTierMain,
       'DIAMOND' => l10n.tournamentManagementSponsorTierDiamond,
       'GOLD' => l10n.tournamentManagementSponsorTierGold,
       'SILVER' => l10n.tournamentManagementSponsorTierSilver,
       'BRONZE' => l10n.tournamentManagementSponsorTierBronze,
+      'COMPANION' => l10n.tournamentManagementSponsorTierCompanion,
       _ => l10n.tournamentManagementSponsorTierInKind,
     };
 
-/// Rank wording of the design ("Hạng Vàng"). The title and in-kind tiers are
-/// not ranks, so they keep their own label.
+/// Rank wording of the design ("Hạng Vàng"). The title, main, companion and
+/// in-kind tiers are not ranks: the short chip labels read badly in a row, so
+/// main and companion use the full public labels and the rest keep their own.
 String _sponsorTierRank(AppLocalizations l10n, String tier) {
   final label = _sponsorTierLabel(l10n, tier);
   return switch (tier.toUpperCase()) {
+    'MAIN' => l10n.sponsorTierMain,
+    'COMPANION' => l10n.sponsorTierCompanion,
     'DIAMOND' ||
     'GOLD' ||
     'SILVER' ||

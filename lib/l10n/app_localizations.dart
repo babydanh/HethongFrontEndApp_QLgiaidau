@@ -2612,6 +2612,12 @@ abstract class AppLocalizations {
   /// **'Nhà tài trợ danh hiệu'**
   String get sponsorTierTitle;
 
+  /// No description provided for @sponsorTierMain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ chính'**
+  String get sponsorTierMain;
+
   /// No description provided for @sponsorTierDiamond.
   ///
   /// In vi, this message translates to:
@@ -2635,6 +2641,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhà tài trợ đồng'**
   String get sponsorTierBronze;
+
+  /// No description provided for @sponsorTierCompanion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhà tài trợ đồng hành'**
+  String get sponsorTierCompanion;
 
   /// No description provided for @sponsorTierInKind.
   ///
@@ -27435,6 +27447,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhà tài trợ danh xưng'**
   String get tournamentManagementSponsorTierTitle;
+
+  /// No description provided for @tournamentManagementSponsorTierMain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính'**
+  String get tournamentManagementSponsorTierMain;
+
+  /// No description provided for @tournamentManagementSponsorTierCompanion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng hành'**
+  String get tournamentManagementSponsorTierCompanion;
 
   /// No description provided for @tournamentManagementSponsorTierRank.
   ///

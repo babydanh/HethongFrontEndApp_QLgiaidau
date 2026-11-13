@@ -306,14 +306,14 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(SponsorsTab),
-        matching: find.text('Partner pub'),
+        matching: find.byTooltip('Partner pub'),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
         of: find.byType(SponsorsTab),
-        matching: find.text('Partner draft'),
+        matching: find.byTooltip('Partner draft'),
       ),
       findsNothing,
     );
