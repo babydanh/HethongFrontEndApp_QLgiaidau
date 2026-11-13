@@ -15,6 +15,7 @@ class RosterImportBatchItem {
     this.player2Phone,
     required this.teamName,
     this.elo,
+    this.eloSource,
     this.isPaid,
     this.autoApprove,
     this.sourceRowIndex,
@@ -32,9 +33,13 @@ class RosterImportBatchItem {
   final String? player2Name;
   final String? player2Email;
   final String? player2Phone;
+
   /// Tên đội từ file; rỗng khi file không có. Không bao giờ ghép tên VĐV.
   final String teamName;
   final num? elo;
+
+  /// Thang của [elo]: `ELO` hoặc `DUPR`. Backend kiểm khoảng theo thang này.
+  final String? eloSource;
   final bool? isPaid;
   final bool? autoApprove;
   final int? sourceRowIndex;
@@ -57,6 +62,7 @@ class RosterImportBatchItem {
     if (_present(player2Phone)) 'player2Phone': player2Phone,
     'teamName': teamName,
     if (elo != null) 'elo': elo,
+    if (elo != null && eloSource != null) 'eloSource': eloSource,
     if (isPaid != null) 'isPaid': isPaid,
     if (autoApprove != null) 'autoApprove': autoApprove,
     if (sourceRowIndex != null) 'sourceRowIndex': sourceRowIndex,

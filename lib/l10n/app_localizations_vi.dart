@@ -16365,6 +16365,29 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không xác định được nội dung';
 
   @override
+  String get rosterImportAiChecking => 'AI đang đọc bố cục file...';
+
+  @override
+  String get rosterImportAiDone => 'Đã dùng bố cục do AI đọc.';
+
+  @override
+  String get rosterImportAiUnavailable =>
+      'AI chưa sẵn sàng, đang dùng kết quả đọc theo luật.';
+
+  @override
+  String get rosterImportAiError =>
+      'Không hỏi được AI (hết lượt hoặc lỗi máy chủ), đang dùng kết quả đọc theo luật.';
+
+  @override
+  String get rosterImportAiEmpty =>
+      'AI không tìm thấy bảng VĐV, đang dùng kết quả đọc theo luật.';
+
+  @override
+  String rosterImportPendingPartnerCount(int count) {
+    return '$count VĐV chờ ghép cặp';
+  }
+
+  @override
   String get rosterImportStatusUnknown => 'Cần kiểm tra lại';
 
   @override
