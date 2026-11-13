@@ -7909,5 +7909,7 @@
   "camWallSignalOffline": "OFFLINE",
   "camWallSignalError": "ERROR",
   "camWallSignalIdle": "Not live",
-  "camWallNoCourt": "No court"
+  "camWallNoCourt": "No court",
+  "feeDirectNote": "Pay the organizer directly",
+  "feeDirectStatus": "Collected directly"
 }

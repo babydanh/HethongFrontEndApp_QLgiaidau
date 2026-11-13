@@ -136,6 +136,7 @@ class _Facts {
     required this.notPlayed,
     required this.disputed,
     required this.late,
+    this.directFee = false,
   });
 
   final TournamentDivision division;
@@ -151,16 +152,22 @@ class _Facts {
   final int disputed;
   final int late;
 
+  /// DIRECT fee collection: the organizer collects fees offline, so nothing
+  /// is "unpaid" on the platform.
+  final bool directFee;
+
   int get total => done + live + notPlayed + disputed;
 
-  List<OrganizerOpsParticipant> get unpaid => entrants
-      .where(
-        (p) =>
-            _payable.contains(p.teamStatus.toUpperCase()) &&
-            !p.isPaid &&
-            (p.entryFee ?? 1) > 0,
-      )
-      .toList();
+  List<OrganizerOpsParticipant> get unpaid => directFee
+      ? const []
+      : entrants
+            .where(
+              (p) =>
+                  _payable.contains(p.teamStatus.toUpperCase()) &&
+                  !p.isPaid &&
+                  (p.entryFee ?? 1) > 0,
+            )
+            .toList();
 
   int get waiting => entrants
       .where((p) => _waiting.contains(p.teamStatus.toUpperCase()))
@@ -190,6 +197,7 @@ _Facts _collectFacts({
   required bool participantsReady,
   required bool inProgress,
   required DateTime now,
+  bool directFee = false,
 }) {
   final entrants = participantsReady
       ? entrantsOfDivision
@@ -227,6 +235,7 @@ _Facts _collectFacts({
     notPlayed: notPlayed,
     disputed: disputed,
     late: late,
+    directFee: directFee,
   );
 }
 
@@ -604,6 +613,7 @@ StepSummary buildStepSummary({
         participantsReady: participantsReady,
         inProgress: inProgress,
         now: now,
+        directFee: tournament.isDirectFeeCollection,
       ),
   ];
   final openDuringPlay =

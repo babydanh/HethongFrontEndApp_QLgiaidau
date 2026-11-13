@@ -19919,4 +19919,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get camWallNoCourt => 'Chưa gắn sân';
+
+  @override
+  String get feeDirectNote => 'Thanh toán trực tiếp cho BTC';
+
+  @override
+  String get feeDirectStatus => 'Thu trực tiếp';
 }

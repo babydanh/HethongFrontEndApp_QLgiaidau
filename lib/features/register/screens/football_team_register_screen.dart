@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
+import 'package:app_quanly_giaidau/features/payment/utils/direct_fee_guard.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -262,9 +263,14 @@ class _FootballTeamRegisterScreenState
             rankingConsent: true,
           );
       if (!mounted) return;
-      if (result.entryFee > 0 &&
+      // DIRECT fee collection never routes to the platform checkout.
+      final goCheckout =
+          result.entryFee > 0 &&
           result.participantId.isNotEmpty &&
-          result.paymentEligible) {
+          result.paymentEligible &&
+          !await isDirectFeeTournament(ref, widget.tournamentId);
+      if (!mounted) return;
+      if (goCheckout) {
         await context.push(
           '/payment/checkout',
           extra: {
