@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/recording_access.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_player_sheet.dart';
@@ -112,7 +113,12 @@ class _MatchStreamActionsState extends ConsumerState<MatchStreamActions> {
           onPressed: _busy
               ? null
               : (widget.onWatchLive ??
-                    () => context.push('/live/${widget.matchId}')),
+                    () => context.push(
+                      NavigationHelper.getLiveMatchRoute(
+                        widget.tournamentId,
+                        widget.matchId,
+                      ),
+                    )),
           child: Semantics(
             label: l10n.tournamentManagementCameraStreamWatchLiveAria(label),
             excludeSemantics: true,

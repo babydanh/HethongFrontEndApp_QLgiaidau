@@ -339,7 +339,10 @@ class ApiMatchRepository implements IMatchRepository {
           final body = response.data;
           final json = body is Map && body['data'] is Map
               ? Map<String, dynamic>.from(body['data'] as Map)
-              : body is Map
+              // An envelope whose `data` is null means "no such match" (the
+              // club-session route does this for tournament matches); parsing
+              // the envelope itself would yield a blank "TBD" match.
+              : body is Map && !body.containsKey('data')
               ? Map<String, dynamic>.from(body)
               : null;
           if (json != null) return _parseMatch(json);

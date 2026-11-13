@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
@@ -249,7 +250,12 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
                   width: kMinTouchTarget,
                   height: kMinTouchTarget,
                 ),
-                onPressed: () => context.push('/live/${match.id}'),
+                onPressed: () => context.push(
+                  NavigationHelper.getLiveMatchRoute(
+                    widget.tournamentId,
+                    match.id,
+                  ),
+                ),
                 color: isLive ? _liveTone : null,
                 icon: const Icon(Icons.play_circle_outline_rounded),
               ),
