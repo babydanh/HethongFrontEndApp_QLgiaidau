@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
@@ -15,7 +16,7 @@ class RankAvatar extends StatelessWidget {
   final double ringWidth;
 
   /// Shown inside the ring when there is no photo (or it fails to load);
-  /// defaults to the first letter of [name] on a grey background.
+  /// defaults to the shared Web-style initials on a name-based colour.
   final Widget? placeholder;
 
   const RankAvatar({
@@ -84,14 +85,14 @@ class RankAvatar extends StatelessWidget {
   Widget _fallback() {
     if (placeholder != null) return placeholder!;
     return Container(
-      color: Colors.blueGrey.shade50,
+      color: avatarFallbackColor(name),
       alignment: Alignment.center,
       child: Text(
-        name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
+        avatarInitials(name),
         style: TextStyle(
           fontSize: size * 0.32,
           fontWeight: FontWeight.w800,
-          color: Colors.blueGrey.shade600,
+          color: Colors.white,
         ),
       ),
     );

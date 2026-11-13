@@ -343,7 +343,7 @@ class ParticipantLabel extends StatelessWidget {
     required this.players,
     this.teamOnly = false,
     this.compact = false,
-    this.coloredAvatars = false,
+    this.coloredAvatars = true,
     this.style,
     this.textAlign = TextAlign.start,
     this.crossAxisAlignment = CrossAxisAlignment.start,
