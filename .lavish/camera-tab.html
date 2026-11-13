@@ -70,18 +70,18 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
   </div>
 
   <div id="cards" style="padding:0 var(--px)">
-   <div class="cam" data-c="1"><div class="top"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 1</b><span class="pill bad"><i class="dot live"></i>LIVE</span></div>
-    <div class="url"><input value="rtmp://live.sporto.asia/s1/abc123" type="password"><button class="ib" title="Hiện / ẩn"><svg><use href="#i-link"/></svg></button></div>
-    <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div>
-   <div class="cam" data-c="2"><div class="top"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 2</b><span class="pill ok">Có tín hiệu</span></div>
-    <div class="url"><input value="https://cam.example.com/s2.m3u8" type="password"><button class="ib"><svg><use href="#i-link"/></svg></button></div>
-    <div class="acts"><button class="ib"><svg><use href="#i-refresh"/></svg></button><button class="ib"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div>
-   <div class="cam" data-c="3"><div class="top"><svg class="ico bad"><use href="#i-cam"/></svg><b>Sân 3</b><span class="pill bad">Mất tín hiệu</span></div>
-    <div class="url"><input value="https://cam.example.com/s3.m3u8" type="password"><button class="ib"><svg><use href="#i-link"/></svg></button></div>
-    <div class="acts"><button class="ib ac" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div>
-   <div class="cam" data-c="4"><div class="top"><svg class="ico"><use href="#i-camoff"/></svg><b>Sân 4</b><span class="pill">Chưa gắn</span></div>
-    <div class="url"><input placeholder="Dán URL phát (https://…)"></div>
-    <div class="acts"><button class="btn save show">Lưu</button></div></div>
+   <div class="cam" data-c="1"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 1</b><span class="pill bad"><i class="dot live"></i>LIVE</span><svg class="chev"><use href="#i-chev"/></svg></div>
+    <div class="body"><div class="url"><input value="rtmp://live.sporto.asia/s1/abc123" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
+     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
+   <div class="cam" data-c="2"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 2</b><span class="pill ok">Có tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div>
+    <div class="body"><div class="url"><input value="https://cam.example.com/s2.m3u8" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
+     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
+   <div class="cam" data-c="3"><div class="top" tabindex="0"><svg class="ico bad"><use href="#i-cam"/></svg><b>Sân 3</b><span class="pill bad">Mất tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div>
+    <div class="body"><div class="url"><input value="https://cam.example.com/s3.m3u8" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
+     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
+   <div class="cam" data-c="4"><div class="top" tabindex="0"><svg class="ico "><use href="#i-camoff"/></svg><b>Sân 4</b><span class="pill">Chưa gắn</span><svg class="chev"><use href="#i-chev"/></svg></div>
+    <div class="body"><div class="url"><input placeholder="Dán URL phát (https://…)"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
+     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
   </div>
 
   <div class="hd" style="margin-top:6px"><span>Trận</span></div>
@@ -106,14 +106,27 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
   <div class="opt"><i class="dot bad"></i>Sân 3<small>Mất tín hiệu</small></div>
   <div class="opt"><i class="dot"></i>Sân 4<small>Chưa gắn cam</small></div></div></div>
 </div>
+<div class="note2"><b>Ghi chú thiết kế (dành cho người duyệt)</b>
+<p>Đây là <b>một thành phần dùng chung</b> — danh sách thẻ sân thu gọn, bấm mở URL — đặt ở <b>cả tab Camera và mục Livestream</b>.</p>
+<p><b>Việc code sẽ làm:</b></p><ol>
+<li>Gộp <code>tournament_camera_panel.dart</code> và <code>court_camera_row.dart</code> + <code>camera_tab_header.dart</code> thành một widget thẻ sân (thu gọn / mở).</li>
+<li>Cả hai nơi gọi cùng widget: <code>tournament_management_camera_section.dart</code> và <code>tournament_management_livestream_section.dart</code>.</li>
+<li>Xoá phần trùng (<code>_CameraRow</code>, <code>_CourtRow</code>, ô URL lặp), bỏ chữ hướng dẫn kéo thả.</li>
+<li>Giữ nguyên API/repository/provider (<code>tournamentCamerasProvider</code>, <code>setCourtPlaybackUrl</code>); chỉ đổi UI, thêm test widget.</li></ol>
+<p><b>Nguy cơ xung đột nhánh khác:</b></p><ul>
+<li><code>app-tuong-camera</code>: <code>tournament_management_camera_section.dart</code>, <code>camera_wall.dart</code>, <code>camera_wall_screen.dart</code>, file <code>.arb</code>.</li>
+<li><code>app-camera-thiet-ke-moi</code> (danh3): <code>camera_tab_header.dart</code>, <code>camera_court_info.dart</code>, <code>camera_match_row.dart</code>, <code>tournament_management_camera_section.dart</code>, <code>.arb</code> — trùng nhiều nhất.</li>
+<li><code>camera-dau-tab-gon</code>: chưa có commit khác <code>main</code> lúc kiểm; nhiều khả năng cũng đụng <code>camera_tab_header.dart</code>.</li>
+<li>Mọi nhánh đều sửa <code>app_vi.arb</code>/<code>app_en.arb</code> và file sinh <code>app_localizations*.dart</code> → nên gộp nhánh danh3 trước rồi mới làm.</li></ul></div>
+<style>.note2{width:390px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px var(--px);font-size:12px;line-height:1.55;color:var(--muted)}.note2 b{color:var(--text)}.note2 p{margin:6px 0 2px}.note2 ol,.note2 ul{padding-left:18px}.note2 code{font-size:11px;background:var(--soft);padding:1px 4px;border-radius:4px}</style>
 <style>
 .cam{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;background:var(--surface)}
-.cam .top{display:flex;align-items:center;gap:8px;margin-bottom:10px}.cam .top b{flex:1;font-size:14px}
+.cam .top{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:32px}.cam .body{display:none;margin-top:10px}.cam.open .body{display:block}.chev{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:2;transition:transform .15s}.cam.open .chev{transform:rotate(90deg)}.cam .top b{flex:1;font-size:14px}
 .ico{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ico.ok{stroke:var(--ok)}.ico.bad{stroke:var(--bad)}
 .url{display:flex;gap:8px}.url input{flex:1;min-width:0;height:40px;border:1px solid var(--chipline);border-radius:12px;background:var(--surface);color:var(--text);padding:0 12px;font:500 13px Inter,sans-serif}
 .url input:focus{outline:2px solid var(--ac);border-color:transparent}
 .acts{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
-.acts .ib{width:40px;height:40px}.acts .btn{height:40px;display:none}.acts .btn.show{display:inline-flex}
+.acts .ib{width:40px;height:40px}.acts .btn{height:40px;display:none}.acts .btn.show{display:inline-flex}.cam{padding:10px 12px}
 .chip.warn{border-color:var(--warn);color:var(--warnt);background:var(--warnbg)}
 .m{display:flex;align-items:center;padding:10px var(--px);border-bottom:1px solid var(--row);gap:10px}.mi{flex:1}.mi b{display:block;font-size:13px}.mi small{color:var(--muted);font-size:11px}
 .empt{text-align:center;padding:70px 32px;display:flex;flex-direction:column;gap:10px;align-items:center}.empt p{color:var(--muted);font-size:12px}
@@ -124,7 +137,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 $('#theme').onclick=()=>document.body.classList.toggle('dark');
 $$('.tools [data-s]').forEach(b=>b.onclick=()=>{$$('.tools [data-s]').forEach(x=>x.classList.toggle('on',x==b));$('#full').style.display=b.dataset.s=='full'?'':'none';$('#empty').style.display=b.dataset.s=='empty'?'':'none'});
 $$('#courtChips .chip').forEach(c=>c.onclick=()=>{$$('#courtChips .chip').forEach(x=>x.classList.toggle('on',x==c));$$('.cam').forEach(k=>k.style.display=(c.dataset.c=='all'||k.dataset.c==c.dataset.c)?'':'none')});
-$$('.cam input').forEach(i=>{const s=i.closest('.cam').querySelector('.save'),o=i.value;i.oninput=()=>s.classList.toggle('show',i.value!==o);i.onfocus=()=>{if(i.type=='password')i.type='text'};i.onblur=()=>{if(i.value)i.type='password'}});
+$$('.cam .top').forEach(t=>t.onclick=()=>t.parentElement.classList.toggle('open'));
+$$('.cam .url .ib').forEach(b=>b.onclick=()=>{const i=b.previousElementSibling;i.type=i.type=='password'?'text':'password'});
+$$('.cam input').forEach(i=>{const s=i.closest('.cam').querySelector('.save'),o=i.value;i.oninput=()=>s.classList.toggle('show',i.value!==o);});
 $$('[data-pick]').forEach(b=>b.onclick=()=>{$('#sm').textContent=b.closest('.m').querySelector('b').textContent.split(' ')[0];$('#sheet').classList.add('show')});
 $('#sheet').onclick=e=>{if(e.target.id=='sheet'||e.target.closest('.opt'))$('#sheet').classList.remove('show')};
 </script>
