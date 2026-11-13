@@ -14,15 +14,29 @@ final RegExp _htmlTagPattern = RegExp(r'<[a-zA-Z/!][^>]*>');
 bool looksLikeHtml(String text) => _htmlTagPattern.hasMatch(text);
 
 /// Bỏ thẻ HTML, giữ lại chữ, để hiển thị khi nội dung không phải HTML.
-String stripHtmlTags(String text) => text
-    .replaceAll(RegExp(r'<[^>]*>'), '')
+String stripHtmlTags(String text) => _decodeEntities(
+  text.replaceAll(RegExp(r'<[^>]*>'), ''),
+).replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+
+final RegExp _numericEntity = RegExp(r'&#(x[0-9a-fA-F]+|[0-9]+);');
+
+/// Decodes the entities rich-text editors emit. `&amp;` goes last so an
+/// escaped entity such as `&amp;lt;` stays the literal text `&lt;`.
+String _decodeEntities(String text) => text
+    .replaceAllMapped(_numericEntity, (match) {
+      final digits = match[1]!;
+      final code = digits.startsWith('x')
+          ? int.tryParse(digits.substring(1), radix: 16)
+          : int.tryParse(digits);
+      if (code == null || code > 0x10FFFF) return match[0]!;
+      return String.fromCharCode(code);
+    })
     .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .replaceAll('&quot;', '"')
-    .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-    .trim();
+    .replaceAll('&apos;', "'")
+    .replaceAll('&amp;', '&');
 
 /// One-line plain preview of an HTML description: tags become spaces (so
 /// adjacent blocks keep their words apart), entities are decoded and

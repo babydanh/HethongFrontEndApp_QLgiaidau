@@ -20,4 +20,21 @@ void main() {
       'Kính gửi Quý Anh/Chị',
     );
   });
+
+  test('TC-HTML-PREVIEW-03 decodes apostrophes and numeric entities', () {
+    expect(
+      stripHtmlTags('L&#39;équipe &apos;A&apos; &#8211; s&#x1EA3;n'),
+      "L'équipe 'A' – sản",
+    );
+  });
+
+  test(
+    'TC-HTML-PREVIEW-04 decodes &amp; last so an escaped entity stays text',
+    () {
+      expect(
+        stripHtmlTags('giá &amp;lt; 100k &amp;amp; quà'),
+        'giá &lt; 100k &amp; quà',
+      );
+    },
+  );
 }
