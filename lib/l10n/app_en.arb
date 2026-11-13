@@ -7827,7 +7827,10 @@
   "camTabFilterTooltip": "Filter matches",
   "camTabCreateTooltip": "Create camera",
   "camTabMenuTooltip": "More options",
-  "camTabSearchHint": "Search by player, team or match code",
+  "camTabSearchHint": "Search player, team, code",
+  "camTabCloseSearch": "Close search",
+  "camTabClearText": "Clear text",
+  "camTabApplyFilter": "Apply",
   "camTabAllRounds": "All rounds",
   "camTabRound": "Round {n}",
   "@camTabRound": {

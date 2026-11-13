@@ -19747,7 +19747,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get camTabMenuTooltip => 'Thêm tuỳ chọn';
 
   @override
-  String get camTabSearchHint => 'Tìm theo tên VĐV, đội hoặc mã trận';
+  String get camTabSearchHint => 'Tìm VĐV, đội, mã trận';
+
+  @override
+  String get camTabCloseSearch => 'Đóng tìm kiếm';
+
+  @override
+  String get camTabClearText => 'Xoá chữ';
+
+  @override
+  String get camTabApplyFilter => 'Áp dụng';
 
   @override
   String get camTabAllRounds => 'Tất cả vòng';

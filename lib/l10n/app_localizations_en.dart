@@ -19831,7 +19831,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get camTabMenuTooltip => 'More options';
 
   @override
-  String get camTabSearchHint => 'Search by player, team or match code';
+  String get camTabSearchHint => 'Search player, team, code';
+
+  @override
+  String get camTabCloseSearch => 'Close search';
+
+  @override
+  String get camTabClearText => 'Clear text';
+
+  @override
+  String get camTabApplyFilter => 'Apply';
 
   @override
   String get camTabAllRounds => 'All rounds';

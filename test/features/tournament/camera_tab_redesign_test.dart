@@ -9,7 +9,6 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_info.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/camera_filter_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_help_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -400,18 +399,19 @@ void main() {
     expect(_row('m1'), findsWidgets);
     expect(_row('m2'), findsWidgets);
 
+    await tester.tap(find.byTooltip('Tìm trận'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Lọc trận'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Vòng 2'));
+    await tester.tap(find.text('Áp dụng'));
     await tester.pumpAndSettle();
     expect(_row('m1'), findsNothing);
     expect(_row('m2'), findsWidgets);
 
-    await tester.tap(find.byTooltip('Tìm trận'));
-    await tester.pumpAndSettle();
     await tester.enterText(
       find.descendant(
-        of: find.byType(CameraFilterStrip),
+        of: find.byKey(const ValueKey('camTabPill')),
         matching: find.byType(TextField),
       ),
       'khong-co',
@@ -436,9 +436,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(_row('m1'), findsWidgets);
 
+    await tester.tap(find.byTooltip('Tìm trận'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Lọc trận'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Chưa có cam'));
+    await tester.tap(find.text('Áp dụng'));
     await tester.pumpAndSettle();
     expect(_row('m1'), findsNothing);
     expect(find.text('Không có trận khớp'), findsOneWidget);

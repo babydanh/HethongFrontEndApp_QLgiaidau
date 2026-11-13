@@ -35536,8 +35536,26 @@ abstract class AppLocalizations {
   /// No description provided for @camTabSearchHint.
   ///
   /// In vi, this message translates to:
-  /// **'Tìm theo tên VĐV, đội hoặc mã trận'**
+  /// **'Tìm VĐV, đội, mã trận'**
   String get camTabSearchHint;
+
+  /// No description provided for @camTabCloseSearch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng tìm kiếm'**
+  String get camTabCloseSearch;
+
+  /// No description provided for @camTabClearText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá chữ'**
+  String get camTabClearText;
+
+  /// No description provided for @camTabApplyFilter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get camTabApplyFilter;
 
   /// No description provided for @camTabAllRounds.
   ///

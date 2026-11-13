@@ -7855,7 +7855,10 @@
   "camTabFilterTooltip": "Lọc trận",
   "camTabCreateTooltip": "Tạo camera",
   "camTabMenuTooltip": "Thêm tuỳ chọn",
-  "camTabSearchHint": "Tìm theo tên VĐV, đội hoặc mã trận",
+  "camTabSearchHint": "Tìm VĐV, đội, mã trận",
+  "camTabCloseSearch": "Đóng tìm kiếm",
+  "camTabClearText": "Xoá chữ",
+  "camTabApplyFilter": "Áp dụng",
   "camTabAllRounds": "Tất cả vòng",
   "camTabRound": "Vòng {n}",
   "@camTabRound": {
