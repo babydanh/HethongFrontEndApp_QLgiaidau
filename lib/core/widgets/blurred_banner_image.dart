@@ -12,6 +12,7 @@ class BlurredBannerImage extends StatelessWidget {
     super.key,
     required this.image,
     this.errorBuilder,
+    this.frameBuilder,
   });
 
   final ImageProvider image;
@@ -19,30 +20,41 @@ class BlurredBannerImage extends StatelessWidget {
   /// Built in place of the whole banner when the image cannot be loaded.
   final ImageErrorWidgetBuilder? errorBuilder;
 
+  /// Wraps the banner, e.g. to show a placeholder until the first frame.
+  final ImageFrameBuilder? frameBuilder;
+
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Opacity(
-              opacity: 0.7,
-              child: Transform.scale(
-                scale: 1.15,
-                child: Image(
-                  image: image,
-                  fit: BoxFit.cover,
-                  excludeFromSemantics: true,
-                  // A failed backdrop stays empty; the foreground shows the fallback.
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+    // The blur is expensive to repaint, so keep it on its own layer.
+    return RepaintBoundary(
+      child: ClipRect(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Opacity(
+                opacity: 0.7,
+                child: Transform.scale(
+                  scale: 1.15,
+                  child: Image(
+                    image: image,
+                    fit: BoxFit.cover,
+                    excludeFromSemantics: true,
+                    // A failed backdrop stays empty; the foreground shows the fallback.
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),
-          ),
-          Image(image: image, fit: BoxFit.contain, errorBuilder: errorBuilder),
-        ],
+            Image(
+              image: image,
+              fit: BoxFit.contain,
+              frameBuilder: frameBuilder,
+              errorBuilder: errorBuilder,
+            ),
+          ],
+        ),
       ),
     );
   }

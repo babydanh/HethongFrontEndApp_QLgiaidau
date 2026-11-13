@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -1156,9 +1157,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 fit: StackFit.expand,
                 children: [
                   images.isNotEmpty
-                      ? Image.network(
-                          _resolveImageUrl(images.first),
-                          fit: BoxFit.cover,
+                      ? BlurredBannerImage(
+                          image: NetworkImage(_resolveImageUrl(images.first)),
                           // Brand placeholder instead of an empty banner
                           // while the image is still downloading.
                           frameBuilder: (ctx, child, frame, wasSync) =>
