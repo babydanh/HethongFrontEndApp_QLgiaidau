@@ -19757,4 +19757,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schedMgmt_emptyHint =>
       'No courts yet. Create a court to start scheduling.';
+
+  @override
+  String get venueHintNameIsAddress =>
+      'The name looks like an address. Move it to the address field?';
+
+  @override
+  String get venueHintNameHasAddress =>
+      'The name also contains an address. Split it into the address field?';
+
+  @override
+  String get venueHintAddressIsName =>
+      'The address looks like a venue name. Move it to the name field?';
+
+  @override
+  String get venueHintAddressRepeatsName =>
+      'The address repeats the venue name. Remove the repeat?';
+
+  @override
+  String get venueHintSameText => 'The venue name and address are identical.';
 }

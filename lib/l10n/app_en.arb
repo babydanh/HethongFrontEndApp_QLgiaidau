@@ -7790,5 +7790,10 @@
   "schedMgmt_hoursTooltip": "Court hours",
   "schedMgmt_arrangeTooltip": "Schedule matches",
   "schedMgmt_createCourtCta": "Create court",
-  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling."
+  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling.",
+  "venueHintNameIsAddress": "The name looks like an address. Move it to the address field?",
+  "venueHintNameHasAddress": "The name also contains an address. Split it into the address field?",
+  "venueHintAddressIsName": "The address looks like a venue name. Move it to the name field?",
+  "venueHintAddressRepeatsName": "The address repeats the venue name. Remove the repeat?",
+  "venueHintSameText": "The venue name and address are identical."
 }

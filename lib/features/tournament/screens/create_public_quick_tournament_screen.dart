@@ -22,6 +22,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
@@ -939,6 +940,22 @@ class _CreatePublicQuickTournamentScreenState
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: colors.border),
                 ),
+              ),
+            ),
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                _venueNameController,
+                _locationAddressController,
+              ]),
+              builder: (_, _) => VenueTextHintBar(
+                name: _venueNameController.text,
+                address: _locationAddressController.text,
+                onApply: (name, address) {
+                  _venueNameController.text = name;
+                  _locationAddressController.text = address;
+                  // Programmatic text changes skip onChanged.
+                  _detectAddressSuggestion();
+                },
               ),
             ),
             if (_suggestedProvince != null || _suggestedWard != null) ...[

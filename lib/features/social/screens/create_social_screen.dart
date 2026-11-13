@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
@@ -1243,6 +1244,15 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                               value == null || value.trim().isEmpty
                               ? 'Nhập địa chỉ sân'
                               : null,
+                        ),
+                        VenueTextHintBar(
+                          name: _venueNameController.text,
+                          address: _venueAddressController.text,
+                          onApply: (name, address) {
+                            _venueNameController.text = name;
+                            _venueAddressController.text = address;
+                            _editVenueText();
+                          },
                         ),
                       ],
                       const SizedBox(height: 16),

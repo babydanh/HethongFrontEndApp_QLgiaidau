@@ -27,6 +27,7 @@ import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/lite_division_picker.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
@@ -1333,6 +1334,36 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               });
             },
           ),
+          if (!locked)
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                _venueNameController,
+                _locationController,
+              ]),
+              builder: (_, _) => VenueTextHintBar(
+                name: _venueNameController.text,
+                address: _locationController.text,
+                onApply: (name, address) {
+                  _venueNameController.text = name;
+                  _locationController.text = address;
+                  _detectAddressAI(address);
+                  // Same debounced save as typing in the fields.
+                  _locationDebounce?.cancel();
+                  _locationDebounce = Timer(
+                    const Duration(milliseconds: 900),
+                    () {
+                      notifier.updateLocation(
+                        widget.tournamentId,
+                        venueName: _venueNameController.text,
+                        locationAddress: _locationController.text,
+                        province: selectedProvince?.name,
+                        ward: selectedWard?.name,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
           // ─── AI Detected Address Helper Banner ───
           if (!locked &&
               (_aiDetectedProvince != null || _aiDetectedWard != null)) ...[
