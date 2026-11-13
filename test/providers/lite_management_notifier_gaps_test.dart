@@ -759,7 +759,7 @@ void main() {
         },
         routes: {
           'PATCH /tournaments/$_id': const FakeReply(200, {}),
-          'POST /tournaments/$_id/venues': const FakeReply(201, {}),
+          'PATCH /tournaments/$_id/venue': const FakeReply(200, {}),
         },
       );
       final (c, notifier) = await _loaded(adapter);
@@ -778,10 +778,15 @@ void main() {
       expect(patch['city'], 'TP.HCM'); // falls back to the loaded province
       final location = (patch['tournamentConfig'] as Map)['location'] as Map;
       expect(location['display'], 'Sân A, 1 Lê Lợi, Bến Nghé, TP.HCM');
-      expect(adapter.postsTo('/tournaments/$_id/venues').single.body, {
+      // The venue is upserted (PATCH), never created again on every save.
+      final venueSaves = adapter.requests.where(
+        (r) => r.method == 'PATCH' && r.path == '/tournaments/$_id/venue',
+      );
+      expect(venueSaves.single.body, {
         'name': 'Sân A',
         'locationAddress': '1 Lê Lợi',
       });
+      expect(adapter.postsTo('/tournaments/$_id/venues'), isEmpty);
       expect(_state(c).venueName, 'Sân A');
       await _settleSaveStatus();
     });
