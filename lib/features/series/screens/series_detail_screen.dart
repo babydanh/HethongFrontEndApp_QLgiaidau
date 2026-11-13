@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:intl/intl.dart';
 
 // ─── Models ───
@@ -123,6 +124,9 @@ class SeriesRanking {
   final int position;
   final String participantName;
   final String? avatarUrl;
+
+  /// Tài khoản của VĐV (null với khách/đội): có thì avatar có viền hạng.
+  final String? userId;
   final int points;
   final int totalWins;
   final int totalLosses;
@@ -131,6 +135,7 @@ class SeriesRanking {
     required this.position,
     required this.participantName,
     this.avatarUrl,
+    this.userId,
     this.points = 0,
     this.totalWins = 0,
     this.totalLosses = 0,
@@ -141,6 +146,7 @@ class SeriesRanking {
     participantName:
         json['fullName'] ?? json['name'] ?? json['participantName'] ?? '',
     avatarUrl: json['avatarUrl'] ?? json['avatar'],
+    userId: json['userId']?.toString(),
     points: json['points'] ?? json['totalPoints'] ?? 0,
     totalWins: json['totalWins'] ?? json['wins'] ?? 0,
     totalLosses: json['totalLosses'] ?? json['losses'] ?? 0,
@@ -149,22 +155,20 @@ class SeriesRanking {
 
 // ─── Provider ───
 
-final seriesDetailProvider = FutureProvider.autoDispose.family<SeriesDetail?, String>((
-  ref,
-  slug,
-) async {
-  final dio = ref.read(dioClientProvider).dio;
-  try {
-    final response = await dio.get('/series/$slug');
-    if (response.statusCode == 200) {
-      final data = response.data['data'] ?? response.data;
-      return SeriesDetail.fromJson(data as Map<String, dynamic>);
-    }
-    return null;
-  } catch (_) {
-    return null;
-  }
-});
+final seriesDetailProvider = FutureProvider.autoDispose
+    .family<SeriesDetail?, String>((ref, slug) async {
+      final dio = ref.read(dioClientProvider).dio;
+      try {
+        final response = await dio.get('/series/$slug');
+        if (response.statusCode == 200) {
+          final data = response.data['data'] ?? response.data;
+          return SeriesDetail.fromJson(data as Map<String, dynamic>);
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    });
 
 // ─── Screen ───
 
@@ -837,25 +841,33 @@ class _RankingsTab extends StatelessWidget {
                   ),
           ),
           const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: colors.bgSurface,
-            backgroundImage: rank.avatarUrl != null
-                ? NetworkImage(rank.avatarUrl!)
-                : null,
-            child: rank.avatarUrl == null
-                ? Text(
-                    rank.participantName.isNotEmpty
-                        ? rank.participantName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textMuted,
-                    ),
-                  )
-                : null,
-          ),
+          if (rank.userId?.isNotEmpty ?? false)
+            ResolvedRankAvatar(
+              userId: rank.userId,
+              name: rank.participantName,
+              imageUrl: rank.avatarUrl,
+              size: 36,
+            )
+          else
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: colors.bgSurface,
+              backgroundImage: rank.avatarUrl != null
+                  ? NetworkImage(rank.avatarUrl!)
+                  : null,
+              child: rank.avatarUrl == null
+                  ? Text(
+                      rank.participantName.isNotEmpty
+                          ? rank.participantName[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textMuted,
+                      ),
+                    )
+                  : null,
+            ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

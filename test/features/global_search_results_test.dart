@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -127,6 +129,7 @@ MatchModel _match({
   String? tournamentName = 'Synthetic Open',
   String? team1LogoUrl,
   String? team2LogoUrl,
+  List<ParticipantPlayer> team1Players = const [],
 }) => MatchModel(
   id: 'match-1',
   tournamentId: 'tournament-1',
@@ -138,6 +141,7 @@ MatchModel _match({
   team2Name: team2Name,
   team1LogoUrl: team1LogoUrl,
   team2LogoUrl: team2LogoUrl,
+  team1Players: team1Players,
   score1: score1,
   score2: score2,
   sets: sets,
@@ -555,6 +559,42 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(matches.requestedCategoryIds.last, _categoryId);
+    },
+  );
+
+  testWidgets(
+    'TC-RANK-RING-APP-E12: match result rings a singles player known only from participant players',
+    (tester) async {
+      final matches = _SearchMatchRepository(
+        matches: [
+          _match(
+            team1Players: const [
+              ParticipantPlayer(
+                slot: 1,
+                userId: 'u1',
+                fullName: 'Player Alpha',
+                eloPoints: 1850,
+                tierName: 'Tier S',
+              ),
+            ],
+          ),
+        ],
+      );
+      await _pumpSearch(
+        tester,
+        scope: 0,
+        tournamentRepository: _SearchTournamentRepository(),
+        matchRepository: matches,
+      );
+
+      final avatar = find.byType(RankAvatar);
+      expect(avatar, findsOneWidget);
+      final outer = find
+          .descendant(of: avatar, matching: find.byType(Container))
+          .first;
+      final ring =
+          (tester.widget<Container>(outer).decoration! as BoxDecoration).color;
+      expect(ring, const Color(0xFFFBBF24));
     },
   );
 

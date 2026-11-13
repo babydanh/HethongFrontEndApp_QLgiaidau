@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -687,9 +688,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           // Kèo dùng chung endpoint của trang kèo (GET /social-sessions).
           // Endpoint nới `date` khi có `search`, nên mặc định (không ghim ngày)
           // tìm được kèo ở mọi ngày; ghim ngày thì vẫn lọc đúng một ngày.
-          final sessionPage = append
-              ? int.tryParse(_nextCursor ?? '') ?? 1
-              : 1;
+          final sessionPage = append ? int.tryParse(_nextCursor ?? '') ?? 1 : 1;
           // Có từ khoá thì không ghim ngày (tìm mọi ngày chơi); không có từ
           // khoá thì rơi về hôm nay — backend chỉ chấp nhận thiếu `date` khi
           // request mang `search`, thiếu cả hai sẽ bị 400.
@@ -865,8 +864,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         .where(
           (player) =>
               query.isEmpty ||
-                  player.fullName.toLowerCase().contains(query) ||
-                  (player.partnerName ?? '').toLowerCase().contains(query),
+              player.fullName.toLowerCase().contains(query) ||
+              (player.partnerName ?? '').toLowerCase().contains(query),
         )
         .toList();
     return athletes;
@@ -910,8 +909,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
           (_tournamentDateRange != null ? 1 : 0),
     // Ngày chơi không còn bắt buộc nên chỉ tính vào số bộ lọc khi đang ghim;
     // mặc định (null) là tìm mọi ngày nên không có gì để "mở ra đổi".
-    2 =>
-      (_sessionDate != null ? 1 : 0) + (_sessionSport != 'all' ? 1 : 0),
+    2 => (_sessionDate != null ? 1 : 0) + (_sessionSport != 'all' ? 1 : 0),
     3 => (_clubSport != 'all' ? 1 : 0) + (_clubProvince != null ? 1 : 0),
     4 =>
       (_athleteSport != 'all' ? 1 : 0) +
@@ -1471,12 +1469,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         match.completedAt != null ||
         match.sets.isNotEmpty ||
         (match.scoreDetails?.isNotEmpty ?? false);
-    final team1Avatar = match.team1MemberInfos.isEmpty
+    final team1Members = matchSideMemberInfos(match, 1);
+    final team2Members = matchSideMemberInfos(match, 2);
+    final team1Avatar = team1Members.isEmpty
         ? null
-        : match.team1MemberInfos.first.avatarUrl;
-    final team2Avatar = match.team2MemberInfos.isEmpty
+        : team1Members.first.avatarUrl;
+    final team2Avatar = team2Members.isEmpty
         ? null
-        : match.team2MemberInfos.first.avatarUrl;
+        : team2Members.first.avatarUrl;
     final team1Image = _preferredImageUrl(match.team1LogoUrl, team1Avatar);
     final team2Image = _preferredImageUrl(match.team2LogoUrl, team2Avatar);
     final location = _joinLocation(match.court, _matchWardAndCity(match));
@@ -1540,7 +1540,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                         child: _sideAvatar(
                           team1Image,
                           match.team1Name,
-                          match.team1MemberInfos,
+                          team1Members,
                           match.sportKey,
                         ),
                       ),
@@ -1553,7 +1553,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                         child: _sideAvatar(
                           team2Image,
                           match.team2Name,
-                          match.team2MemberInfos,
+                          team2Members,
                           match.sportKey,
                         ),
                       ),
