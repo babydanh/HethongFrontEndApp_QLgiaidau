@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -638,6 +639,15 @@ class _VenueDialogState extends State<_VenueDialog> {
                       controller: _address,
                       required: true,
                       maxLines: 2,
+                    ),
+                    // The fields call setState on every edit, so this rebuilds.
+                    VenueTextHintBar(
+                      name: _name.text,
+                      address: _address.text,
+                      onApply: (name, address) => setState(() {
+                        _name.text = name;
+                        _address.text = address;
+                      }),
                     ),
                     if (widget.showCourtFields) ...[
                       const SizedBox(height: 14),
