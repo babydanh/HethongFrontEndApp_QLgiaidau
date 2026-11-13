@@ -7930,5 +7930,10 @@
   "camWallSignalIdle": "Not live",
   "camWallNoCourt": "No court",
   "feeDirectNote": "Pay the organizer directly",
-  "feeDirectStatus": "Collected directly"
+  "feeDirectStatus": "Collected directly",
+  "venueHintNameIsAddress": "The name looks like an address. Move it to the address field?",
+  "venueHintNameHasAddress": "The name also contains an address. Split it into the address field?",
+  "venueHintAddressIsName": "The address looks like a venue name. Move it to the name field?",
+  "venueHintAddressRepeatsName": "The address repeats the venue name. Remove the repeat?",
+  "venueHintSameText": "The venue name and address are identical."
 }

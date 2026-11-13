@@ -35928,6 +35928,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thu trực tiếp'**
   String get feeDirectStatus;
+
+  /// No description provided for @venueHintNameIsAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô tên đang giống một địa chỉ. Chuyển sang ô địa chỉ?'**
+  String get venueHintNameIsAddress;
+
+  /// No description provided for @venueHintNameHasAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô tên có cả địa chỉ. Tách địa chỉ sang ô địa chỉ?'**
+  String get venueHintNameHasAddress;
+
+  /// No description provided for @venueHintAddressIsName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô địa chỉ đang giống một tên sân. Chuyển sang ô tên?'**
+  String get venueHintAddressIsName;
+
+  /// No description provided for @venueHintAddressRepeatsName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ đang lặp lại tên sân. Bỏ phần lặp?'**
+  String get venueHintAddressRepeatsName;
+
+  /// No description provided for @venueHintSameText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân và địa chỉ đang giống hệt nhau.'**
+  String get venueHintSameText;
 }
 
 class _AppLocalizationsDelegate
