@@ -12,6 +12,8 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_digest.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Giới hạn số dòng mỗi lần nhập, giống `MAX_BATCH_PARTICIPANTS` của web.
@@ -186,11 +188,11 @@ class _DraftRow {
 
   bool get localEligible => !localStatus.any(_localBlockingCodes.contains);
 
-  bool get hasPlayer2 =>
-      parsed.player2Name != null ||
-      parsed.player2Email != null ||
-      parsed.player2Phone != null;
+  bool get hasPlayer2 => parsed.hasPlayer2;
 }
+
+/// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi.
+enum _LayoutStatus { idle, rules, loading, done, unavailable, error, empty }
 
 class _DraftGroup {
   _DraftGroup(this.target);
@@ -363,6 +365,17 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   List<_DraftRow> _rows = const [];
   List<_DraftGroup> _groups = const [];
   List<String> _skippedSheets = const [];
+
+  /// Lưới đã điền ô gộp và các khối đang dùng (luật, rồi AI khi AI trả lời được).
+  List<RosterGridSheet> _grid = const [];
+  List<RosterReading> _readings = const [];
+  _LayoutStatus _layoutStatus = _LayoutStatus.idle;
+
+  /// Tăng mỗi lần đọc file hoặc hỏi AI để bỏ câu trả lời của lần cũ đến muộn.
+  int _layoutRequest = 0;
+
+  /// Tăng khi người dùng sửa dữ liệu (tài khoản, nội dung); câu trả lời AI đến sau đó bị bỏ.
+  int _editRevision = 0;
   final Map<int, _RowCandidates> _candidates = {};
   String? _fileName;
   String? _fileError;
@@ -395,6 +408,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   @override
   void dispose() {
     _previewGeneration++;
+    _layoutRequest++;
     super.dispose();
   }
 
@@ -429,22 +443,41 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     );
   }
 
-  _ParsedWorkbook _parseWorkbook(List<RosterGridSheet> sheets) {
-    final rows = <_DraftRow>[];
+  /// Nội dung đích là đôi? Nội dung của giải theo kiểu thật; nội dung chưa có (sẽ tạo từ tên trong file)
+  /// theo kiểu suy từ tên, như web, để file `Đôi Nam` được ghép cặp trước cả khi nội dung được tạo.
+  bool _isDoublesForLabel(String? divisionName) {
+    final target = _targetFor(divisionName);
+    if (target.divisionId != null) return target.isDoubles;
+    return _isDoublesType(
+      _inferMatchType(target.label, anyRowHasPlayer2: false),
+    );
+  }
+
+  /// Đọc workbook bằng luật: từng sheet có dòng header thành một khối; sheet không có thì bị bỏ qua.
+  ({List<RosterReading> readings, List<String> skipped}) _readByRules(
+    List<RosterGridSheet> grid,
+  ) {
+    final readings = <RosterReading>[];
     final skipped = <String>[];
-    for (final sheet in sheets) {
-      final headerRow = detectRosterHeaderRow(sheet);
-      if (headerRow == null) {
+    for (final sheet in grid) {
+      final reading = readSheetByRules(sheet);
+      if (reading == null) {
         skipped.add(sheet.name);
-        continue;
+      } else {
+        readings.add(reading);
       }
-      final mapping = detectRosterColumnMapping(sheet.rows[headerRow]);
-      final parsedRows = parseRosterSheet(
-        sheet,
-        headerRowIndex: headerRow,
-        mapping: mapping,
-      );
-      for (final parsed in parsedRows) {
+    }
+    return (readings: readings, skipped: skipped);
+  }
+
+  /// Ghép các dòng của mọi khối (cặp, VĐV lẻ) rồi dựng dòng nháp, kiểm tra cục bộ và nhóm theo nội dung.
+  _ParsedWorkbook _assembleWorkbook(
+    List<RosterReading> readings,
+    List<String> skipped,
+  ) {
+    final rows = <_DraftRow>[];
+    for (final reading in readings) {
+      for (final parsed in assembleRosterRows(reading, _isDoublesForLabel)) {
         rows.add(
           _DraftRow(
             index: rows.length,
@@ -504,29 +537,29 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       });
       final sheets = await readRosterWorkbook(bytes);
       if (!mounted) return;
-      final parsed = _parseWorkbook(sheets);
+      final requestId = ++_layoutRequest;
+      _editRevision = 0;
+      // Ô gộp được điền xuống trước khi đọc: cả hai dòng của một cặp mang STT và dấu thanh toán.
+      final grid = [for (final sheet in sheets) fillRosterMerges(sheet)];
+      final byRules = _readByRules(grid);
       _candidates.clear();
-      final unmatched = parsed.groups
-          .where((group) => group.target.divisionId == null)
-          .toList(growable: false);
+      _grid = grid;
+      _readings = byRules.readings;
+      final parsed = _assembleWorkbook(byRules.readings, byRules.skipped);
+      // Luật đủ tin thì không chờ AI; không thì hỏi AI và giữ kết quả luật trên màn hình tới khi AI trả lời.
+      final confident =
+          grid.isEmpty ||
+          rosterRulesAreConfident(grid, byRules.readings, _isDoublesForLabel);
       setState(() {
-        _rows = parsed.rows;
-        _groups = parsed.groups;
-        _skippedSheets = parsed.skippedSheets;
+        _layoutStatus = confident ? _LayoutStatus.rules : _LayoutStatus.loading;
         _reading = false;
-        _preview = null;
-        _previewPlan = null;
-        _previewError = null;
-        _createdDivisions.clear();
-        // Có tên nội dung chưa khớp: dừng ở bước xác nhận tạo nội dung trước
-        // khi preview server (task 3.8). Không có thì preview như cũ.
-        _pendingDivisionConfirm = unmatched.isNotEmpty;
-        _createChoice = {
-          for (final group in unmatched) _foldName(group.target.label),
-        };
-        _createError = null;
       });
-      if (!_pendingDivisionConfirm) unawaited(_runPreview());
+      _installParsed(parsed);
+      if (!confident) {
+        unawaited(_requestAiLayout(requestId));
+      } else if (!_pendingDivisionConfirm) {
+        unawaited(_runPreview());
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -534,6 +567,84 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
         _fileError = l10n.rosterImportReadFailed;
       });
     }
+  }
+
+  /// Số VĐV ở nội dung đôi chưa có VĐV 2: chờ BTC ghép cặp.
+  int get _pendingPartnerCount => _rows
+      .where(
+        (row) => !row.hasPlayer2 && _isDoublesForLabel(row.parsed.divisionName),
+      )
+      .length;
+
+  /// Đặt các dòng đọc được vào màn và mở bước xác nhận tạo nội dung nếu có tên chưa khớp.
+  void _installParsed(_ParsedWorkbook parsed) {
+    final unmatched = parsed.groups
+        .where((group) => group.target.divisionId == null)
+        .toList(growable: false);
+    setState(() {
+      _rows = parsed.rows;
+      _groups = parsed.groups;
+      _skippedSheets = parsed.skippedSheets;
+      _preview = null;
+      _previewPlan = null;
+      _previewError = null;
+      _createdDivisions.clear();
+      // Có tên nội dung chưa khớp: dừng ở bước xác nhận tạo nội dung trước khi preview server.
+      _pendingDivisionConfirm = unmatched.isNotEmpty;
+      _createChoice = {
+        for (final group in unmatched) _foldName(group.target.label),
+      };
+      _createError = null;
+    });
+  }
+
+  /// Hỏi AI về bố cục khi luật không đủ tin. AI tắt (`aiAvailable: false`), hết lượt (429), lỗi (503) hay
+  /// không tìm thấy bảng thì giữ kết quả luật và báo trạng thái. Câu trả lời đến sau khi người dùng đã sửa
+  /// dữ liệu hoặc mở file khác bị bỏ. Một câu trả lời không có khối nào được hỏi lại một lần.
+  Future<void> _requestAiLayout(int requestId) async {
+    final repository = ref.read(rosterLayoutRepositoryProvider);
+    final locale = Localizations.localeOf(context).languageCode == 'en'
+        ? 'en'
+        : 'vi';
+    final editRevision = _editRevision;
+    _LayoutStatus outcome = _LayoutStatus.error;
+    try {
+      final digest = buildRosterLayoutDigest(_grid);
+      for (var attempt = 0; attempt < 2; attempt++) {
+        final response = await repository.analyzeRosterLayout(
+          widget.tournament.id,
+          sheets: digest,
+          locale: locale,
+          retryEmptyLayout: attempt > 0,
+        );
+        if (!mounted || requestId != _layoutRequest) return;
+        final layout = response.layout;
+        if (!response.aiAvailable || layout == null) {
+          outcome = _LayoutStatus.unavailable;
+          break;
+        }
+        if (_editRevision != editRevision) {
+          outcome = _LayoutStatus.rules;
+          break;
+        }
+        final readings = applyRosterLayout(_grid, layout);
+        if (readings.isEmpty) {
+          outcome = _LayoutStatus.empty;
+          continue;
+        }
+        _readings = readings;
+        setState(() => _layoutStatus = _LayoutStatus.done);
+        _installParsed(_assembleWorkbook(readings, const []));
+        if (!_pendingDivisionConfirm) unawaited(_runPreview());
+        return;
+      }
+    } catch (_) {
+      if (!mounted || requestId != _layoutRequest) return;
+      outcome = _LayoutStatus.error;
+    }
+    if (!mounted || requestId != _layoutRequest) return;
+    setState(() => _layoutStatus = outcome);
+    if (!_pendingDivisionConfirm) unawaited(_runPreview());
   }
 
   /// Payload tạo hạng mục mới từ tên trong file, giống `createPendingDivision`
@@ -659,24 +770,10 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   /// Khớp lại nội dung đích của mọi dòng sau khi có hạng mục mới, tính lại
   /// trạng thái cục bộ (quy tắc VĐV 2 phụ thuộc nội dung đích) và nhóm.
   void _remapRows() {
-    for (final row in _rows) {
-      row.target = _targetFor(row.parsed.divisionName);
-    }
-    final duplicates = _duplicateRowIndices(_rows);
-    for (final row in _rows) {
-      row.localStatus = _localStatusOf(
-        row,
-        duplicate: duplicates.contains(row.index),
-      );
-    }
-    final groupMap = <String, _DraftGroup>{};
-    for (final row in _rows) {
-      groupMap
-          .putIfAbsent(row.target.key, () => _DraftGroup(row.target))
-          .rows
-          .add(row);
-    }
-    _groups = groupMap.values.toList(growable: false);
+    // Nội dung mới có thể là đôi: ghép lại các khối đang dùng theo nội dung đích mới.
+    final parsed = _assembleWorkbook(_readings, _skippedSheets);
+    _rows = parsed.rows;
+    _groups = parsed.groups;
   }
 
   /// Dựng payload từ các dòng đạt kiểm tra cục bộ. Trả null khi không có gì để gửi.
@@ -720,6 +817,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       player2Phone: parsed.player2Phone,
       teamName: teamName,
       elo: parsed.elo,
+      eloSource: parsed.eloSource,
       isPaid: parsed.isPaid,
       autoApprove: _autoApprove,
       sourceRowIndex: parsed.sourceRowIndex,
@@ -818,6 +916,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   }
 
   void _setLink(_DraftRow row, int player, _PlayerLink link) {
+    _editRevision++;
     setState(() {
       if (player == 1) {
         row.player1Link = link;
@@ -1053,6 +1152,40 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
         _noticeText(l10n.rosterImportNoSheetHeader(sheet), colors.warning),
       if (_fileName != null && !_reading && _rows.isEmpty)
         _noticeText(l10n.rosterImportNoRows, colors.warning),
+      if (_layoutStatus == _LayoutStatus.loading)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            key: const ValueKey('roster-import-ai-checking'),
+            children: [
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.rosterImportAiChecking,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      if (_layoutStatus == _LayoutStatus.done)
+        _noticeText(l10n.rosterImportAiDone, colors.success),
+      if (_layoutStatus == _LayoutStatus.unavailable)
+        _noticeText(l10n.rosterImportAiUnavailable, colors.warning),
+      if (_layoutStatus == _LayoutStatus.error)
+        _noticeText(l10n.rosterImportAiError, colors.warning),
+      if (_layoutStatus == _LayoutStatus.empty)
+        _noticeText(l10n.rosterImportAiEmpty, colors.warning),
+      if (_pendingPartnerCount > 0)
+        _noticeText(
+          l10n.rosterImportPendingPartnerCount(_pendingPartnerCount),
+          colors.textSecondary,
+        ),
       if (_pendingDivisionConfirm) ...[
         _noticeText(l10n.rosterImportCreateTitle, colors.warning),
         Text(

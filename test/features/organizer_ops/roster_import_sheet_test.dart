@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
+import 'package:app_quanly_giaidau/domain/entities/roster_layout.dart';
+import 'package:app_quanly_giaidau/domain/repositories/roster_layout_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_sheet.dart';
@@ -11,7 +13,10 @@ import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'roster_fixture_workbook.dart';
 
 /// File picker giả: trả về workbook xlsx dựng sẵn, không đụng hệ điều hành.
 class _FakePicker extends FilePickerPlatform {
@@ -38,6 +43,28 @@ class _FakePicker extends FilePickerPlatform {
     return FilePickerResult([
       PlatformFile(name: 'roster.xlsx', size: bytes.length, bytes: bytes),
     ]);
+  }
+}
+
+/// AI layout giả: trả [response] hoặc ném [failure]; ghi lại số lần gọi và retryReason.
+class _FakeLayoutRepo implements RosterLayoutRepository {
+  _FakeLayoutRepo({this.response, this.failure});
+
+  final RosterLayoutResponse? response;
+  final Object? failure;
+  final calls = <bool>[];
+
+  @override
+  Future<RosterLayoutResponse> analyzeRosterLayout(
+    String tournamentId, {
+    required List<Map<String, dynamic>> sheets,
+    String locale = 'vi',
+    bool retryEmptyLayout = false,
+  }) async {
+    calls.add(retryEmptyLayout);
+    final error = failure;
+    if (error != null) throw error;
+    return response!;
   }
 }
 
@@ -122,7 +149,7 @@ class _Repo implements TournamentManagementRepository {
 TournamentDivision _division(String id, String name, {String? matchType}) =>
     TournamentDivision(id: id, name: name, matchType: matchType ?? 'SINGLES');
 
-Tournament _tournament() => Tournament(
+Tournament _tournament({String matchType = 'SINGLES'}) => Tournament(
   id: 't1',
   name: 'Giải Test',
   sport: 'pickleball',
@@ -134,7 +161,7 @@ Tournament _tournament() => Tournament(
   creatorId: 'creator-1',
   createdAt: DateTime.utc(2026),
   updatedAt: DateTime.utc(2026),
-  divisions: [_division('div-1', 'Đơn nam')],
+  divisions: [_division('div-1', 'Đơn nam', matchType: matchType)],
 );
 
 /// Workbook một sheet: dòng đầu là header, các dòng sau là dữ liệu.
@@ -150,9 +177,15 @@ Uint8List _workbook(List<List<String>> rows) {
 
 /// Trang chủ có nút mở sheet: sheet chạy trong modal route thật nên đóng
 /// được bằng Navigator.pop (như các test sheet khác).
-Widget _app(_Repo repo) => ProviderScope(
+Widget _app(
+  _Repo repo, {
+  String matchType = 'SINGLES',
+  RosterLayoutRepository? layout,
+}) => ProviderScope(
   overrides: [
     tournamentManagementRepositoryProvider.overrideWith((ref) => repo),
+    if (layout != null)
+      rosterLayoutRepositoryProvider.overrideWith((ref) => layout),
   ],
   child: MaterialApp(
     theme: AppTheme.darkTheme,
@@ -169,8 +202,12 @@ Widget _app(_Repo repo) => ProviderScope(
               isScrollControlled: true,
               enableDrag: false,
               builder: (_) => RosterImportSheet(
-                tournament: _tournament(),
-                defaultDivision: _division('div-1', 'Đơn nam'),
+                tournament: _tournament(matchType: matchType),
+                defaultDivision: _division(
+                  'div-1',
+                  'Đơn nam',
+                  matchType: matchType,
+                ),
                 onRefresh: () async {},
               ),
             ),
@@ -407,4 +444,200 @@ void main() {
       expect(repo.previews.single.groups.single.divisionId, 'div-1');
     },
   );
+
+  group('TC-APP-ROSTER-SHEET: màn nhập ghép cặp, thanh toán và AI', () {
+    Future<void> openWith(
+      WidgetTester tester,
+      Uint8List bytes,
+      _Repo repo, {
+      String matchType = 'DOUBLES',
+      RosterLayoutRepository? layout,
+    }) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      _installPicker(bytes);
+      await _open(tester, _app(repo, matchType: matchType, layout: layout));
+    }
+
+    List<RosterImportBatchItem> sent(_Repo repo) => [
+      for (final group in repo.previews.last.groups) ...group.participants,
+    ];
+
+    testWidgets(
+      'TC-APP-ROSTER-SHEET-01: file mẫu gửi 11 cặp và 7 VĐV lẻ, không ai đã thanh toán, không hỏi AI',
+      (tester) async {
+        final repo = _Repo();
+        final layout = _FakeLayoutRepo(failure: StateError('không được gọi'));
+        await openWith(tester, sampleWorkbookBytes(), repo, layout: layout);
+
+        final items = sent(repo);
+        expect(items, hasLength(18));
+        expect(items.where((i) => i.player2Name != null), hasLength(11));
+        expect(items.where((i) => i.player2Name == null), hasLength(7));
+        expect(items.every((i) => i.isPaid == false), isTrue);
+        expect(items.first.player1Phone, fakePhone(0));
+        expect(items.first.player2Phone, fakePhone(1));
+        expect(layout.calls, isEmpty);
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(RosterImportSheet)),
+        )!;
+        expect(
+          find.text(l10n.rosterImportPendingPartnerCount(7)),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'TC-APP-ROSTER-SHEET-02: AI không sẵn sàng (aiAvailable:false) giữ kết quả luật và báo trạng thái',
+      (tester) async {
+        final sample = workbookBytes(
+          [
+            ['STT', 'Họ và tên VĐV', 'Số điện thoại liên hệ'],
+            [1, fakeName(0), fakePhone(0)],
+            [null, fakeName(1), fakePhone(1)],
+            [2, fakeName(2), fakePhone(2)],
+            [null, fakeName(3), fakePhone(3)],
+            [3, fakeName(4), fakePhone(4)],
+            [4, fakeName(5), fakePhone(5)],
+            [5, fakeName(6), fakePhone(6)],
+          ],
+          merges: ['A2:A3', 'A4:A5'],
+        );
+        final repo = _Repo();
+        final layout = _FakeLayoutRepo(
+          response: const RosterLayoutResponse(
+            aiAvailable: false,
+            layout: null,
+          ),
+        );
+        await openWith(tester, sample, repo, layout: layout);
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(RosterImportSheet)),
+        )!;
+        expect(layout.calls, [false]);
+        expect(find.text(l10n.rosterImportAiUnavailable), findsOneWidget);
+        // Luật không thấy cặp nào (quá ít dòng cặp), nên cả bảy dòng vẫn được kiểm tra, đều là VĐV lẻ.
+        expect(sent(repo), hasLength(7));
+        expect(sent(repo).every((i) => i.player2Name == null), isTrue);
+      },
+    );
+
+    testWidgets(
+      'TC-APP-ROSTER-SHEET-03: AI hết lượt (429) hoặc lỗi 503 giữ kết quả luật và báo lỗi',
+      (tester) async {
+        final sample = workbookBytes(
+          [
+            ['STT', 'Họ và tên VĐV', 'Số điện thoại liên hệ'],
+            [1, fakeName(0), ''],
+            [null, fakeName(1), ''],
+            [2, fakeName(2), ''],
+            [null, fakeName(3), ''],
+            [3, fakeName(4), ''],
+            [4, fakeName(5), ''],
+            [5, fakeName(6), ''],
+          ],
+          merges: ['A2:A3', 'A4:A5'],
+        );
+        final repo = _Repo();
+        final layout = _FakeLayoutRepo(
+          failure: DioException(
+            requestOptions: RequestOptions(path: '/ai'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/ai'),
+              statusCode: 429,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        await openWith(tester, sample, repo, layout: layout);
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(RosterImportSheet)),
+        )!;
+        expect(find.text(l10n.rosterImportAiError), findsOneWidget);
+        expect(sent(repo), hasLength(7));
+      },
+    );
+
+    testWidgets(
+      'TC-APP-ROSTER-SHEET-04: AI trả CONSECUTIVE_ROWS kèm singlesFromRow thì dùng bố cục AI: 2 cặp và 3 VĐV lẻ',
+      (tester) async {
+        final sample = workbookBytes(
+          [
+            ['STT', 'Họ và tên VĐV', 'Số điện thoại liên hệ'],
+            [1, fakeName(0), fakePhone(0)],
+            [null, fakeName(1), fakePhone(1)],
+            [2, fakeName(2), fakePhone(2)],
+            [null, fakeName(3), fakePhone(3)],
+            [3, fakeName(4), fakePhone(4)],
+            [4, fakeName(5), fakePhone(5)],
+            [5, fakeName(6), fakePhone(6)],
+          ],
+          merges: ['A2:A3', 'A4:A5'],
+        );
+        final repo = _Repo();
+        final layout = _FakeLayoutRepo(
+          response: RosterLayoutResponse.fromJson({
+            'aiAvailable': true,
+            'layout': {
+              'sheets': [
+                {
+                  'sheetName': 'S1',
+                  'kind': 'ROSTER',
+                  'blocks': [
+                    {
+                      'divisionLabel': '',
+                      'headerRow': 1,
+                      'firstDataRow': 2,
+                      'lastDataRow': 8,
+                      'columns': {'player1Name': 'B', 'player1Phone': 'C'},
+                      'pairLayout': 'CONSECUTIVE_ROWS',
+                      'pairSeparator': '',
+                      'singlesFromRow': 6,
+                    },
+                  ],
+                },
+              ],
+              'notes': <String>[],
+            },
+          }),
+        );
+        await openWith(tester, sample, repo, layout: layout);
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(RosterImportSheet)),
+        )!;
+        expect(find.text(l10n.rosterImportAiDone), findsOneWidget);
+        final items = sent(repo);
+        expect(items, hasLength(5));
+        expect(items.where((i) => i.player2Name != null), hasLength(2));
+        expect(items.every((i) => i.isPaid == false), isTrue);
+      },
+    );
+
+    testWidgets(
+      'TC-APP-ROSTER-SHEET-05: cột Xác nhận BTC được gửi lên theo file, ô gộp theo cặp áp cho cả hai',
+      (tester) async {
+        final bytes = workbookBytes(
+          [
+            ['STT', 'Họ và tên VĐV', 'Xác nhận BTC'],
+            [1, fakeName(0), 'x'],
+            [null, fakeName(1), null],
+            [2, fakeName(2), null],
+            [null, fakeName(3), null],
+          ],
+          merges: ['A2:A3', 'C2:C3', 'A4:A5', 'C4:C5'],
+        );
+        final repo = _Repo();
+        await openWith(tester, bytes, repo);
+
+        expect(sent(repo).map((i) => i.isPaid), [true, false]);
+        expect(sent(repo).map((i) => i.toJson()['isPaid']), [true, false]);
+      },
+    );
+  });
 }

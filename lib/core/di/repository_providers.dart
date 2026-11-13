@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/data/repositories/api/api_roster_layout_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/roster_layout_repository.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
@@ -52,6 +54,10 @@ final tournamentManagementRepositoryProvider =
     Provider<TournamentManagementRepository>((ref) {
       return ApiTournamentManagementRepository(ref.watch(dioClientProvider));
     });
+
+final rosterLayoutRepositoryProvider = Provider<RosterLayoutRepository>((ref) {
+  return ApiRosterLayoutRepository(ref.watch(dioClientProvider));
+});
 
 final teamRepositoryProvider = Provider<ITeamRepository>((ref) {
   return ApiTeamRepository(ref.watch(dioClientProvider));

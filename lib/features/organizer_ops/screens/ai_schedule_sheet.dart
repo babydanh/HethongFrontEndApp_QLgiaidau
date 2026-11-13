@@ -61,7 +61,8 @@ class AiScheduleSheet extends StatefulWidget {
     isScrollControlled: true,
     enableDrag: false,
     showDragHandle: false,
-    builder: (_) => AiScheduleSheet(onPreview: onPreview, initialDay: initialDay),
+    builder: (_) =>
+        AiScheduleSheet(onPreview: onPreview, initialDay: initialDay),
   );
 
   @override

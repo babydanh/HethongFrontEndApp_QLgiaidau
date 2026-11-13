@@ -29566,6 +29566,42 @@ abstract class AppLocalizations {
   /// **'Không xác định được nội dung'**
   String get rosterImportStatusDivisionUnknown;
 
+  /// No description provided for @rosterImportAiChecking.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI đang đọc bố cục file...'**
+  String get rosterImportAiChecking;
+
+  /// No description provided for @rosterImportAiDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã dùng bố cục do AI đọc.'**
+  String get rosterImportAiDone;
+
+  /// No description provided for @rosterImportAiUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI chưa sẵn sàng, đang dùng kết quả đọc theo luật.'**
+  String get rosterImportAiUnavailable;
+
+  /// No description provided for @rosterImportAiError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không hỏi được AI (hết lượt hoặc lỗi máy chủ), đang dùng kết quả đọc theo luật.'**
+  String get rosterImportAiError;
+
+  /// No description provided for @rosterImportAiEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI không tìm thấy bảng VĐV, đang dùng kết quả đọc theo luật.'**
+  String get rosterImportAiEmpty;
+
+  /// No description provided for @rosterImportPendingPartnerCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} VĐV chờ ghép cặp'**
+  String rosterImportPendingPartnerCount(int count);
+
   /// No description provided for @rosterImportStatusUnknown.
   ///
   /// In vi, this message translates to:
