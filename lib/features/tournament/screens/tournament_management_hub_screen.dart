@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
@@ -1171,7 +1172,7 @@ class _TournamentManagementHubScreenState
       context: context,
       title: tournament.name,
       subtitle:
-          '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
+          '${TournamentLocationFormatter.tournamentFullLocationOr(tournament, l10n.vietnam)} • ${tournament.category ?? tournament.sport}',
       webUrl: shareUrl,
       imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
       badgeText: tournament.isClubLite

@@ -460,16 +460,9 @@ class Tournament {
       registrationEndDate: json['registrationEndDate'] != null
           ? DateParser.parseDate(json['registrationEndDate'])
           : null,
-      venueName: (json['venue'] is Map ? (json['venue'] as Map)['name'] : null)
-          ?.toString(),
+      venueName: _linkedVenueText(json['venue'], 'name'),
       city: json['city']?.toString(),
-      locationAddress: json['venue'] is Map
-          ? ((json['venue'] as Map)['locationAddress'] ??
-                    (json['venue'] as Map)['location_address'] ??
-                    json['locationAddress'] ??
-                    json['location_address'])
-                ?.toString()
-          : (json['locationAddress'] ?? json['location_address'])?.toString(),
+      locationAddress: _tournamentLocationAddress(json),
       locationConfig: config['location'] is Map
           ? Map<String, dynamic>.from(config['location'] as Map)
           : json['location'] is Map
@@ -528,6 +521,26 @@ class Tournament {
   }
 
   /// Helper parse value → int. Handles both int and numeric String from JSONB.
+  static String? _blankToNull(dynamic v) {
+    final text = v?.toString().trim() ?? '';
+    return text.isEmpty ? null : text;
+  }
+
+  static String? _linkedVenueText(dynamic venue, String key) =>
+      venue is Map ? _blankToNull(venue[key]) : null;
+
+  // Like the Web: a linked venue (name or address) is the canonical address;
+  // the tournament's own `locationAddress` is used only without a venue.
+  static String? _tournamentLocationAddress(Map<String, dynamic> json) {
+    final venue = json['venue'];
+    final venueName = _linkedVenueText(venue, 'name');
+    final venueAddress =
+        _linkedVenueText(venue, 'locationAddress') ??
+        _linkedVenueText(venue, 'location_address');
+    if (venueName != null || venueAddress != null) return venueAddress;
+    return _blankToNull(json['locationAddress'] ?? json['location_address']);
+  }
+
   static int? _toInt(dynamic v) {
     if (v == null) return null;
     if (v is int) return v;
