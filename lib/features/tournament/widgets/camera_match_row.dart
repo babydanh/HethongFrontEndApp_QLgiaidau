@@ -3,7 +3,7 @@ import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_catalog_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_player_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/match_stream_toggle.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_match_livestreams_provider.dart';
@@ -85,11 +85,7 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
     if (value == _startValue || value == _stopValue) {
       _toggle(isLive);
     } else if (value == _recordingsValue) {
-      showMatchRecordingCatalogSheet(
-        context,
-        matchId: widget.match.id,
-        matchLabel: widget.label,
-      );
+      showMatchRecordingPlayerSheet(context, matchId: widget.match.id);
     } else if (value.startsWith(_courtPrefix)) {
       final id = value.substring(_courtPrefix.length);
       final court = widget.courts.where((c) => c.id == id).firstOrNull;

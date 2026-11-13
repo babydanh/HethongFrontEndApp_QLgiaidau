@@ -2,7 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_recording_catalog_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/recording_access.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_catalog_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_player_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/match_stream_actions.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.dart';
@@ -225,7 +225,7 @@ void main() {
     expect(find.textContaining('Đã tắt phát trực tiếp'), findsOneWidget);
   });
 
-  testWidgets('TC-CAM-SYNC-23 đã có bản ghi, camera đã gỡ: MP4 hiện và mở danh sách bản ghi', (
+  testWidgets('TC-CAM-SYNC-23 đã có bản ghi, camera đã gỡ: MP4 hiện và mở thẳng trình phát bản ghi', (
     tester,
   ) async {
     final repo = _Repo()..rows = [_row(hasRecording: true)];
@@ -236,7 +236,7 @@ void main() {
     await tester.tap(_mp4);
     await tester.pumpAndSettle();
 
-    expect(find.byType(MatchRecordingCatalogSheet), findsOneWidget);
+    expect(find.byType(MatchRecordingPlayerSheet), findsOneWidget);
   });
 
   testWidgets('TC-CAM-SYNC-24 lỗi tải danh sách: thẻ vẫn hiện, nút theo hasCamera', (

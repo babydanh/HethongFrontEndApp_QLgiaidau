@@ -10,10 +10,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Fake chỉ cần `getPlaylist`; ba hàm còn lại không dùng trong trình phát.
 class _FakePlaylistRepository implements IMatchRecordingCatalogRepository {
-  _FakePlaylistRepository(this._loadPlaylist);
+  _FakePlaylistRepository(this._loadPlaylist, {this.days});
 
   final Future<MatchRecordingPlaylist> Function(String matchId, String period)
   _loadPlaylist;
+
+  /// Ngày có bản ghi; null = không ai được gọi hàm này.
+  final List<String>? days;
+  final List<String> askedPeriods = <String>[];
 
   @override
   Future<MatchStreamCommandResult> startMatchStream(String matchId) async =>
@@ -39,15 +43,21 @@ class _FakePlaylistRepository implements IMatchRecordingCatalogRepository {
   Future<MatchRecordingPlaylist> getPlaylist(
     String matchId, {
     required String period,
-  }) => _loadPlaylist(matchId, period);
+  }) {
+    askedPeriods.add(period);
+    return _loadPlaylist(matchId, period);
+  }
 
   @override
   Future<MatchStreamControlStateModel> getMatchControlState(String matchId) =>
       throw UnimplementedError('không dùng trong test trình phát');
 
   @override
-  Future<MatchRecordingDaysModel> listRecordingDays(String matchId) =>
-      throw UnimplementedError('không dùng trong test trình phát');
+  Future<MatchRecordingDaysModel> listRecordingDays(String matchId) async {
+    final value = days;
+    if (value == null) throw UnimplementedError('không truyền ngày');
+    return MatchRecordingDaysModel(days: value);
+  }
 
   @override
   Future<List<MatchRecordingFileModel>> listRecordings(
@@ -70,8 +80,9 @@ MatchRecordingPlaylist _playlist(List<String> names) => MatchRecordingPlaylist(
 
 Future<void> _pump(
   WidgetTester tester,
-  IMatchRecordingCatalogRepository repository,
-) async {
+  IMatchRecordingCatalogRepository repository, {
+  String? period = '2026-10-09',
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -82,10 +93,10 @@ Future<void> _pump(
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: MatchRecordingPlayerSheet(
             matchId: 'match-player',
-            period: '2026-10-09',
+            period: period,
           ),
         ),
       ),
@@ -137,4 +148,58 @@ void main() {
     expect(find.text('Không tải được danh sách đoạn.'), findsOneWidget);
     expect(find.byType(TextButton), findsOneWidget);
   });
+
+  testWidgets(
+    'TC-REC-PLAYER-DAY-01 mở không kèm ngày thì tự lấy ngày gần nhất và có nút tải',
+    (tester) async {
+      final repository = _FakePlaylistRepository(
+        (matchId, period) async => _playlist(const <String>[]),
+        days: const <String>['2026-11-11', '2026-11-10'],
+      );
+
+      await _pump(tester, repository, period: null);
+
+      expect(repository.askedPeriods, <String>['2026-11-11']);
+      expect(find.text('2026-11-11'), findsOneWidget);
+      expect(find.text('Tải video đầy đủ'), findsOneWidget);
+    },
+  );
+
+  testWidgets('TC-REC-PLAYER-DAY-02 nhiều ngày thì chọn ngày khác để phát', (
+    tester,
+  ) async {
+    final repository = _FakePlaylistRepository(
+      (matchId, period) async => _playlist(const <String>[]),
+      days: const <String>['2026-11-11', '2026-11-10'],
+    );
+
+    await _pump(tester, repository, period: null);
+    await tester.tap(find.byKey(const ValueKey('recording-day-selector')));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('2026-11-10').last);
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    expect(repository.askedPeriods, <String>['2026-11-11', '2026-11-10']);
+  });
+
+  testWidgets(
+    'TC-REC-PLAYER-DAY-03 không có ngày nào thì báo không có bản ghi, ẩn nút tải',
+    (tester) async {
+      final repository = _FakePlaylistRepository(
+        (matchId, period) async => _playlist(const <String>[]),
+        days: const <String>[],
+      );
+
+      await _pump(tester, repository, period: null);
+
+      expect(
+        find.text('Không tìm thấy ngày có bản ghi của trận này.'),
+        findsOneWidget,
+      );
+      expect(find.text('Tải video đầy đủ'), findsNothing);
+      expect(repository.askedPeriods, isEmpty);
+    },
+  );
 }

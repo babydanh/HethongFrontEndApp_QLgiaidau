@@ -1,7 +1,7 @@
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/recording_access.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_catalog_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_player_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_stream_control_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_match_livestreams_provider.dart';
@@ -162,10 +162,9 @@ class _MatchStreamActionsState extends ConsumerState<MatchStreamActions> {
               style: OutlinedButton.styleFrom(minimumSize: size),
               onPressed: _busy
                   ? null
-                  : () => showMatchRecordingCatalogSheet(
+                  : () => showMatchRecordingPlayerSheet(
                       context,
                       matchId: widget.matchId,
-                      matchLabel: label,
                     ),
               icon: const Icon(Icons.video_library_outlined, size: 18),
               label: const Text('MP4'),

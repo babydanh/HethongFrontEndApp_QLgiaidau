@@ -11,11 +11,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
-/// Mở trình phát bản ghi nối tiếp của một ngày.
+/// Mở trình phát bản ghi nối tiếp của một ngày; không truyền [period] thì
+/// trình phát tự lấy ngày có bản ghi gần nhất.
 Future<void> showMatchRecordingPlayerSheet(
   BuildContext context, {
   required String matchId,
-  required String period,
+  String? period,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -35,11 +36,14 @@ class MatchRecordingPlayerSheet extends ConsumerStatefulWidget {
   const MatchRecordingPlayerSheet({
     super.key,
     required this.matchId,
-    required this.period,
+    this.period,
   });
 
   final String matchId;
-  final String period;
+
+  /// Ngày cần phát (`YYYY-MM-DD`); null = ngày có bản ghi gần nhất, kèm ô
+  /// chọn ngày khi trận có nhiều ngày.
+  final String? period;
 
   @override
   ConsumerState<MatchRecordingPlayerSheet> createState() =>
@@ -50,6 +54,8 @@ class _MatchRecordingPlayerSheetState
     extends ConsumerState<MatchRecordingPlayerSheet> {
   bool _loading = true;
   bool _loadError = false;
+  late String? _period = widget.period;
+  List<String> _days = const <String>[];
   List<MatchRecordingSegment> _segments = const <MatchRecordingSegment>[];
   MatchRecordingPlaybackPlan _plan = MatchRecordingPlaybackPlan(
     segmentCount: 0,
@@ -94,9 +100,14 @@ class _MatchRecordingPlayerSheetState
 
     final MatchRecordingPlaylist playlist;
     try {
+      final period = _period ?? await _latestDay(epoch);
+      if (period == null) {
+        if (_isCurrent(epoch)) setState(() => _loading = false);
+        return;
+      }
       playlist = await ref
           .read(matchRecordingCatalogRepositoryProvider)
-          .getPlaylist(widget.matchId, period: widget.period);
+          .getPlaylist(widget.matchId, period: period);
     } on Object {
       if (!_isCurrent(epoch)) return;
       setState(() {
@@ -114,6 +125,23 @@ class _MatchRecordingPlayerSheetState
     });
     final first = _plan.nextAfter(-1);
     if (first != null) await _play(first, epoch);
+  }
+
+  /// Lấy danh sách ngày có bản ghi, chọn ngày đầu (gần nhất); null khi không có.
+  Future<String?> _latestDay(int epoch) async {
+    final model = await ref
+        .read(matchRecordingCatalogRepositoryProvider)
+        .listRecordingDays(widget.matchId);
+    if (!_isCurrent(epoch)) return null;
+    _days = model.days;
+    _period = model.days.isEmpty ? null : model.days.first;
+    return _period;
+  }
+
+  void _selectDay(String? day) {
+    if (day == null || day == _period) return;
+    setState(() => _period = day);
+    unawaited(_load());
   }
 
   /// Mở đoạn [index] rồi phát. Đoạn không mở được thì thử đoạn chưa lỗi kế tiếp.
@@ -292,7 +320,7 @@ class _MatchRecordingPlayerSheetState
     try {
       await ref
           .read(fullRecordingDownloaderProvider)
-          .run(widget.matchId, widget.period);
+          .run(widget.matchId, _period!);
     } on Object {
       failed = true;
     }
@@ -364,12 +392,7 @@ class _MatchRecordingPlayerSheetState
                         l10n.recordingPlayerTitle,
                         style: theme.textTheme.titleLarge,
                       ),
-                      Text(
-                        widget.period,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                      _buildDay(l10n, theme),
                     ],
                   ),
                 ),
@@ -383,7 +406,7 @@ class _MatchRecordingPlayerSheetState
             const SizedBox(height: AppTheme.spacingSM),
             _buildVideo(l10n),
             _buildControls(l10n),
-            _buildDownload(l10n),
+            if (_period != null) _buildDownload(l10n),
             const Divider(height: AppTheme.spacingLG),
             Text(
               l10n.recordingPlayerSegments,
@@ -392,6 +415,28 @@ class _MatchRecordingPlayerSheetState
             _buildSegments(l10n),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Ngày đang phát; trận có nhiều ngày thì cho chọn ngày khác.
+  Widget _buildDay(AppLocalizations l10n, ThemeData theme) {
+    final style = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    if (_days.length < 2) return Text(_period ?? '', style: style);
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        key: const ValueKey('recording-day-selector'),
+        value: _period,
+        isDense: true,
+        style: style,
+        hint: Text(l10n.tournamentManagementRecordingDay),
+        items: [
+          for (final day in _days)
+            DropdownMenuItem<String>(value: day, child: Text(day)),
+        ],
+        onChanged: _loading ? null : _selectDay,
       ),
     );
   }
@@ -411,6 +456,10 @@ class _MatchRecordingPlayerSheetState
           onPressed: () => unawaited(_load()),
           child: Text(l10n.opsRetry),
         ),
+      );
+    } else if (_period == null) {
+      content = _StatusMessage(
+        message: l10n.tournamentManagementRecordingNoDays,
       );
     } else if (_segments.isEmpty) {
       content = _StatusMessage(message: l10n.recordingPlayerEmpty);
