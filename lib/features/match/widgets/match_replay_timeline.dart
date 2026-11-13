@@ -101,3 +101,20 @@ int matchReplayElapsedSeconds(MatchReplaySegment segment, int mediaSeconds) =>
   }
   return (h2h: h2h, bracket: bracket);
 }
+
+/// The score on the board at [seconds] of the replay timeline: the last event
+/// at or before [seconds], or null while none has happened yet. Input order
+/// does not matter; on equal offsets the later entry wins.
+MatchReplayScoreEvent? matchReplayScoreAt(
+  List<MatchReplayScoreEvent> events,
+  num seconds,
+) {
+  MatchReplayScoreEvent? current;
+  for (final event in events) {
+    if (event.offsetSec > seconds) continue;
+    if (current == null || event.offsetSec >= current.offsetSec) {
+      current = event;
+    }
+  }
+  return current;
+}

@@ -2299,18 +2299,30 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return ref.watch(matchReplayProvider(widget.matchId)).asData?.value != null;
   }
 
-  /// Overlay events of the recording `LiveVideoBox` plays, or null while a
-  /// live stream (or nothing) shows. Same lookup order as `LiveVideoBox`.
-  List<MatchReplayOverlayEvent>? _replayOverlayEvents() {
+  /// The recording `LiveVideoBox` plays, or null while a live stream (or
+  /// nothing) shows. Same lookup order as `LiveVideoBox`.
+  MatchReplay? _replayInUse() {
     final playback = ref.watch(matchPlaybackProvider(widget.matchId));
     if (!playback.hasValue) return null;
     if (playback.asData?.value != null && !_preferReplay) return null;
-    return ref
-        .watch(matchReplayProvider(widget.matchId))
-        .asData
-        ?.value
-        ?.overlayEvents;
+    return ref.watch(matchReplayProvider(widget.matchId)).asData?.value;
   }
+
+  /// The match as the scoreboard showed it at [event] of the recording; before
+  /// the first event (null) the board is empty, 0-0. The result only counts as
+  /// finished from the last event on.
+  MatchModel _matchAtReplayScore(
+    MatchModel match,
+    List<MatchReplayScoreEvent> events,
+    MatchReplayScoreEvent? event,
+  ) => match.copyWith(
+    score1: event?.p1SetsWon ?? 0,
+    score2: event?.p2SetsWon ?? 0,
+    scoreDetails: event?.scoreDetails ?? const <String, dynamic>{},
+    status: event != null && identical(event, events.last)
+        ? match.status
+        : 'ONGOING',
+  );
 
   /// Which single overlay the picture shows at [seconds] of the recording.
   LiveOverlayKind? _replayOverlayAt(
@@ -2358,7 +2370,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
     // A recording replays the overlay from its own events, not from the
     // server flags (which describe the live moment, long gone).
-    final replayEvents = _replayOverlayEvents();
+    final replay = _replayInUse();
+    final replayEvents = replay?.overlayEvents;
+    // The scoreboard follows the recording's own scores too; none recorded
+    // (older match or Backend) keeps the current score.
+    final replayScores = replay?.scoreEvents.isNotEmpty == true
+        ? replay!.scoreEvents
+        : null;
     // An X pressed in one mode must not hide a panel of the other mode.
     if ((replayEvents == null) != (_replayEventsInUse == null)) {
       _dismissedOverlay = null;
@@ -2438,6 +2456,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ValueListenableBuilder<int>(
                 valueListenable: _replaySeconds,
                 builder: (context, seconds, _) {
+              final boardMatch = replayScores == null
+                  ? match
+                  : _matchAtReplayScore(
+                      match,
+                      replayScores,
+                      matchReplayScoreAt(replayScores, seconds),
+                    );
               final overlayToShow = replayEvents == null
                   ? liveOverlay
                   : _replayOverlayAt(replayEvents, seconds) == _dismissedOverlay
@@ -2477,7 +2502,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           overlayToShow == null
                       ? KeyedSubtree(
                           key: const ValueKey('live-scoreboard-on'),
-                          child: _liveScoreOverlay(match, currentScore),
+                          child: _liveScoreOverlay(
+                            boardMatch,
+                            replayScores == null
+                                ? currentScore
+                                : _currentLiveScore(boardMatch),
+                          ),
                         )
                       : const SizedBox.shrink(
                           key: ValueKey('live-scoreboard-off'),

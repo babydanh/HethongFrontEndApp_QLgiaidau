@@ -57,10 +57,12 @@ class MatchReplay {
     required List<MatchReplaySegment> segments,
     List<MatchReplayOverlayEvent> overlayEvents =
         const <MatchReplayOverlayEvent>[],
+    List<MatchReplayScoreEvent> scoreEvents = const <MatchReplayScoreEvent>[],
   }) : segments = List<MatchReplaySegment>.unmodifiable(segments),
        overlayEvents = List<MatchReplayOverlayEvent>.unmodifiable(
          overlayEvents,
-       );
+       ),
+       scoreEvents = List<MatchReplayScoreEvent>.unmodifiable(scoreEvents);
 
   factory MatchReplay.fromJson(Map<String, Object?> json) {
     final rawSegments = json['segments'];
@@ -91,6 +93,7 @@ class MatchReplay {
           : 0,
       segments: segments,
       overlayEvents: MatchReplayOverlayEvent.parseList(json['overlayEvents']),
+      scoreEvents: MatchReplayScoreEvent.parseList(json['scoreEvents']),
     );
   }
 
@@ -105,6 +108,10 @@ class MatchReplay {
   /// H2H / bracket on-off changes on the replay timeline, ordered by offset.
   /// Empty for a match recorded before the Backend stored them.
   final List<MatchReplayOverlayEvent> overlayEvents;
+
+  /// Score after each change, placed on the replay timeline, ordered by offset.
+  /// Empty for a match recorded before the Backend stored them.
+  final List<MatchReplayScoreEvent> scoreEvents;
 }
 
 /// One H2H or bracket overlay on/off change placed on the replay timeline by
@@ -148,18 +155,66 @@ class MatchReplayOverlayEvent {
       final event = tryParse(_stringKeyedMap(item));
       if (event != null) parsed.add(event);
     }
-    // List.sort is not stable, so the original index breaks ties.
-    final indexed = [for (var i = 0; i < parsed.length; i++) (i, parsed[i])];
-    indexed.sort((a, b) {
-      final byOffset = a.$2.offsetSec.compareTo(b.$2.offsetSec);
-      return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
-    });
-    return [for (final entry in indexed) entry.$2];
+    return _sortedByOffset(parsed, (event) => event.offsetSec);
   }
 
   final LiveOverlayKind kind;
   final bool visible;
   final double offsetSec;
+}
+
+/// The match score from [offsetSec] of the replay timeline on, until the next
+/// event. [scoreDetails] has the same per-sport shape the match itself carries.
+class MatchReplayScoreEvent {
+  const MatchReplayScoreEvent({
+    required this.offsetSec,
+    required this.p1SetsWon,
+    required this.p2SetsWon,
+    required this.scoreDetails,
+  });
+
+  static MatchReplayScoreEvent? tryParse(Map<String, Object?> json) {
+    final offsetSec = json['offsetSec'];
+    final p1SetsWon = json['p1SetsWon'];
+    final p2SetsWon = json['p2SetsWon'];
+    final scoreDetails = json['scoreDetails'];
+    if (offsetSec is! num ||
+        !offsetSec.isFinite ||
+        offsetSec < 0 ||
+        p1SetsWon is! int ||
+        p2SetsWon is! int ||
+        p1SetsWon < 0 ||
+        p2SetsWon < 0 ||
+        scoreDetails is! Map) {
+      return null;
+    }
+    return MatchReplayScoreEvent(
+      offsetSec: offsetSec.toDouble(),
+      p1SetsWon: p1SetsWon,
+      p2SetsWon: p2SetsWon,
+      scoreDetails: Map<String, dynamic>.unmodifiable(
+        _stringKeyedMap(scoreDetails),
+      ),
+    );
+  }
+
+  /// A missing or non-list value means no events; malformed entries are
+  /// skipped. Ordered by offset, equal offsets keep the Backend's order.
+  static List<MatchReplayScoreEvent> parseList(Object? raw) {
+    if (raw is! List) return const <MatchReplayScoreEvent>[];
+    final parsed = <MatchReplayScoreEvent>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final event = tryParse(_stringKeyedMap(item));
+      if (event != null) parsed.add(event);
+    }
+    return _sortedByOffset(parsed, (event) => event.offsetSec);
+  }
+
+  final double offsetSec;
+  final int p1SetsWon;
+  final int p2SetsWon;
+  final Map<String, dynamic> scoreDetails;
 }
 
 class MatchReplaySegment {
@@ -205,6 +260,16 @@ class MatchReplaySegment {
   final int offsetSec;
   final int clipStartSec;
   final int durationSec;
+}
+
+/// List.sort is not stable, so the original index breaks ties.
+List<T> _sortedByOffset<T>(List<T> items, double Function(T) offsetOf) {
+  final indexed = [for (var i = 0; i < items.length; i++) (i, items[i])];
+  indexed.sort((a, b) {
+    final byOffset = offsetOf(a.$2).compareTo(offsetOf(b.$2));
+    return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
+  });
+  return [for (final entry in indexed) entry.$2];
 }
 
 String? _nullableString(Object? value) {

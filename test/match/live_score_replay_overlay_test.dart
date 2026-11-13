@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_player.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
@@ -80,7 +81,10 @@ MatchModel _bracketMatch(int round, int number) => MatchModel(
   updatedAt: DateTime.utc(2026, 10, 15),
 );
 
-MatchReplay _replay(List<Map<String, Object?>> overlayEvents) =>
+MatchReplay _replay(
+  List<Map<String, Object?>> overlayEvents, [
+  List<Map<String, Object?>> scoreEvents = const [],
+]) =>
     MatchReplay.fromJson(<String, Object?>{
       'matchId': _matchId,
       'available': true,
@@ -88,6 +92,7 @@ MatchReplay _replay(List<Map<String, Object?>> overlayEvents) =>
       'endedAt': null,
       'durationSec': 60,
       'overlayEvents': overlayEvents,
+      'scoreEvents': scoreEvents,
       'segments': <Object?>[
         <String, Object?>{
           'name': 'clip.mp4',
@@ -115,6 +120,7 @@ Future<void> _pumpReplay(
   List<Map<String, Object?>> overlayEvents, {
   MatchPlaybackModel? live,
   bool recordingAvailable = true,
+  List<Map<String, Object?>> scoreEvents = const [],
 }) async {
   VideoPlayerPlatform.instance = FakeVideoPlayerPlatform();
   tester.view.physicalSize = const Size(390, 844);
@@ -137,7 +143,7 @@ Future<void> _pumpReplay(
         matchPlaybackProvider.overrideWith((ref, id) => Future.value(live)),
         matchReplayProvider.overrideWith(
           (ref, id) => Future.value(
-            recordingAvailable ? _replay(overlayEvents) : null,
+            recordingAvailable ? _replay(overlayEvents, scoreEvents) : null,
           ),
         ),
         bracketMatchesWithDivisionProvider.overrideWith(
@@ -183,8 +189,74 @@ Future<void> _skip(WidgetTester tester, Key button) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
+Map<String, Object?> _scoreEvent(
+  num at,
+  int p1,
+  int p2,
+  int team1,
+  int team2, {
+  bool finished = false,
+}) => <String, Object?>{
+  'offsetSec': at,
+  'p1SetsWon': p1,
+  'p2SetsWon': p2,
+  'scoreDetails': <String, Object?>{
+    'sets': <Object?>[
+      <String, Object?>{
+        'team1Score': team1,
+        'team2Score': team2,
+        'isFinished': finished,
+      },
+    ],
+  },
+};
+
+LiveScoreboardOverlay _board(WidgetTester tester) =>
+    tester.widget<LiveScoreboardOverlay>(find.byType(LiveScoreboardOverlay));
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'TC-SCOREREPLAY-APP-12 the scoreboard follows the recording: empty before the first event, then each recorded score',
+    (tester) async {
+      await _pumpReplay(
+        tester,
+        const [],
+        scoreEvents: [
+          _scoreEvent(3, 0, 0, 5, 2),
+          _scoreEvent(6, 1, 0, 11, 7, finished: true),
+        ],
+      );
+      // 0 s, before the first event: empty 0-0 board, not the final 11-7.
+      expect((_board(tester).score1, _board(tester).score2), (0, 0));
+      expect(_board(tester).finished, isFalse);
+
+      await _skip(tester, _forward); // 3 s
+      expect((_board(tester).score1, _board(tester).score2), (5, 2));
+      expect(_board(tester).finished, isFalse);
+
+      await _skip(tester, _forward); // 6 s: last event, match over
+      expect((_board(tester).score1, _board(tester).score2), (11, 7));
+      expect(_board(tester).finished, isTrue);
+
+      await _skip(tester, _back); // 3 s: the earlier score is back
+      expect((_board(tester).score1, _board(tester).score2), (5, 2));
+      expect(_board(tester).finished, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'TC-SCOREREPLAY-APP-13 a recording without score events keeps the current match score',
+    (tester) async {
+      await _pumpReplay(tester, const []);
+      await _skip(tester, _forward);
+
+      expect((_board(tester).score1, _board(tester).score2), (11, 7));
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'TC-REPLAYOV-11 H2H shows only inside its on/off window of the recording',
