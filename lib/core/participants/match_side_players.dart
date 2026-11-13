@@ -37,6 +37,21 @@ String matchSideLabel(MatchModel match, int side) => participantLabel(
   teamOnly: isFootballMatch(match),
 );
 
+/// Tiêu đề "A VS B" của trận. Bên chưa có đội/VĐV ([matchSideLabel] rỗng) hiện
+/// [undetermined] để tiêu đề không chỉ còn chữ "VS".
+String matchSidesTitle(
+  MatchModel match, {
+  required String separator,
+  required String undetermined,
+}) {
+  String side(int n) {
+    final label = matchSideLabel(match, n);
+    return label.isEmpty ? undetermined : label;
+  }
+
+  return '${side(1)} $separator ${side(2)}';
+}
+
 /// Roster (có userId/ELO/ảnh) của một bên trận cho nơi cần `MatchMemberInfo`.
 /// Payload chỉ có `participant.players[]` (không `members`/`rosters`) để
 /// `teamNMemberInfos` rỗng, nên rơi về [matchSidePlayers] để người có tài khoản

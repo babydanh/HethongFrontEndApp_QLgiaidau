@@ -352,17 +352,22 @@ void main() {
     );
   });
 
-  testWidgets('TC-CAMCARD-02 live button on a match row shows its name', (
+  testWidgets('TC-CAMCARD-02 live button on a match row is an icon only', (
     tester,
   ) async {
     await _pumpTab(tester, [_match('open')]);
     await tester.tap(find.byKey(_tile1));
     await tester.pumpAndSettle();
 
-    // Visible text, not only a long-press tooltip.
+    // Icon button named by its tooltip; no text label squeezes the row.
+    final row = _rowInSheet('open');
     expect(
-      find.descendant(of: _rowInSheet('open'), matching: find.text('Xem live')),
+      find.descendant(of: row, matching: find.byTooltip('Xem live')),
       findsOneWidget,
+    );
+    expect(
+      find.descendant(of: row, matching: find.text('Xem live')),
+      findsNothing,
     );
   });
 }

@@ -2654,7 +2654,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   String _viewerTitle(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
-    return '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}';
+    return matchSidesTitle(
+      match,
+      separator: l10n.matchVsLabel,
+      undetermined: l10n.matchNotDetermined,
+    );
   }
 
   /// Start (scheduled) or open-scoreboard (live) button for a scorer.
