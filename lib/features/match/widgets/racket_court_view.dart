@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/services/racket_court_layout.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/court_receive_outline.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_drag_widgets.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/racket_court_bar.dart';
@@ -618,7 +617,7 @@ class _RacketCellTile extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: tap,
         child: CustomPaint(
-          foregroundPainter: isReceiver ? const _DashedOutline() : null,
+          foregroundPainter: isReceiver ? const CourtReceiveOutline() : null,
           child: ColoredBox(
             color: palette.court,
             child: Stack(
@@ -645,7 +644,7 @@ class _RacketCellTile extends StatelessWidget {
                           dragEnabled: dragEnabled,
                         )
                       : isReceiver
-                      ? _Tag(text: l10n.racketReceive)
+                      ? CourtCellTag(text: l10n.racketReceive)
                       : const SizedBox.shrink(),
                 ),
                 Positioned(
@@ -704,35 +703,6 @@ class _Person extends StatelessWidget {
   }
 }
 
-class _Tag extends StatelessWidget {
-  const _Tag({required this.text, this.ball = false});
-
-  final String text;
-  final bool ball;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: ball ? 1 : 0.7),
-        borderRadius: BorderRadius.circular(8),
-        border: ball ? Border.all(color: courtBallColor, width: 2) : null,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: courtNavy,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// "GIAO" chip of the server's cell: long-press and drag it to hand the serve
 /// to another player.
 class _ServeTag extends StatelessWidget {
@@ -749,7 +719,10 @@ class _ServeTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final pill = _Tag(text: '● ${l10n.pickleballCourtServeTag}', ball: true);
+    final pill = CourtCellTag(
+      text: '● ${l10n.pickleballCourtServeTag}',
+      ball: true,
+    );
     final hit = ColoredBox(
       key: serveBallHitKey,
       color: Colors.transparent,
@@ -775,36 +748,4 @@ class _ServeTag extends StatelessWidget {
           : hit,
     );
   }
-}
-
-/// Dashed white outline inside the cell: marks the receiver.
-class _DashedOutline extends CustomPainter {
-  const _DashedOutline();
-
-  static const _inset = 7.0;
-  static const _dash = 9.0;
-  static const _gap = 6.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final path = Path()..addRect(rect.deflate(_inset));
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    for (final metric in path.computeMetrics()) {
-      var at = 0.0;
-      while (at < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(at, math.min(at + _dash, metric.length)),
-          paint,
-        );
-        at += _dash + _gap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedOutline oldDelegate) => false;
 }

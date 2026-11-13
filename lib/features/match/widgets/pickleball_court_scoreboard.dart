@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/court_receive_outline.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_drag_widgets.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
@@ -510,6 +511,13 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
         index != null &&
         layout.servingTeam == widget.team &&
         layout.serverPlayerIndex == index;
+    // The receiver stands diagonally from the server, on the other team.
+    final isReceiving =
+        index != null &&
+        layout.servingTeam != null &&
+        layout.servingTeam != widget.team &&
+        layout.receiverCell == cell &&
+        layout.receiverPlayerIndex == index;
     final tile = _ScoreboardCell(
       cell: cell,
       team: widget.team,
@@ -518,6 +526,7 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
           ? null
           : courtPlayerDisplayName(widget.players, index, l10n),
       isServing: isServing,
+      isReceiving: isReceiving,
       serverNumber: layout.callServerNumber,
       dragEnabled: widget.dragEnabled,
       actions: index == null || !widget.dragEnabled
@@ -631,6 +640,7 @@ class _ScoreboardCell extends StatelessWidget {
     required this.playerIndex,
     required this.playerName,
     required this.isServing,
+    required this.isReceiving,
     required this.serverNumber,
     required this.dragEnabled,
     required this.actions,
@@ -641,6 +651,7 @@ class _ScoreboardCell extends StatelessWidget {
   final int? playerIndex;
   final String? playerName;
   final bool isServing;
+  final bool isReceiving;
   final int? serverNumber;
   final bool dragEnabled;
 
@@ -711,6 +722,8 @@ class _ScoreboardCell extends StatelessWidget {
     return Semantics(
       label: isServing
           ? '$cellLabel: $name, ${l10n.pickleballServing}'
+          : isReceiving
+          ? '$cellLabel: $name, ${l10n.racketReceive}'
           : '$cellLabel: $name',
       customSemanticsActions: {
         for (final entry in actions.entries)
@@ -757,9 +770,21 @@ class _ScoreboardCell extends StatelessWidget {
                           serverNumber: serverNumber,
                           dragEnabled: dragEnabled,
                         )
+                      : isReceiving
+                      ? CourtCellTag(
+                          key: const ValueKey('receive-tag'),
+                          text: l10n.racketReceive,
+                        )
                       : const SizedBox.shrink(key: ValueKey('no-serve-tag')),
                 ),
               ),
+              // Dashed outline around the receiver's cell.
+              if (isReceiving)
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(painter: CourtReceiveOutline()),
+                  ),
+                ),
             ],
           ),
         ),
