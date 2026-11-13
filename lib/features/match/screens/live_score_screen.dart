@@ -3165,13 +3165,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt IN HOA | ô điểm
   /// vát]. Chỉ chữ, không avatar, như web.
   Widget _liveScoreOverlay(MatchModel match, dynamic score) {
+    final undetermined = AppLocalizations.of(context)!.matchNotDetermined;
     Widget sideName(int side) => Text(
-      participantLabel(
-        teamName: matchSideTeamName(match, side),
-        players: matchSidePlayers(match, side),
-        teamOnly: isFootballMatch(match),
-        abbreviated: true,
-      ).toUpperCase(),
+      matchSideShortLabel(match, side, undetermined: undetermined).toUpperCase(),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: const TextStyle(

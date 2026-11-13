@@ -37,6 +37,22 @@ String matchSideLabel(MatchModel match, int side) => participantLabel(
   teamOnly: isFootballMatch(match),
 );
 
+/// Nhãn viết tắt của một bên (bảng điểm nhỏ trên video). Bên chưa có đội/VĐV
+/// hiện [undetermined] để ô tên không bị trống.
+String matchSideShortLabel(
+  MatchModel match,
+  int side, {
+  required String undetermined,
+}) {
+  final label = participantLabel(
+    teamName: matchSideTeamName(match, side),
+    players: matchSidePlayers(match, side),
+    teamOnly: isFootballMatch(match),
+    abbreviated: true,
+  );
+  return label.isEmpty ? undetermined : label;
+}
+
 /// Tiêu đề "A VS B" của trận. Bên chưa có đội/VĐV ([matchSideLabel] rỗng) hiện
 /// [undetermined] để tiêu đề không chỉ còn chữ "VS".
 String matchSidesTitle(
