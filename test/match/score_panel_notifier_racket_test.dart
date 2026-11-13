@@ -329,4 +329,67 @@ void main() {
       expect(_state(c).racketServerTeam, 2);
     });
   });
+
+  group('TC-RACKET-N-12 minus gives back an automatic change of ends', () {
+    test('badminton deciding game: 11, minus, plus flips only once', () {
+      final c = _container(
+        _badminton(),
+        sets: const [
+          SetScoreData(score1: 21, score2: 10, isFinished: true),
+          SetScoreData(score1: 10, score2: 21, isFinished: true),
+        ],
+        rally: const RallySetState(
+          currentP1: 10,
+          currentP2: 9,
+          lastWinner: 1,
+          swaps1: 0,
+          swaps2: 0,
+        ),
+      );
+      expect(_state(c).racketPick.endsFlipped, isFalse);
+      _rally(c, true, 1);
+      expect(_state(c).racketPick.endsFlipped, isTrue);
+      _panel(c).rallyRemovePoint(true);
+      expect(_state(c).racketPick.endsFlipped, isFalse);
+      _rally(c, true, 1);
+      expect(_state(c).racketPick.endsFlipped, isTrue);
+    });
+
+    test('tennis tie-break: the 6th point, minus, plus flips only once', () {
+      final c = _container(
+        _tennis(),
+        sets: const [SetScoreData(score1: 6, score2: 6)],
+        tennis: const TennisGameState(isTiebreak: true, team1GamePoints: 5),
+      );
+      _tennisPoints(c, true, 1);
+      expect(_state(c).racketPick.endsFlipped, isTrue);
+      _panel(c).tennisRemovePoint(true);
+      expect(_state(c).racketPick.endsFlipped, isFalse);
+      _tennisPoints(c, true, 1);
+      expect(_state(c).racketPick.endsFlipped, isTrue);
+    });
+  });
+
+  group('TC-RACKET-N-13 minus at zero changes nothing', () {
+    test('no Undo step is added', () {
+      final b = _container(_badminton());
+      _panel(b).rallyRemovePoint(true);
+      expect(_state(b).canRacketUndo, isFalse);
+      final t = _container(_tennis());
+      _panel(t).tennisRemovePoint(false);
+      expect(_state(t).canRacketUndo, isFalse);
+    });
+  });
+
+  group('TC-RACKET-N-14 correcting the server leaves the other pair alone', () {
+    test('the other team keeps the swaps it really made', () {
+      final c = _container(_badminton());
+      _panel(c).racketPickFirstServer(1, 0);
+      _rally(c, false, 1); // team 2 takes the serve
+      _rally(c, false, 1); // team 2 wins serving: its pair swaps once
+      expect(_state(c).rally!.swaps2, 1);
+      expect(_panel(c).racketCorrectServer(1, 1), isTrue);
+      expect(_state(c).rally!.swaps2, 1);
+    });
+  });
 }

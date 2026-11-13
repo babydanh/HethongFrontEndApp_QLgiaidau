@@ -108,7 +108,7 @@ class RacketCourtView extends StatelessWidget {
                 ? Column(
                     children: [
                       Expanded(flex: 5, child: halfA),
-                      SizedBox(height: 132, child: middle),
+                      SizedBox(height: 168, child: middle),
                       Expanded(flex: 5, child: halfB),
                     ],
                   )

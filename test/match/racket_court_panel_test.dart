@@ -220,4 +220,23 @@ void main() {
     expect(find.byKey(const ValueKey('racketPlus1')), findsNothing);
     expect(find.byKey(racketUndoKey), findsNothing);
   });
+
+  testWidgets('TC-RACKET-P-08 doubles after minus says the server is unknown', (
+    tester,
+  ) async {
+    await _pump(tester, _badminton(), doubles: true);
+    await tester.tap(find.text('An'));
+    await tester.pump();
+    for (final key in ['racketPlus1', 'racketPlus1', 'racketMinus1']) {
+      await tester.tap(find.byKey(ValueKey(key)));
+      await tester.pump();
+    }
+    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.pump();
+    expect(
+      find.text('Server unknown. Undo, or ⋯ → Choose server.'),
+      findsOneWidget,
+    );
+    await _flush(tester);
+  });
 }
