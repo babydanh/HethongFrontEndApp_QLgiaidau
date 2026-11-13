@@ -487,4 +487,53 @@ void main() {
       expect(second.callServerNumber, 2);
     });
   });
+
+  group('TC-PLF-RECV người nhận chéo người giao', () {
+    test('TC-PLF-RECV-01 đôi, người giao ô phải: nhận ô phải đội kia', () {
+      final layout = resolveCourtLayout(const CourtState(), ctx());
+      expect(layout.serverCell, CourtCell.right);
+      expect(layout.receiverCell, CourtCell.right);
+      expect(layout.receiverPlayerIndex, layout.team2.rightPlayerIndex);
+    });
+
+    test('TC-PLF-RECV-02 đôi, người giao ô trái: nhận ô trái đội kia', () {
+      final layout = resolveCourtLayout(
+        const CourtState(),
+        ctx(s1: 1, mode: CourtScoringMode.rally),
+      );
+      expect(layout.serverCell, CourtCell.left);
+      expect(layout.receiverCell, CourtCell.left);
+      expect(layout.receiverPlayerIndex, layout.team2.leftPlayerIndex);
+    });
+
+    test('TC-PLF-RECV-03 đơn: người nhận đứng chéo, không theo điểm riêng', () {
+      // Team 1 serves with 4 (right cell); team 2 has 3 (odd).
+      final layout = resolveCourtLayout(
+        const CourtState(),
+        ctx(s1: 4, s2: 3, doubles: false, mode: CourtScoringMode.rally),
+      );
+      expect(layout.serverCell, CourtCell.right);
+      expect(layout.team2.rightPlayerIndex, 0);
+      expect(layout.team2.leftPlayerIndex, isNull);
+      expect(layout.receiverCell, CourtCell.right);
+      expect(layout.receiverPlayerIndex, 0);
+      // The server scores: both players move to the left cell.
+      final next = resolveCourtLayout(
+        const CourtState(),
+        ctx(s1: 5, s2: 3, doubles: false, mode: CourtScoringMode.rally),
+      );
+      expect(next.team1.leftPlayerIndex, 0);
+      expect(next.team2.leftPlayerIndex, 0);
+      expect(next.team2.rightPlayerIndex, isNull);
+    });
+
+    test('TC-PLF-RECV-04 chưa có đội giao: không có người nhận', () {
+      final layout = resolveCourtLayout(
+        const CourtState(),
+        ctx(serving: null, mode: CourtScoringMode.rally),
+      );
+      expect(layout.receiverCell, isNull);
+      expect(layout.receiverPlayerIndex, isNull);
+    });
+  });
 }

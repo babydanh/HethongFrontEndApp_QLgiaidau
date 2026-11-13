@@ -130,3 +130,34 @@ RallyBreak rallyServeBanner({
       return RallyBreak.none;
   }
 }
+
+bool _rallyGameWon(int a, int b, int target, bool winByTwo, int cap) {
+  if (cap > 0 && a >= cap) return true;
+  return a >= target && (!winByTwo || a - b >= 2);
+}
+
+/// The team (1 or 2) that wins the game with the next point, or 0 when no team
+/// does, or when both would (the golden point at cap-1 all). [cap] <= 0 means
+/// there is no maximum score.
+int rallySetPointTeam({
+  required int p1,
+  required int p2,
+  required int target,
+  required bool winByTwo,
+  required int cap,
+}) {
+  bool next(int a, int b) =>
+      !_rallyGameWon(a, b, target, winByTwo, cap) &&
+      _rallyGameWon(a + 1, b, target, winByTwo, cap);
+  final one = next(p1, p2);
+  final two = next(p2, p1);
+  if (one == two) return 0;
+  return one ? 1 : 2;
+}
+
+/// Badminton golden point: at cap-1 all the next point wins the game.
+bool rallyGoldenPoint({
+  required int p1,
+  required int p2,
+  required int cap,
+}) => cap > 0 && p1 == cap - 1 && p2 == cap - 1;
