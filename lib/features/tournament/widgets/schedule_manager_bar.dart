@@ -13,12 +13,12 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 
 /// The tournament when the current user may manage its schedule (organizer or
-/// co-organizer of a non-lite tournament), else null. Lite tournaments have no
-/// venues, so they never get the court actions.
+/// co-organizer), else null. A quick tournament carries the backend `isLite`
+/// flag but still has courts, so the flag must not hide the court actions.
 final scheduleManagerTournamentProvider = Provider.autoDispose
     .family<Tournament?, String>((ref, tournamentId) {
       final tournament = ref.watch(tournamentProvider(tournamentId)).value;
-      if (tournament == null || tournament.isLite) return null;
+      if (tournament == null) return null;
       final workspace = ref.watch(myTournamentWorkspaceProvider).value;
       final canManage = canManageTournament(
         tournamentId: tournamentId,
@@ -51,7 +51,7 @@ class ScheduleManagerBar extends ConsumerStatefulWidget {
 
   /// The host screen already gates scheduling (e.g. admin or co-organizer on the
   /// ops screen), so the empty-state CTA must not depend on the creator /
-  /// workspace lookup. Lite tournaments never get it: they have no courts.
+  /// workspace lookup.
   final bool hostGrantsManage;
 
   @override
@@ -128,9 +128,9 @@ class _ScheduleManagerBarState extends ConsumerState<ScheduleManagerBar> {
     final tournament = ref.watch(
       scheduleManagerTournamentProvider(widget.tournamentId),
     );
-    final isLite = ref.watch(tournamentProvider(widget.tournamentId)).value?.isLite;
+    final loaded = ref.watch(tournamentProvider(widget.tournamentId)).value;
     final hostGrantedCta =
-        widget.createCourtCta && widget.hostGrantsManage && isLite == false;
+        widget.createCourtCta && widget.hostGrantsManage && loaded != null;
     if (tournament == null && !hostGrantedCta) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     if (widget.createCourtCta) return _cta(l10n);

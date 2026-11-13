@@ -142,13 +142,14 @@ void main() {
       expect(_key('schedMgmt-arrange'), findsNothing);
     });
 
-    testWidgets('a lite tournament has no court actions even for its owner', (
-      tester,
-    ) async {
-      await _pump(tester, child: _bar, lite: true);
+    testWidgets(
+      'a quick (isLite) tournament still has court actions for its owner',
+      (tester) async {
+        await _pump(tester, child: _bar, lite: true);
 
-      expect(_key('schedMgmt-courts'), findsNothing);
-    });
+        expect(_key('schedMgmt-courts'), findsOneWidget);
+      },
+    );
   });
 
   group('TC-SCHED-MGMT-02 create courts', () {

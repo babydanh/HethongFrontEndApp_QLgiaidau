@@ -109,15 +109,21 @@ void main() {
     },
   );
 
-  testWidgets(
-    'TC-APP-SCHED-EMPTY-01 viewer and Lite tournament get no Tạo sân',
-    (tester) async {
-      await _pump(tester, userId: 'someone-else');
-      expect(find.byKey(cta), findsNothing);
-      expect(find.text('Chưa cấu hình địa điểm'), findsOneWidget);
+  testWidgets('TC-APP-SCHED-EMPTY-01 viewer gets no Tạo sân', (tester) async {
+    await _pump(tester, userId: 'someone-else');
+    expect(find.byKey(cta), findsNothing);
+    expect(find.text('Chưa cấu hình địa điểm'), findsOneWidget);
+  });
 
+  testWidgets(
+    'TC-APP-SCHED-EMPTY-04 a quick tournament (isLite flag) manager still sees Tạo sân',
+    (tester) async {
       await _pump(tester, lite: true);
-      expect(find.byKey(cta), findsNothing);
+      expect(find.byKey(cta), findsOneWidget);
+
+      await tester.tap(find.byKey(cta));
+      await tester.pumpAndSettle();
+      expect(find.byType(ScheduleCourtManagementScreen), findsOneWidget);
     },
   );
 
@@ -138,7 +144,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-APP-SCHED-EMPTY-03 host-granted scheduling still hides Tạo sân on a Lite tournament',
+    'TC-APP-SCHED-EMPTY-03 host-granted scheduling shows Tạo sân on a quick (isLite) tournament too',
     (tester) async {
       await _pump(
         tester,
@@ -146,7 +152,7 @@ void main() {
         lite: true,
         hostGrantsScheduling: true,
       );
-      expect(find.byKey(cta), findsNothing);
+      expect(find.byKey(cta), findsOneWidget);
     },
   );
 }
