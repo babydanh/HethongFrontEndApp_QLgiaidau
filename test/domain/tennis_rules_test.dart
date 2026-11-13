@@ -183,4 +183,109 @@ void main() {
       expect(tb(5), 2);
     });
   });
+
+  group('TC-RACKET-T-01 serve court follows the points of the game', () {
+    test('even points: right court, odd points: left court', () {
+      expect(tennisServeRight(0), isTrue);
+      expect(tennisServeRight(1), isFalse);
+      expect(tennisServeRight(2), isTrue);
+      expect(tennisServeRight(5), isFalse);
+    });
+  });
+
+  group('TC-RACKET-T-02 game point team', () {
+    int gp(int a, int b, {bool noAd = false, bool tb = false}) =>
+        tennisGamePointTeam(p1: a, p2: b, noAd: noAd, tiebreak: tb);
+
+    test('40-30 is a game point for the leader', () {
+      expect(gp(3, 2), 1);
+      expect(gp(1, 3), 2);
+    });
+    test('0-0, 30-30 and 40-40 (advantage game) have none', () {
+      expect(gp(0, 0), 0);
+      expect(gp(2, 2), 0);
+      expect(gp(3, 3), 0);
+    });
+    test('advantage: the team with the advantage', () {
+      expect(gp(4, 3), 1);
+      expect(gp(3, 4), 2);
+    });
+    test('No-Ad at 40-40 both teams are one point from the game', () {
+      expect(gp(3, 3, noAd: true), 0);
+      expect(gp(3, 2, noAd: true), 1);
+    });
+    test('tie-break to 7 needs a 2 point lead', () {
+      expect(gp(6, 5, tb: true), 1);
+      expect(gp(6, 6, tb: true), 0);
+      expect(gp(5, 6, tb: true), 2);
+    });
+  });
+
+  group('TC-RACKET-T-03 change of ends', () {
+    test('after an odd game of the set', () {
+      expect(tennisChangeEndsAfterGame(1), isTrue);
+      expect(tennisChangeEndsAfterGame(2), isFalse);
+      expect(tennisChangeEndsAfterGame(13), isTrue);
+    });
+    test('tie-break: every 6 points', () {
+      expect(tennisTiebreakChangeEnds(0), isFalse);
+      expect(tennisTiebreakChangeEnds(5), isFalse);
+      expect(tennisTiebreakChangeEnds(6), isTrue);
+      expect(tennisTiebreakChangeEnds(12), isTrue);
+    });
+  });
+
+  group('TC-RACKET-T-04 service games of a team', () {
+    int sg(int played, int team, {int first = 1}) => tennisTeamServiceGames(
+      gamesPlayed: played,
+      team: team,
+      firstServer: first,
+    );
+    test('counts the games the team already served', () {
+      expect(sg(0, 1), 0);
+      expect(sg(1, 1), 1);
+      expect(sg(1, 2), 0);
+      expect(sg(4, 1), 2);
+      expect(sg(4, 2), 2);
+      expect(sg(5, 1), 3);
+    });
+    test('respects a different first server', () {
+      expect(sg(1, 2, first: 2), 1);
+      expect(sg(1, 1, first: 2), 0);
+    });
+  });
+
+  group('TC-RACKET-T-05 doubles server alternates per service game', () {
+    test('first player serves the first service game, the partner the next', () {
+      expect(tennisServerPlayerIndex(teamServiceGames: 0), 0);
+      expect(tennisServerPlayerIndex(teamServiceGames: 1), 1);
+      expect(tennisServerPlayerIndex(teamServiceGames: 2), 0);
+    });
+    test('starts from the picked first player', () {
+      expect(tennisServerPlayerIndex(teamServiceGames: 0, firstPlayer: 1), 1);
+      expect(tennisServerPlayerIndex(teamServiceGames: 1, firstPlayer: 1), 0);
+    });
+  });
+
+  group('TC-RACKET-T-06 tie-break doubles rotation', () {
+    int turns(int points, {required bool gameServer}) =>
+        tennisTiebreakTurnsServed(
+          tiebreakPoints: points,
+          isGameServer: gameServer,
+        );
+    test('the game server serves point 0, then the other team 1-2, 3-4...', () {
+      expect(turns(0, gameServer: true), 0);
+      expect(turns(1, gameServer: false), 0);
+      expect(turns(3, gameServer: true), 1);
+      expect(turns(5, gameServer: false), 1);
+    });
+    test('the second turn of a team uses the partner', () {
+      final first = tennisServerPlayerIndex(teamServiceGames: 2);
+      final second = tennisServerPlayerIndex(
+        teamServiceGames: 2,
+        tiebreakTurnsServed: turns(3, gameServer: true),
+      );
+      expect(second, isNot(first));
+    });
+  });
 }

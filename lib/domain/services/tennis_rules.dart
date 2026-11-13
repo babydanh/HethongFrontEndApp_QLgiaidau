@@ -128,3 +128,69 @@ int tennisServer({
   if (!tiebreak) return gameServer;
   return ((tiebreakPoints + 1) ~/ 2).isEven ? gameServer : 3 - gameServer;
 }
+
+/// The server stands in the right (deuce) court when the points played in the
+/// current game (or tie-break) are even, and in the left (ad) court when odd.
+bool tennisServeRight(int pointsInGame) => pointsInGame.isEven;
+
+/// The team (1 or 2) that wins the current game with the next point, or 0 when
+/// no team is one point from the game. With advantage rules at 40-40 neither
+/// team is; No-Ad makes both teams one point away, which this returns as 0
+/// because the next point decides for whoever wins it.
+int tennisGamePointTeam({
+  required int p1,
+  required int p2,
+  required bool noAd,
+  required bool tiebreak,
+  int tiebreakTarget = 7,
+}) {
+  bool wins(int a, int b) => tennisGameWon(
+    a: a + 1,
+    b: b,
+    noAd: noAd,
+    tiebreak: tiebreak,
+    tiebreakTarget: tiebreakTarget,
+  );
+  final one = wins(p1, p2);
+  final two = wins(p2, p1);
+  if (one == two) return 0;
+  return one ? 1 : 2;
+}
+
+/// Players change ends after every odd numbered game of a set.
+bool tennisChangeEndsAfterGame(int gamesInSet) => gamesInSet.isOdd;
+
+/// In a tie-break players change ends every 6 points.
+bool tennisTiebreakChangeEnds(int tiebreakPoints) =>
+    tiebreakPoints > 0 && tiebreakPoints % 6 == 0;
+
+/// How many service games [team] already served, out of [gamesPlayed] games
+/// played before the current one (a tie-break counts as one game).
+int tennisTeamServiceGames({
+  required int gamesPlayed,
+  required int team,
+  int firstServer = 1,
+}) {
+  final firstGames = (gamesPlayed + 1) ~/ 2;
+  return team == firstServer ? firstGames : gamesPlayed ~/ 2;
+}
+
+/// Doubles: index (0 or 1) of the player who serves. Partners alternate every
+/// service game of the team, starting from [firstPlayer]; inside a tie-break
+/// they alternate every serving turn ([tiebreakTurnsServed]).
+int tennisServerPlayerIndex({
+  required int teamServiceGames,
+  int firstPlayer = 0,
+  int tiebreakTurnsServed = 0,
+}) => (firstPlayer + teamServiceGames + tiebreakTurnsServed) % 2;
+
+/// Serving turns the team already had in the current tie-break. The game
+/// server serves turn 0 (one point), then the teams take turns of two points.
+int tennisTiebreakTurnsServed({
+  required int tiebreakPoints,
+  required bool isGameServer,
+}) {
+  final turn = (tiebreakPoints + 1) ~/ 2;
+  final served = isGameServer ? turn ~/ 2 : (turn - 1) ~/ 2;
+  return served < 0 ? 0 : served;
+}

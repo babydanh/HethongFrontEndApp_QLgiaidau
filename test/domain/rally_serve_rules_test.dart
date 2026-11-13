@@ -245,4 +245,45 @@ void main() {
       }
     });
   });
+
+  group('TC-RACKET-B-01 set point team', () {
+    int sp(int a, int b, {int target = 21, bool two = true, int cap = 30}) =>
+        rallySetPointTeam(
+          p1: a,
+          p2: b,
+          target: target,
+          winByTwo: two,
+          cap: cap,
+        );
+
+    test('20-17 is a set point for team 1, 17-20 for team 2', () {
+      expect(sp(20, 17), 1);
+      expect(sp(17, 20), 2);
+    });
+    test('mid game and a one point lead at 20-20 have none', () {
+      expect(sp(5, 3), 0);
+      expect(sp(20, 20), 0);
+      expect(sp(0, 0), 0);
+    });
+    test('21-20 is a set point (win by 2 needs 22)', () {
+      expect(sp(21, 20), 1);
+    });
+    test('29-29: either team wins with the next point, so none is named', () {
+      expect(sp(29, 29), 0);
+    });
+    test('30-29 cannot happen as a lead, 29-28 is a set point at the cap', () {
+      expect(sp(29, 28), 1);
+    });
+  });
+
+  group('TC-RACKET-B-02 golden point', () {
+    test('only at cap-1 all', () {
+      expect(rallyGoldenPoint(p1: 29, p2: 29, cap: 30), isTrue);
+      expect(rallyGoldenPoint(p1: 28, p2: 29, cap: 30), isFalse);
+      expect(rallyGoldenPoint(p1: 20, p2: 20, cap: 30), isFalse);
+    });
+    test('no cap means no golden point', () {
+      expect(rallyGoldenPoint(p1: 29, p2: 29, cap: 0), isFalse);
+    });
+  });
 }
