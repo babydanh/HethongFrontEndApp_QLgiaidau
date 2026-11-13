@@ -28,6 +28,8 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/lite_division_picker.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_suggest_list.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
@@ -60,6 +62,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   int _durationMinutes = 30;
   Timer? _descDebounce;
   Timer? _locationDebounce;
+  SocialPlace? _pickedVenue;
   Timer? _maxPartDebounce;
   bool _controllersInitialized = false;
 
@@ -1241,6 +1244,27 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         .where((w) => w.code == _selectedWardCode)
         .firstOrNull;
 
+    // Debounced save used by the hint button and the venue pick. The picked
+    // directory venue is attached by id only while both texts are unchanged.
+    void saveLocationSoon() {
+      _locationDebounce?.cancel();
+      _locationDebounce = Timer(const Duration(milliseconds: 900), () {
+        final picked = _pickedVenue;
+        final unchanged =
+            picked != null &&
+            _venueNameController.text == picked.name &&
+            _locationController.text == picked.formattedAddress;
+        notifier.updateLocation(
+          widget.tournamentId,
+          venueName: _venueNameController.text,
+          locationAddress: _locationController.text,
+          province: selectedProvince?.name,
+          ward: selectedWard?.name,
+          venueId: unchanged ? picked.venueId : null,
+        );
+      });
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1303,6 +1327,23 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               });
             },
           ),
+          if (!locked)
+            ListenableBuilder(
+              listenable: _venueNameController,
+              builder: (_, _) => VenueSuggestList(
+                // Hide the list once the picked venue's name is in the field.
+                query: _venueNameController.text == _pickedVenue?.name
+                    ? ''
+                    : _venueNameController.text,
+                onPick: (place) {
+                  _pickedVenue = place;
+                  _venueNameController.text = place.name;
+                  _locationController.text = place.formattedAddress;
+                  _detectAddressAI(place.formattedAddress);
+                  saveLocationSoon();
+                },
+              ),
+            ),
           const SizedBox(height: 10),
           TextField(
             controller: _locationController,
@@ -1349,19 +1390,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   _locationController.text = address;
                   _detectAddressAI(address);
                   // Same debounced save as typing in the fields.
-                  _locationDebounce?.cancel();
-                  _locationDebounce = Timer(
-                    const Duration(milliseconds: 900),
-                    () {
-                      notifier.updateLocation(
-                        widget.tournamentId,
-                        venueName: _venueNameController.text,
-                        locationAddress: _locationController.text,
-                        province: selectedProvince?.name,
-                        ward: selectedWard?.name,
-                      );
-                    },
-                  );
+                  saveLocationSoon();
                 },
               ),
             ),

@@ -139,4 +139,55 @@ void main() {
 
     await Future<void>.delayed(const Duration(milliseconds: 2600));
   });
+
+  // TC-VENUE-TEXT-APP-06
+  test('a directory venue is attached by venueId and no venue text is '
+      'upserted', () async {
+    final adapter = FakeApiAdapter({
+      'GET /tournaments/$_id': const FakeReply(200, {
+        'data': {
+          'id': _id,
+          'name': 'Giải Lite',
+          'matchType': 'DOUBLES',
+          'status': 'REGISTRATION',
+          'tournamentConfig': {'isLite': true},
+          'divisions': [
+            {'id': 'd1', 'matchType': 'DOUBLES'},
+          ],
+        },
+      }),
+      'GET /tournaments/lite/$_id/participants': const FakeReply(200, {
+        'data': [],
+      }),
+      'PATCH /tournaments/$_id': const FakeReply(200, {}),
+      'PATCH /tournaments/$_id/venue': const FakeReply(200, {}),
+    });
+    final container = ProviderContainer(
+      overrides: [dioClientProvider.overrideWithValue(fakeDioClient(adapter))],
+    );
+    addTearDown(container.dispose);
+    final notifier = container.read(liteManagementProvider.notifier);
+    await notifier.init(_id);
+
+    expect(
+      await notifier.updateLocation(
+        _id,
+        venueName: 'Pickleball Mộc Châu',
+        locationAddress: 'Ngõ 247, Mộc Châu',
+        venueId: 'v1',
+      ),
+      isTrue,
+    );
+
+    final patch = adapter.requests.firstWhere(
+      (r) => r.method == 'PATCH' && r.path == '/tournaments/$_id',
+    );
+    expect((patch.body as Map)['venueId'], 'v1');
+    expect(
+      adapter.requests.where((r) => r.path == '/tournaments/$_id/venue'),
+      isEmpty,
+    );
+
+    await Future<void>.delayed(const Duration(milliseconds: 2600));
+  });
 }
