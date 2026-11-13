@@ -897,9 +897,11 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       );
 
       if (venueName.trim().isNotEmpty || locationAddress.trim().isNotEmpty) {
+        // Upsert the tournament's venue: POST /venues added a new venue row on
+        // every save. Failure is swallowed; the main save above stands.
         try {
-          await _dio.post(
-            '/tournaments/$tournamentId/venues',
+          await _dio.patch(
+            '/tournaments/$tournamentId/venue',
             data: {
               'name': venueName.trim().isNotEmpty
                   ? venueName.trim()
