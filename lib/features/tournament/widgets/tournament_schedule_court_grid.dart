@@ -337,6 +337,8 @@ class _TournamentScheduleCourtGridState
                 ScheduleManagerBar(
                   tournamentId: widget.tournamentId,
                   createCourtCta: true,
+                  // The ops screen only passes onScheduleDrop to users it lets schedule.
+                  hostGrantsManage: widget.onScheduleDrop != null,
                 ),
               ],
             ),

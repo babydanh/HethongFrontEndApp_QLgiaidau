@@ -43,10 +43,16 @@ class ScheduleManagerBar extends ConsumerStatefulWidget {
     super.key,
     required this.tournamentId,
     this.createCourtCta = false,
+    this.hostGrantsManage = false,
   });
 
   final String tournamentId;
   final bool createCourtCta;
+
+  /// The host screen already gates scheduling (e.g. admin or co-organizer on the
+  /// ops screen), so the empty-state CTA must not depend on the creator /
+  /// workspace lookup. Lite tournaments never get it: they have no courts.
+  final bool hostGrantsManage;
 
   @override
   ConsumerState<ScheduleManagerBar> createState() => _ScheduleManagerBarState();
@@ -122,9 +128,13 @@ class _ScheduleManagerBarState extends ConsumerState<ScheduleManagerBar> {
     final tournament = ref.watch(
       scheduleManagerTournamentProvider(widget.tournamentId),
     );
-    if (tournament == null) return const SizedBox.shrink();
+    final isLite = ref.watch(tournamentProvider(widget.tournamentId)).value?.isLite;
+    final hostGrantedCta =
+        widget.createCourtCta && widget.hostGrantsManage && isLite == false;
+    if (tournament == null && !hostGrantedCta) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     if (widget.createCourtCta) return _cta(l10n);
+    if (tournament == null) return const SizedBox.shrink();
     final colors = context.colors;
     Widget action(Key key, IconData icon, String tooltip, VoidCallback onTap) =>
         IconButton(

@@ -44,6 +44,7 @@ Future<void> _pump(
   WidgetTester tester, {
   String userId = 'owner-1',
   bool lite = false,
+  bool hostGrantsScheduling = false,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -67,15 +68,18 @@ Future<void> _pump(
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: SingleChildScrollView(
             child: TournamentScheduleCourtGrid(
               tournamentId: _tid,
-              matches: [],
-              scheduleSettings: {
+              matches: const [],
+              scheduleSettings: const {
                 'operatingStart': '07:00',
                 'operatingEnd': '10:00',
               },
+              onScheduleDrop: hostGrantsScheduling
+                  ? (matchId, courtId, courtName, scheduledAt) {}
+                  : null,
             ),
           ),
         ),
@@ -113,6 +117,35 @@ void main() {
       expect(find.text('Chưa cấu hình địa điểm'), findsOneWidget);
 
       await _pump(tester, lite: true);
+      expect(find.byKey(cta), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'TC-APP-SCHED-EMPTY-02 host-granted scheduling shows Tạo sân even when the creator/workspace lookup does not match (e.g. admin)',
+    (tester) async {
+      await _pump(
+        tester,
+        userId: 'admin-not-creator',
+        hostGrantsScheduling: true,
+      );
+      expect(find.byKey(cta), findsOneWidget);
+
+      await tester.tap(find.byKey(cta));
+      await tester.pumpAndSettle();
+      expect(find.byType(ScheduleCourtManagementScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TC-APP-SCHED-EMPTY-03 host-granted scheduling still hides Tạo sân on a Lite tournament',
+    (tester) async {
+      await _pump(
+        tester,
+        userId: 'admin-not-creator',
+        lite: true,
+        hostGrantsScheduling: true,
+      );
       expect(find.byKey(cta), findsNothing);
     },
   );
