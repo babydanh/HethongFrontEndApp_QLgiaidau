@@ -35365,6 +35365,84 @@ abstract class AppLocalizations {
   /// **'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)'**
   String get cbdTennisMatchTiebreak;
 
+  /// No description provided for @racketReceive.
+  ///
+  /// In vi, this message translates to:
+  /// **'NHẬN'**
+  String get racketReceive;
+
+  /// No description provided for @racketPickServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn người giao'**
+  String get racketPickServer;
+
+  /// No description provided for @racketPickFirstHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm vào VĐV để chọn người giao đầu.'**
+  String get racketPickFirstHint;
+
+  /// No description provided for @racketPickServerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm vào người đang giao để sửa.'**
+  String get racketPickServerHint;
+
+  /// No description provided for @racketServeUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa rõ ai giao. Hoàn tác, hoặc ⋯ → Chọn người giao.'**
+  String get racketServeUnknown;
+
+  /// No description provided for @racketSetPoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm set · {team}'**
+  String racketSetPoint(String team);
+
+  /// No description provided for @racketGoldenPoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm vàng: ai được {cap} thắng'**
+  String racketGoldenPoint(int cap);
+
+  /// No description provided for @racketGamePoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game point · {team}'**
+  String racketGamePoint(String team);
+
+  /// No description provided for @racketAdvantage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lợi thế {team}'**
+  String racketAdvantage(String team);
+
+  /// No description provided for @racketDecidingPoint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm quyết định (No-Ad)'**
+  String get racketDecidingPoint;
+
+  /// No description provided for @racketChangeEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi sân'**
+  String get racketChangeEnds;
+
+  /// No description provided for @racketTiebreakServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tie-break {n} · đổi giao mỗi 2 điểm · đổi sân mỗi 6 điểm'**
+  String racketTiebreakServe(int n);
+
+  /// No description provided for @racketGames.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game {a}-{b}'**
+  String racketGames(int a, int b);
+
   /// No description provided for @bracketMgmt_manageTooltip.
   ///
   /// In vi, this message translates to:

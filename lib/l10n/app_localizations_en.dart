@@ -19734,6 +19734,59 @@ class AppLocalizationsEn extends AppLocalizations {
       'MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)';
 
   @override
+  String get racketReceive => 'RECEIVE';
+
+  @override
+  String get racketPickServer => 'Choose server';
+
+  @override
+  String get racketPickFirstHint => 'Tap a player to choose who serves first.';
+
+  @override
+  String get racketPickServerHint =>
+      'Tap the player who is serving to correct it.';
+
+  @override
+  String get racketServeUnknown =>
+      'Server unknown. Undo, or ⋯ → Choose server.';
+
+  @override
+  String racketSetPoint(String team) {
+    return 'Set point · $team';
+  }
+
+  @override
+  String racketGoldenPoint(int cap) {
+    return 'Golden point: first to $cap wins';
+  }
+
+  @override
+  String racketGamePoint(String team) {
+    return 'Game point · $team';
+  }
+
+  @override
+  String racketAdvantage(String team) {
+    return 'Advantage $team';
+  }
+
+  @override
+  String get racketDecidingPoint => 'Deciding point (No-Ad)';
+
+  @override
+  String get racketChangeEnds => 'Change ends';
+
+  @override
+  String racketTiebreakServe(int n) {
+    return 'Tie-break $n · serve changes every 2 points · ends every 6';
+  }
+
+  @override
+  String racketGames(int a, int b) {
+    return 'Game $a-$b';
+  }
+
+  @override
   String get bracketMgmt_manageTooltip => 'Manage';
 
   @override
