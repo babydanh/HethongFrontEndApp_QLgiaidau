@@ -576,8 +576,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void tennisRemovePoint(bool isTeam1) {
-    _racketRemember();
     final t = state.tennis ?? const TennisGameState();
+    // Nothing to take back: no state change and no Undo step.
+    if ((isTeam1 ? t.team1GamePoints : t.team2GamePoints) == 0) return;
+    _racketRemember();
     state = state.copyWith(
       tennis: t.copyWith(
         team1GamePoints: isTeam1
@@ -589,6 +591,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    // A tie-break point that changed ends takes its change of ends back too.
+    if (t.isTiebreak &&
+        tennisTiebreakChangeEnds(t.team1GamePoints + t.team2GamePoints)) {
+      _racketFlipEnds();
+    }
     _scheduleLiveSync();
   }
 
@@ -893,8 +900,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void rallyRemovePoint(bool isTeam1) {
-    _racketRemember();
     final r = state.rally ?? const RallySetState();
+    // Nothing to take back: no state change and no Undo step.
+    if ((isTeam1 ? r.currentP1 : r.currentP2) == 0) return;
+    _racketRemember();
     // A correction makes the serve history unknown; the panel hides the serve
     // line until the next point instead of showing a wrong server.
     state = state.copyWith(
@@ -908,7 +917,25 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    _racketUndoEndsAfterMinus(r);
     _scheduleLiveSync();
+  }
+
+  /// Badminton deciding game: the point that took the leader from 10 to 11
+  /// changed ends, so taking it back changes them back.
+  void _racketUndoEndsAfterMinus(RallySetState before) {
+    final after = state.rally;
+    if (state.config.kind != SportRuleKind.badminton || after == null) return;
+    final deciding =
+        state.config.bestOf > 1 &&
+        state.finishedSets.length == state.config.bestOf - 1;
+    final highBefore = before.currentP1 > before.currentP2
+        ? before.currentP1
+        : before.currentP2;
+    final highAfter = after.currentP1 > after.currentP2
+        ? after.currentP1
+        : after.currentP2;
+    if (deciding && highBefore == 11 && highAfter == 10) _racketFlipEnds();
   }
 
   void _checkRallySetEnd() {
@@ -1046,8 +1073,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         currentP1: r.currentP1,
         currentP2: r.currentP2,
         lastWinner: team,
-        swaps1: 0,
-        swaps2: 0,
+        // The other team keeps the swaps it really made (unknown counts as 0).
+        swaps1: team == 1 ? 0 : (r.swaps1 ?? 0),
+        swaps2: team == 2 ? 0 : (r.swaps2 ?? 0),
       ),
       racketPick: state.racketPick.withRightStarter(
         team,

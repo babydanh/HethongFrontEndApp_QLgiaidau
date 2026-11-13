@@ -51,8 +51,10 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
   }
 
   void _pickServer(int team, int playerIndex) {
-    _notifier.racketCorrectServer(team, playerIndex);
-    if (_correcting) setState(() => _correcting = false);
+    // Stay in the correcting mode when the pick was refused, so the referee
+    // can tap another player.
+    final changed = _notifier.racketCorrectServer(team, playerIndex);
+    if (changed && _correcting) setState(() => _correcting = false);
   }
 
   Future<void> _openMenu() async {
@@ -75,11 +77,16 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
     AppLocalizations l10n,
     ScorePanelState state,
     bool tennis,
+    bool doubles,
     RallySetState rally,
   ) {
     if (_correcting) return l10n.racketPickServerHint;
     if (state.racketCanPickFirstServer) return l10n.racketPickFirstHint;
-    if (state.racketServerTeam == null) return l10n.racketServeUnknown;
+    // After a minus, doubles may know the serving team but not the player.
+    if (state.racketServerTeam == null ||
+        (doubles && state.racketServerPlayerIndex(doubles: true) == null)) {
+      return l10n.racketServeUnknown;
+    }
     if (tennis) {
       return state.tennisMatchTiebreakDue ? l10n.cbdTennisMatchTiebreak : null;
     }
@@ -192,7 +199,7 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
         call: call,
         setText: setText,
         chips: _chips(l10n, state, tennis, [name1, name2]),
-        banner: _banner(l10n, state, tennis, rally),
+        banner: _banner(l10n, state, tennis, doubles, rally),
         canUndo: state.canRacketUndo,
         onScore: readOnly ? null : (team, inc) => _score(tennis, team, inc),
         onUndo: _notifier.racketUndoStep,
