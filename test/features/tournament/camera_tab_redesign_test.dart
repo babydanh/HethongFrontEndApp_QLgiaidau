@@ -383,6 +383,40 @@ void main() {
     expect(find.byType(CameraWallScreen), findsNothing);
   });
 
+  testWidgets('TC-CAMSCROLL-APP-01 the tab scrolls with the outer page', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 700));
+    final outer = ScrollController();
+    addTearDown(outer.dispose);
+    // Same shape as the hub: a collapsing header above, then the camera tab
+    // in a plain sliver. The tab must not trap the drag in its own scroll view.
+    await tester.pumpWidget(
+      _app(
+        Scaffold(
+          body: CustomScrollView(
+            controller: outer,
+            slivers: const [
+              SliverToBoxAdapter(child: SizedBox(height: 200)),
+              SliverToBoxAdapter(
+                child: TournamentManagementCameraSection(tournamentId: 't1'),
+              ),
+            ],
+          ),
+        ),
+        _Cameras([_camera(1)]),
+        matches: [for (var i = 0; i < 10; i++) _match('m$i')],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(outer.offset, 0);
+
+    await tester.drag(find.byType(CameraMatchRow).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(outer.offset, greaterThan(0));
+  });
+
   testWidgets('TC-CAMFILTER-APP-20 stage filter narrows the pool, Xoá lọc', (
     tester,
   ) async {

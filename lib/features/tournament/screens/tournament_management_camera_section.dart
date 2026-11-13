@@ -284,7 +284,12 @@ class _TournamentManagementCameraSectionState
             .where((match) => match.id == _selectedMatchId)
             .firstOrNull;
 
+        // Sized to its content and never scrolls on its own: the host page
+        // scrolls, so the tournament header moves with it like on other tabs.
         return ListView(
+          shrinkWrap: true,
+          primary: false,
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           children: [
             CameraTabHeader(

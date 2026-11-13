@@ -644,10 +644,8 @@ class _TournamentManagementHubScreenState
             ...overlapHandles.map(
               (handle) => SliverOverlapInjector(handle: handle),
             ),
-            // The camera board owns its scroll view, so it needs a bounded
-            // height instead of sizing to its content.
-            SliverFillRemaining(
-              hasScrollBody: true,
+            // Plain sliver like the other tabs, so scrolling moves the header.
+            SliverToBoxAdapter(
               child: TournamentManagementCameraSection(
                 tournamentId: tournament.id,
                 divisionId: _divisionId,

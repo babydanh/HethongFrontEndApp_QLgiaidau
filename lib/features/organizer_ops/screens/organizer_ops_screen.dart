@@ -391,10 +391,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 else if (_selectedTab == 4)
                   _buildActivitySliver(context, opsReadAsync)
                 else
-                  // The camera board owns its scroll view, so this sliver
-                  // must hand it a bounded height instead of sizing to it.
-                  SliverFillRemaining(
-                    hasScrollBody: true,
+                  // Plain sliver like the other tabs, so the page scrolls as one.
+                  SliverToBoxAdapter(
                     child: TournamentManagementCameraSection(
                       tournamentId: widget.tournamentId,
                       divisionId: selectedDivisionId,
