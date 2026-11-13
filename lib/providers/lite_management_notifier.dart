@@ -850,6 +850,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     required String locationAddress,
     String? province,
     String? ward,
+    // Directory venue picked from the suggestions: attach it instead of
+    // upserting the typed text (which would create a duplicate venue row).
+    String? venueId,
   }) async {
     final tournament = state.tournament;
     if (tournament == null ||
@@ -889,17 +892,21 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await _dio.patch(
         '/tournaments/$tournamentId',
         data: {
-          'locationAddress': locationAddress.trim(),
+          // No locationAddress here: UpdateTournamentDto rejects unknown keys (400).
+          'venueId': ?venueId,
           if (effectiveProvince.trim().isNotEmpty)
             'city': effectiveProvince.trim(),
           'tournamentConfig': nextTournamentConfig,
         },
       );
 
-      if (venueName.trim().isNotEmpty || locationAddress.trim().isNotEmpty) {
+      if (venueId == null &&
+          (venueName.trim().isNotEmpty || locationAddress.trim().isNotEmpty)) {
+        // Upsert the tournament's venue: POST /venues added a new venue row on
+        // every save. Failure is swallowed; the main save above stands.
         try {
-          await _dio.post(
-            '/tournaments/$tournamentId/venues',
+          await _dio.patch(
+            '/tournaments/$tournamentId/venue',
             data: {
               'name': venueName.trim().isNotEmpty
                   ? venueName.trim()
@@ -960,7 +967,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         '/tournaments/$tournamentId',
         data: {
           'description': description.trim(),
-          'locationAddress': locationAddress.trim(),
           'tournamentConfig': nextTournamentConfig,
         },
       );

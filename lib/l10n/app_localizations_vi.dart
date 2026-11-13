@@ -20002,4 +20002,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get feeDirectStatus => 'Thu trực tiếp';
+
+  @override
+  String get venueHintNameIsAddress =>
+      'Ô tên đang giống một địa chỉ. Chuyển sang ô địa chỉ?';
+
+  @override
+  String get venueHintNameHasAddress =>
+      'Ô tên có cả địa chỉ. Tách địa chỉ sang ô địa chỉ?';
+
+  @override
+  String get venueHintAddressIsName =>
+      'Ô địa chỉ đang giống một tên sân. Chuyển sang ô tên?';
+
+  @override
+  String get venueHintAddressRepeatsName =>
+      'Địa chỉ đang lặp lại tên sân. Bỏ phần lặp?';
+
+  @override
+  String get venueHintSameText => 'Tên sân và địa chỉ đang giống hệt nhau.';
 }

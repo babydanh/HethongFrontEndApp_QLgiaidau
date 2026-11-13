@@ -7967,5 +7967,10 @@
   "camWallSignalIdle": "Chưa phát",
   "camWallNoCourt": "Chưa gắn sân",
   "feeDirectNote": "Thanh toán trực tiếp cho BTC",
-  "feeDirectStatus": "Thu trực tiếp"
+  "feeDirectStatus": "Thu trực tiếp",
+  "venueHintNameIsAddress": "Ô tên đang giống một địa chỉ. Chuyển sang ô địa chỉ?",
+  "venueHintNameHasAddress": "Ô tên có cả địa chỉ. Tách địa chỉ sang ô địa chỉ?",
+  "venueHintAddressIsName": "Ô địa chỉ đang giống một tên sân. Chuyển sang ô tên?",
+  "venueHintAddressRepeatsName": "Địa chỉ đang lặp lại tên sân. Bỏ phần lặp?",
+  "venueHintSameText": "Tên sân và địa chỉ đang giống hệt nhau."
 }
