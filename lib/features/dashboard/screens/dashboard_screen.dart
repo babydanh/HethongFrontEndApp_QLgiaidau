@@ -309,6 +309,7 @@ class _ProfileRow extends ConsumerWidget {
             final avatar = profile.avatarUrl;
             final rank = ref.watch(myBestRankingProvider);
             return LavishRow(
+<<<<<<< origin/main
               leading: RankAvatar(
                 imageUrl: avatar,
                 name: name,
@@ -318,6 +319,31 @@ class _ProfileRow extends ConsumerWidget {
                 tierAvailable: rank?.tierAvailable,
                 matchesPlayed: rank?.matchesPlayed ?? 0,
                 size: 40,
+||||||| 6510e896
+              leading: CircleAvatar(
+                radius: 20,
+                backgroundColor: c.soft(LavishTone.accent),
+                foregroundImage: avatar != null && avatar.isNotEmpty
+                    ? NetworkImage(avatar)
+                    : null,
+                onForegroundImageError: avatar != null && avatar.isNotEmpty
+                    ? (_, _) {}
+                    : null,
+                child: Text(
+                  name.isNotEmpty ? name.characters.first.toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: LavishColors.accent,
+                  ),
+                ),
+=======
+              leading: RankAvatar(
+                imageUrl: avatar,
+                name: name,
+                elo: profile.eloPoints ?? 0,
+                tierName: profile.tierName,
+                size: 40,
+>>>>>>> origin/cloud/danh3-app-vien-rank
               ),
               title: name.isNotEmpty ? name : l10n.dashboard_user,
               subtitle: profile.email,

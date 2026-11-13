@@ -476,11 +476,18 @@ class _AuthorRow extends ConsumerWidget {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final cleanAvatarUrl = avatarUrl?.trim();
-    final rank = ref.watch(myBestRankingProvider);
+<<<<<<< origin/main
+    final rank = ref.watch(myBestRankingProvider).asData?.value;
+||||||| 6510e896
+    final initial = ref.watch().asData?.value;
+=======
+    final profile = ref.watch(userProfileProvider).asData?.value;
+>>>>>>> origin/cloud/danh3-app-vien-rank
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+<<<<<<< origin/main
         RankAvatar(
           imageUrl: cleanAvatarUrl,
           name: name,
@@ -490,6 +497,56 @@ class _AuthorRow extends ConsumerWidget {
           tierAvailable: rank?.tierAvailable,
           matchesPlayed: rank?.matchesPlayed ?? 0,
           size: 42,
+||||||| 6510e896
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            border: Border.all(
+              color: colors.borderLight.withValues(alpha: 0.6),
+              width: 1,
+            ),
+          ),
+          child: ClipOval(
+            child: hasAvatar
+                ? Image.network(
+                    cleanAvatarUrl,
+                    width: 42,
+                    height: 42,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        color: AppTheme.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+          ),
+=======
+        RankAvatar(
+          imageUrl: cleanAvatarUrl,
+          name: name,
+          elo: profile?.eloPoints ?? 0,
+          tierName: profile?.tierName,
+          matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+          size: 42,
+>>>>>>> origin/cloud/danh3-app-vien-rank
         ),
         const SizedBox(width: 12),
         Expanded(

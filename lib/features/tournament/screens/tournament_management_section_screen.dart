@@ -538,12 +538,18 @@ class _TournamentSettingsFormState
       initial: _contactInfo,
       profileName: profile?.fullName,
       profileAvatarUrl: profile?.avatarUrl,
+<<<<<<< origin/main
       profileElo: rank?.eloPoints,
       profileTierName: rank?.tierName,
+||||||| 6510e896
+=======
+      profileElo: profile?.eloPoints,
+      profileTierName: profile?.tierName,
+>>>>>>> origin/cloud/danh3-app-vien-rank
       onChanged: (value) {
-        _contactInfo = value;
-        _syncDirty();
-      },
+      _contactInfo = value;
+      _syncDirty();
+    },
     );
   }
 
