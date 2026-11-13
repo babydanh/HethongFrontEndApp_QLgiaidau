@@ -45,11 +45,8 @@ class RacketScoreBar extends StatelessWidget {
 }
 
 class _ScoreButton extends StatelessWidget {
-  const _ScoreButton({
-    required this.team,
-    required this.plus,
-    required this.onScore,
-  });
+  _ScoreButton({required this.team, required this.plus, required this.onScore})
+    : super(key: ValueKey('racket${plus ? 'Plus' : 'Minus'}$team'));
 
   final int team;
   final bool plus;

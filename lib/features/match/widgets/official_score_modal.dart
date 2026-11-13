@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_stream_toggle_row.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/racket_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
@@ -80,6 +81,10 @@ class OfficialScorePage extends ConsumerStatefulWidget {
   @override
   ConsumerState<OfficialScorePage> createState() => _OfficialScorePageState();
 }
+
+/// Strict (not Lite) badminton and tennis score on a court.
+bool _usesRacketCourt(SportRuleKind kind, bool isLite) =>
+    !isLite && (kind == SportRuleKind.badminton || kind == SportRuleKind.tennis);
 
 class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   int? _selectedPenaltySide;
@@ -166,6 +171,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     // Pickleball scores on the court itself: points, set and match controls
     // all sit on it, so the shared bottom bar is not drawn.
     final courtMode = kind == SportRuleKind.pickleball;
+    // Strict badminton / tennis: a court with drag targets, no tab swiping.
+    final racketCourt = _usesRacketCourt(kind, isLite);
 
     // Sideways, the pickleball court runs to both edges, also under the
     // camera inset on either side: its controls stay clear of the hole.
@@ -342,7 +349,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                             // The court is all drag targets: a sideways
                             // swipe there must not slide the tab page.
                             // The tab labels still switch pages.
-                            physics: courtMode
+                            physics: courtMode || racketCourt
                                 ? const NeverScrollableScrollPhysics()
                                 : null,
                             children: [
@@ -881,6 +888,9 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     SportRuleKind kind,
     bool isLite,
   ) {
+    // Strict badminton and tennis score on a court too; Lite cards keep the
+    // plain panels.
+    final racketCourt = _usesRacketCourt(kind, isLite);
     // Pickleball: the court carries the score and every set / match control.
     final scorePanel = kind == SportRuleKind.pickleball
         ? PickleballCourtPanel(
@@ -894,6 +904,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
             team1Name: widget.match.team1Name,
             team2Name: widget.match.team2Name,
           )
+        : racketCourt
+        ? RacketCourtPanel(params: params)
         : kind == SportRuleKind.tennis
         ? TennisScorePanel(params: params, isReadOnly: false)
         : isLite
