@@ -19724,6 +19724,49 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String camTabSummaryShort(int total, int live) {
+    return '$total cam · $live LIVE';
+  }
+
+  @override
+  String get camTabMenuRefresh => 'Làm mới';
+
+  @override
+  String get camTabMenuHelp => 'Hướng dẫn';
+
+  @override
+  String get camTabSearchTooltip => 'Tìm trận';
+
+  @override
+  String get camTabFilterTooltip => 'Lọc trận';
+
+  @override
+  String get camTabCreateTooltip => 'Tạo camera';
+
+  @override
+  String get camTabMenuTooltip => 'Thêm tuỳ chọn';
+
+  @override
+  String get camTabSearchHint => 'Tìm theo tên VĐV, đội hoặc mã trận';
+
+  @override
+  String get camTabAllRounds => 'Tất cả vòng';
+
+  @override
+  String camTabRound(int n) {
+    return 'Vòng $n';
+  }
+
+  @override
+  String get camTabNoCamera => 'Chưa có cam';
+
+  @override
+  String get camTabNoMatchFound => 'Không có trận khớp';
+
+  @override
+  String get camTabClearFilter => 'Xoá lọc';
+
+  @override
   String get camTabHelpHeading => 'Cách dùng tab Camera';
 
   @override

@@ -35491,6 +35491,84 @@ abstract class AppLocalizations {
   /// **'{total} camera · {live} LIVE · {failing} lỗi'**
   String camTabSummary(int total, int live, int failing);
 
+  /// No description provided for @camTabSummaryShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'{total} cam · {live} LIVE'**
+  String camTabSummaryShort(int total, int live);
+
+  /// No description provided for @camTabMenuRefresh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm mới'**
+  String get camTabMenuRefresh;
+
+  /// No description provided for @camTabMenuHelp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hướng dẫn'**
+  String get camTabMenuHelp;
+
+  /// No description provided for @camTabSearchTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm trận'**
+  String get camTabSearchTooltip;
+
+  /// No description provided for @camTabFilterTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lọc trận'**
+  String get camTabFilterTooltip;
+
+  /// No description provided for @camTabCreateTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo camera'**
+  String get camTabCreateTooltip;
+
+  /// No description provided for @camTabMenuTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm tuỳ chọn'**
+  String get camTabMenuTooltip;
+
+  /// No description provided for @camTabSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên VĐV, đội hoặc mã trận'**
+  String get camTabSearchHint;
+
+  /// No description provided for @camTabAllRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả vòng'**
+  String get camTabAllRounds;
+
+  /// No description provided for @camTabRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {n}'**
+  String camTabRound(int n);
+
+  /// No description provided for @camTabNoCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có cam'**
+  String get camTabNoCamera;
+
+  /// No description provided for @camTabNoMatchFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận khớp'**
+  String get camTabNoMatchFound;
+
+  /// No description provided for @camTabClearFilter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá lọc'**
+  String get camTabClearFilter;
+
   /// No description provided for @camTabHelpHeading.
   ///
   /// In vi, this message translates to:

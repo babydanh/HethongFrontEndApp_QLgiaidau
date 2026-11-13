@@ -7814,6 +7814,30 @@
       "failing": { "type": "int" }
     }
   },
+  "camTabSummaryShort": "{total} cams · {live} LIVE",
+  "@camTabSummaryShort": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "live": { "type": "int" }
+    }
+  },
+  "camTabMenuRefresh": "Refresh",
+  "camTabMenuHelp": "How to use",
+  "camTabSearchTooltip": "Search matches",
+  "camTabFilterTooltip": "Filter matches",
+  "camTabCreateTooltip": "Create camera",
+  "camTabMenuTooltip": "More options",
+  "camTabSearchHint": "Search by player, team or match code",
+  "camTabAllRounds": "All rounds",
+  "camTabRound": "Round {n}",
+  "@camTabRound": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "camTabNoCamera": "No camera yet",
+  "camTabNoMatchFound": "No matching matches",
+  "camTabClearFilter": "Clear filter",
   "camTabHelpHeading": "How to use the Camera tab",
   "camTabHelpStep1Title": "1. Put a match on a court",
   "camTabHelpStep1Body": "Long-press a match and drop it on a court card, or use the match ⋯ menu to move it.",

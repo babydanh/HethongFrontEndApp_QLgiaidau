@@ -7842,6 +7842,30 @@
       "failing": { "type": "int" }
     }
   },
+  "camTabSummaryShort": "{total} cam · {live} LIVE",
+  "@camTabSummaryShort": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "live": { "type": "int" }
+    }
+  },
+  "camTabMenuRefresh": "Làm mới",
+  "camTabMenuHelp": "Hướng dẫn",
+  "camTabSearchTooltip": "Tìm trận",
+  "camTabFilterTooltip": "Lọc trận",
+  "camTabCreateTooltip": "Tạo camera",
+  "camTabMenuTooltip": "Thêm tuỳ chọn",
+  "camTabSearchHint": "Tìm theo tên VĐV, đội hoặc mã trận",
+  "camTabAllRounds": "Tất cả vòng",
+  "camTabRound": "Vòng {n}",
+  "@camTabRound": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "camTabNoCamera": "Chưa có cam",
+  "camTabNoMatchFound": "Không có trận khớp",
+  "camTabClearFilter": "Xoá lọc",
   "camTabHelpHeading": "Cách dùng tab Camera",
   "camTabHelpStep1Title": "1. Gán trận vào sân",
   "camTabHelpStep1Body": "Kéo giữ một trận thả vào thẻ sân, hoặc mở menu ⋯ của trận để chuyển sân.",

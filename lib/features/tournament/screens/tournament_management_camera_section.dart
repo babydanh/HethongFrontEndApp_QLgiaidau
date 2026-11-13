@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_live_status_action.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/camera_create_flow.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/camera_match_filter.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_info.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_header.dart';
@@ -82,6 +84,8 @@ class _TournamentManagementCameraSectionState
 
   /// Match picked with a single tap, waiting for a court to be chosen.
   String? _selectedMatchId;
+
+  CameraMatchFilter _filter = const CameraMatchFilter();
 
   /// Matches with an assignment in flight, so only that row shows a spinner.
   final Set<String> _busyMatchIds = <String>{};
@@ -253,6 +257,15 @@ class _TournamentManagementCameraSectionState
         final assignable = _assignableMatches(matches);
         final cameras =
             camerasAsync.asData?.value ?? const <TournamentCameraModel>[];
+        final visible = filterCameraMatches(
+          matches: assignable,
+          query: _filter.query,
+          round: _filter.round,
+          onlyNoCamera: _filter.onlyNoCamera,
+          labelOf: (match) => _matchLabel(l10n, match),
+          hasCameraOnCourt: (courtId) =>
+              cameraForCourt(cameras, courtId) != null,
+        );
         final selectedMatch = assignable
             .where((match) => match.id == _selectedMatchId)
             .firstOrNull;
@@ -262,6 +275,24 @@ class _TournamentManagementCameraSectionState
           children: [
             CameraTabHeader(
               cameras: camerasAsync.asData == null ? null : cameras,
+              filter: _filter,
+              rounds: cameraMatchRounds(assignable),
+              onFilterChanged: (value) => setState(() => _filter = value),
+              onCreateCamera: widget.readOnly || courts.isEmpty
+                  ? null
+                  : () => runCreateCameraFlow(
+                      context: context,
+                      ref: ref,
+                      tournamentId: widget.tournamentId,
+                      courts: courts,
+                      refresh: () => ref
+                          .read(
+                            tournamentCamerasProvider(
+                              widget.tournamentId,
+                            ).notifier,
+                          )
+                          .refresh(),
+                    ),
               onRefresh: () => ref
                   .read(tournamentCamerasProvider(widget.tournamentId).notifier)
                   .refresh(),
@@ -293,7 +324,10 @@ class _TournamentManagementCameraSectionState
               _MatchPool(
                 tournamentId: widget.tournamentId,
                 cameras: cameras,
-                matches: assignable,
+                matches: visible,
+                filterActive: _filter.isActive && assignable.isNotEmpty,
+                onClearFilter: () =>
+                    setState(() => _filter = const CameraMatchFilter()),
                 isLoading: matchesAsync.isLoading,
                 courts: courts,
                 busyMatchIds: _busyMatchIds,
@@ -309,7 +343,7 @@ class _TournamentManagementCameraSectionState
                   tournamentId: widget.tournamentId,
                   court: court,
                   camera: cameraForCourt(cameras, court.id),
-                  matchesHere: assignable
+                  matchesHere: visible
                       .where((match) => match.courtId == court.id)
                       .toList(growable: false),
                   assignable: assignable,
@@ -392,6 +426,8 @@ class _MatchPool extends StatelessWidget {
     required this.tournamentId,
     required this.cameras,
     required this.matches,
+    required this.filterActive,
+    required this.onClearFilter,
     required this.isLoading,
     required this.courts,
     required this.busyMatchIds,
@@ -404,6 +440,10 @@ class _MatchPool extends StatelessWidget {
   final String tournamentId;
   final List<TournamentCameraModel> cameras;
   final List<MatchModel> matches;
+
+  /// Có lọc đang bật trong khi vẫn còn trận để gán: danh sách rỗng là do lọc.
+  final bool filterActive;
+  final VoidCallback onClearFilter;
   final bool isLoading;
   final List<TournamentCourtRef> courts;
   final Set<String> busyMatchIds;
@@ -420,6 +460,16 @@ class _MatchPool extends StatelessWidget {
       subtitle: l10n.tournamentManagementCameraMatchPoolHint,
       child: isLoading && matches.isEmpty
           ? const BoneListLoading(itemCount: 3, leadingAvatar: false)
+          : matches.isEmpty && filterActive
+          ? Column(
+              children: [
+                Text(l10n.camTabNoMatchFound),
+                TextButton(
+                  onPressed: onClearFilter,
+                  child: Text(l10n.camTabClearFilter),
+                ),
+              ],
+            )
           : matches.isEmpty
           ? TournamentManagementEmpty(
               title: l10n.tournamentManagementCameraMatchPoolEmpty,

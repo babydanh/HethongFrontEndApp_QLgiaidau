@@ -19808,6 +19808,49 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String camTabSummaryShort(int total, int live) {
+    return '$total cams · $live LIVE';
+  }
+
+  @override
+  String get camTabMenuRefresh => 'Refresh';
+
+  @override
+  String get camTabMenuHelp => 'How to use';
+
+  @override
+  String get camTabSearchTooltip => 'Search matches';
+
+  @override
+  String get camTabFilterTooltip => 'Filter matches';
+
+  @override
+  String get camTabCreateTooltip => 'Create camera';
+
+  @override
+  String get camTabMenuTooltip => 'More options';
+
+  @override
+  String get camTabSearchHint => 'Search by player, team or match code';
+
+  @override
+  String get camTabAllRounds => 'All rounds';
+
+  @override
+  String camTabRound(int n) {
+    return 'Round $n';
+  }
+
+  @override
+  String get camTabNoCamera => 'No camera yet';
+
+  @override
+  String get camTabNoMatchFound => 'No matching matches';
+
+  @override
+  String get camTabClearFilter => 'Clear filter';
+
+  @override
   String get camTabHelpHeading => 'How to use the Camera tab';
 
   @override

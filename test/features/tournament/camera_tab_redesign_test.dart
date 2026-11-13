@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_info.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_filter_strip.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_help_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/camera_preview_provider.dart';
@@ -117,6 +119,11 @@ Widget _app(
   ),
 );
 
+/// Hàng trận trong pool / thẻ sân (không tính dòng "Đang chiếu" của camera).
+Finder _row(String matchId) => find.byWidgetPredicate(
+  (widget) => widget is CameraMatchRow && widget.match.id == matchId,
+);
+
 Future<void> _size(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -150,8 +157,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Camera của giải'), findsOneWidget);
-    expect(find.text('3 camera · 1 LIVE · 1 lỗi'), findsOneWidget);
-    expect(find.text('Xem camera'), findsOneWidget);
+    expect(find.text('3 cam · 1 LIVE'), findsOneWidget);
+    expect(find.byTooltip('Xem camera'), findsOneWidget);
   });
 
   testWidgets('TC-CAMWALL-APP-21 no cameras hides Xem camera', (tester) async {
@@ -160,7 +167,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Camera của giải'), findsOneWidget);
-    expect(find.text('Xem camera'), findsNothing);
+    expect(find.byTooltip('Xem camera'), findsNothing);
   });
 
   testWidgets('TC-CAMWALL-APP-22 ? opens an animated guide', (tester) async {
@@ -168,7 +175,9 @@ void main() {
     await tester.pumpWidget(_app(_tab, _Cameras(const [])));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Hướng dẫn tab Camera'));
+    await tester.tap(find.byTooltip('Thêm tuỳ chọn'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hướng dẫn'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -198,7 +207,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Hướng dẫn tab Camera'));
+    await tester.tap(find.byTooltip('Thêm tuỳ chọn'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hướng dẫn'));
     await tester.pumpAndSettle();
 
     for (var i = 0; i < 3; i++) {
@@ -364,12 +375,97 @@ void main() {
     await tester.pumpWidget(_app(_tab, _Cameras([_camera(1, status: 'IDLE')])));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Xem camera'));
+    await tester.tap(find.byTooltip('Xem camera'));
     await tester.pumpAndSettle();
     expect(find.byType(CameraWallScreen), findsOneWidget);
 
     await tester.tap(find.byTooltip('Đóng tường camera'));
     await tester.pumpAndSettle();
     expect(find.byType(CameraWallScreen), findsNothing);
+  });
+
+  testWidgets('TC-CAMFILTER-APP-20 round filter narrows the pool, Xoá lọc', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 1600));
+    MatchModel round(String id, int n) => _match(id).copyWith(round: n);
+    await tester.pumpWidget(
+      _app(
+        _tab,
+        _Cameras([_camera(1)]),
+        matches: [round('m1', 1), round('m2', 2)],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(_row('m1'), findsWidgets);
+    expect(_row('m2'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Lọc trận'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vòng 2'));
+    await tester.pumpAndSettle();
+    expect(_row('m1'), findsNothing);
+    expect(_row('m2'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Tìm trận'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(CameraFilterStrip),
+        matching: find.byType(TextField),
+      ),
+      'khong-co',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Không có trận khớp'), findsOneWidget);
+
+    await tester.tap(find.text('Xoá lọc'));
+    await tester.pumpAndSettle();
+    expect(find.text('Không có trận khớp'), findsNothing);
+    expect(_row('m1'), findsWidgets);
+  });
+
+  testWidgets('TC-CAMFILTER-APP-21 "Chưa có cam" keeps courts w/o camera', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 1600));
+    // Sân court-1 có camera → trận m1 không còn hiện khi bật "Chưa có cam".
+    await tester.pumpWidget(
+      _app(_tab, _Cameras([_camera(1)]), matches: [_match('m1')]),
+    );
+    await tester.pumpAndSettle();
+    expect(_row('m1'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Lọc trận'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Chưa có cam'));
+    await tester.pumpAndSettle();
+    expect(_row('m1'), findsNothing);
+    expect(find.text('Không có trận khớp'), findsOneWidget);
+    // Thẻ sân vẫn hiện đủ để còn kéo thả/gán được.
+    expect(find.text('Sân 1'), findsWidgets);
+  });
+
+  testWidgets('TC-CAMFILTER-APP-22 read-only tab has no Tạo camera icon', (
+    tester,
+  ) async {
+    await _size(tester, const Size(390, 1600));
+    await tester.pumpWidget(_app(_tab, _Cameras([_camera(1)])));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Tạo camera'), findsOneWidget);
+
+    await tester.pumpWidget(
+      _app(
+        const Scaffold(
+          body: TournamentManagementCameraSection(
+            tournamentId: 't1',
+            readOnly: true,
+          ),
+        ),
+        _Cameras([_camera(1)]),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Tạo camera'), findsNothing);
   });
 }

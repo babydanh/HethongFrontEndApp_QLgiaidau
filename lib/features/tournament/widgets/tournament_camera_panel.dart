@@ -4,9 +4,8 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/camera_editor_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/participant_row_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/camera_create_flow.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/stream_key_qr_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -143,41 +142,14 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
     }
   }
 
-  Future<void> _openAdd(List<TournamentCourtRef> courts) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    TournamentCameraModel? created;
-    final saved = await CameraEditorSheet.show(
-      context,
-      courts: courts,
-      onSubmit: (value) async {
-        created = await ref
-            .read(cameraAdminRepositoryProvider)
-            .createCamera(
-              tournamentId: widget.tournamentId,
-              name: value.name,
-              mode: value.mode,
-              courtId: value.courtId,
-            );
-        await _refresh();
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(l10n.tournamentCameraCreated(value.name))),
-          );
-      },
-    );
-    // Như Web (LivestreamTab.handleCreateCamera): camera PUSH vừa tạo thì mở
-    // luôn popup QR, không hỏi lại; popup tự tạo stream key khi chưa có.
-    final camera = created;
-    if (saved != true ||
-        camera == null ||
-        !mounted ||
-        !shouldOpenStreamKeyAfterCreate(camera.mode)) {
-      return;
-    }
-    await StreamKeyQrSheet.show(context, camera: camera);
-  }
+  Future<void> _openAdd(List<TournamentCourtRef> courts) =>
+      runCreateCameraFlow(
+        context: context,
+        ref: ref,
+        tournamentId: widget.tournamentId,
+        courts: courts,
+        refresh: _refresh,
+      );
 
   /// The QR carries the stream key, so it is never one tap away: the
   /// organizer confirms first and only then is the sheet (and its key request)
