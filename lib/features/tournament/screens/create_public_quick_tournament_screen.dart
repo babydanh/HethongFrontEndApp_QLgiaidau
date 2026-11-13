@@ -949,12 +949,30 @@ class _CreatePublicQuickTournamentScreenState
                 query: _venueNameController.text == _pickedVenue?.name
                     ? ''
                     : _venueNameController.text,
-                onPick: (place) {
+                onPick: (place) async {
                   _pickedVenue = place;
                   _venueNameController.text = place.name;
                   _locationAddressController.text = place.formattedAddress;
+                  // The directory already knows the venue's region (v2 codes).
+                  final knownProvince = place.provinceCode;
+                  if (knownProvince != null) {
+                    setState(() {
+                      _provinceCode = knownProvince;
+                      _wardCode = place.wardCode;
+                    });
+                  }
                   // Programmatic text changes skip onChanged.
-                  _detectAddressSuggestion();
+                  await _detectAddressSuggestion();
+                  // No stored region: fill the province from the address only
+                  // when it is unambiguous; the ward stays a tap on the banner.
+                  final detected = _suggestedProvince;
+                  if (!mounted || knownProvince != null || detected == null) {
+                    return;
+                  }
+                  setState(() {
+                    _provinceCode = detected.code;
+                    _wardCode = null;
+                  });
                 },
               ),
             ),

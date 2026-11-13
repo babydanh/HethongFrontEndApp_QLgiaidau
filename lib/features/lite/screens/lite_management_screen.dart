@@ -1254,6 +1254,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             picked != null &&
             _venueNameController.text == picked.name &&
             _locationController.text == picked.formattedAddress;
+        // Read at fire time: a venue pick sets the region just before this.
+        final selectedProvince = _provinces
+            .where((p) => p.code == _selectedProvinceCode)
+            .firstOrNull;
+        final selectedWard = _wards
+            .where((w) => w.code == _selectedWardCode)
+            .firstOrNull;
         notifier.updateLocation(
           widget.tournamentId,
           venueName: _venueNameController.text,
@@ -1339,6 +1346,19 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                   _pickedVenue = place;
                   _venueNameController.text = place.name;
                   _locationController.text = place.formattedAddress;
+                  // The directory already knows the venue's region (v2 codes).
+                  final knownProvince = place.provinceCode;
+                  if (knownProvince != null) {
+                    setState(() {
+                      _selectedProvinceCode = knownProvince;
+                      _selectedWardCode = null;
+                      _wards = [];
+                    });
+                    _loadWardsForProvince(
+                      knownProvince,
+                      targetWardCode: place.wardCode,
+                    );
+                  }
                   _detectAddressAI(place.formattedAddress);
                   saveLocationSoon();
                 },

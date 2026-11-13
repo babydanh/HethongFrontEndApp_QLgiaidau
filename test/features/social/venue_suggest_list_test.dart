@@ -82,6 +82,25 @@ void main() {
       expect(picked?.venueId, 'v1');
     });
 
+    // TC-VENUE-UI-APP-05
+    testWidgets('marks verified venues and keeps unverified ones plain', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(const [
+        SocialPlace(
+          name: 'Sân A',
+          formattedAddress: '1 Đường X, Hà Nội',
+          venueId: 'a',
+          isVerified: true,
+        ),
+        _mocChau,
+      ]);
+      await tester.pumpWidget(_app(repo, 'san', (_) {}));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byIcon(Icons.verified), findsOneWidget);
+      expect(find.byIcon(Icons.stadium_outlined), findsNWidgets(2));
+    });
+
     testWidgets('searches again only for the latest query', (tester) async {
       final repo = _FakeRepo(const [_mocChau]);
       await tester.pumpWidget(_app(repo, 'pic', (_) {}));

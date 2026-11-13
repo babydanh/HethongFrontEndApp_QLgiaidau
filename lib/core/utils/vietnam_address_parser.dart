@@ -193,6 +193,17 @@ class VietnamAddressParser {
       }
     }
 
+    // 3. Bare province name without "Tinh/Thanh pho" ("..., Cao Lanh, Dong Thap"). Only non-address
+    //    lines count, so "Duong Dong Thap" is not taken for a province.
+    for (final p in sorted) {
+      final bare = removeVietnameseTones(getName(p))
+          .replaceFirst(_provinceTypePrefix, '')
+          .trim();
+      if (bare.length <= 3) continue;
+      final pattern = RegExp(r'(^|\s|\W)' + bare + r'(\s|\W|)');
+      if (pattern.hasMatch(aliasAddr)) return p;
+    }
+
     return null;
   }
 

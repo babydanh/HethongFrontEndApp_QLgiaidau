@@ -123,6 +123,15 @@ void main() {
       expect(_province('Sân A, Đà Lạt', _provinces), '68'); // city → province
     });
 
+    // TC-VENUE-REGION-APP-01
+    test('recognises a bare province name on a non-street line', () {
+      final provinces = [..._provinces, _area('87', 'Tỉnh Đồng Tháp')];
+      expect(_province('1 Đường Nguyễn Văn Tre, Cao Lãnh, Đồng Tháp', provinces), '87');
+      expect(_province('Sân A, Phường Mỹ Phú, Đồng Tháp', provinces), '87');
+      // The street line never claims a province.
+      expect(_province('12 Đường Đồng Tháp', provinces), isNull);
+    });
+
     test('an alias inside the street line is ignored', () {
       // "hn" appears as a word on the street line only.
       expect(_province('12 Hn Street', _provinces), isNull);
