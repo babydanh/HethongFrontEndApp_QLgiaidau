@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/payment/utils/direct_fee_guard.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -902,6 +903,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final l10n = AppLocalizations.of(context)!;
     setModalState(() => _isProcessingLink = true);
     try {
+      // DIRECT fee collection: never create a platform payment link.
+      if (await isDirectFeeTournament(ref, payment.tournamentId)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.feeDirectNote)));
+        }
+        return;
+      }
       if (payment.tournamentId.isNotEmpty && payment.participantId.isNotEmpty) {
         final result = await ref
             .read(paymentRepositoryProvider)

@@ -7926,5 +7926,7 @@
   "camWallSignalOffline": "OFFLINE",
   "camWallSignalError": "ERROR",
   "camWallSignalIdle": "Chưa phát",
-  "camWallNoCourt": "Chưa gắn sân"
+  "camWallNoCourt": "Chưa gắn sân",
+  "feeDirectNote": "Thanh toán trực tiếp cho BTC",
+  "feeDirectStatus": "Thu trực tiếp"
 }

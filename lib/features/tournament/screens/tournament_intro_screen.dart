@@ -389,6 +389,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
 
     return TournamentRegisterBar(
       entryFee: tournament.entryFee,
+      isDirectFee: tournament.isDirectFeeCollection,
       registrationEnd: tournament.registrationEndDate,
       onRegister: () => context.push(registrationUri),
     );

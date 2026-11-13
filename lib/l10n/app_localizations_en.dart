@@ -19968,4 +19968,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camWallNoCourt => 'No court';
+
+  @override
+  String get feeDirectNote => 'Pay the organizer directly';
+
+  @override
+  String get feeDirectStatus => 'Collected directly';
 }

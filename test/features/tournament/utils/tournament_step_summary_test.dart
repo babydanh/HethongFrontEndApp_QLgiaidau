@@ -13,12 +13,14 @@ Tournament _tournament(
   DateTime? registrationEnd,
   DateTime? endDate,
   bool withDates = true,
+  String? feeCollectionMode,
 }) => Tournament.fromJson({
   'name': 'Step summary cup',
   'sport': 'pickleball',
   'format': 'doubles',
   'bracketType': 'single_elimination',
   'status': status,
+  if (feeCollectionMode != null) 'feeCollectionMode': feeCollectionMode,
   'maxTeams': 8,
   'maxPlayersPerTeam': 2,
   'createdAt': '2026-01-01T00:00:00Z',
@@ -151,6 +153,22 @@ void main() {
     final step = _step(summary, StepKey.registration);
     expect(_todo(step, 'unpaid')?.count, 1);
     expect(_todo(step, 'unpaid')?.target.tab, StepHubTab.athletes);
+  });
+
+  test('TC-FEEMODE-APP-11 DIRECT fee collection has no unpaid todo', () {
+    final summary = _build(
+      _tournament(
+        'registration',
+        registrationEnd: _future,
+        feeCollectionMode: 'DIRECT',
+      ),
+      divisions: [_division('a', participantCount: 1)],
+      participants: [
+        _participant('unpaid', 'a', isPaid: false, entryFee: 100000),
+      ],
+    );
+
+    expect(_todo(_step(summary, StepKey.registration), 'unpaid'), isNull);
   });
 
   test('TC-STEP-03 a missing registration deadline asks for one', () {

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/payment/utils/direct_fee_guard.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,6 +49,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _isSubmitting = true);
     try {
+      // DIRECT fee collection: never create a platform payment link.
+      if (await isDirectFeeTournament(ref, widget.tournamentId)) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.feeDirectNote)));
+        }
+        return;
+      }
       if (effectiveAmount <= 0) {
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
@@ -163,6 +173,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         : (tournament?.name ?? '');
 
     final isFree = effectiveAmount <= 0;
+    final isDirect = tournament?.isDirectFeeCollection ?? false;
 
     return Scaffold(
       backgroundColor: colors.bgDark,
@@ -206,7 +217,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               child: Column(
                 children: [
                   Text(
-                    isFree ? l10n.checkout_freeBadge : l10n.checkout_entryFeeLabel,
+                    isFree
+                        ? l10n.checkout_freeBadge
+                        : isDirect
+                        ? l10n.feeDirectStatus
+                        : l10n.checkout_entryFeeLabel,
                     style: TextStyle(
                       color: isFree
                           ? const Color(0xFF10B981)
@@ -245,7 +260,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
             const SizedBox(height: 24),
 
-            if (!isFree) ...[
+            if (!isFree && !isDirect) ...[
               Text(
                 l10n.checkout_paymentMethodLabel,
                 style: TextStyle(
@@ -324,7 +339,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
 
             Text(
-              l10n.checkout_confirmInstruction,
+              isDirect ? l10n.feeDirectNote : l10n.checkout_confirmInstruction,
               style: TextStyle(
                 fontSize: 12,
                 color: colors.textMuted,
@@ -337,7 +352,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isSubmitting
+                onPressed: _isSubmitting || isDirect
                     ? null
                     : () => _handleCheckout(effectiveAmount, effectiveName),
                 style: ElevatedButton.styleFrom(
@@ -360,6 +375,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     : Text(
                         isFree
                             ? l10n.checkout_freeConfirmButton
+                            : isDirect
+                            ? l10n.feeDirectStatus
                             : l10n.checkout_payButton(fmt.format(effectiveAmount.ceil())),
                         style: const TextStyle(
                           fontSize: 16,

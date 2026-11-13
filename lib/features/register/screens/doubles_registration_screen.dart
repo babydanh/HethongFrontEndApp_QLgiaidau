@@ -1615,7 +1615,11 @@ class _DoublesRegistrationFlowState
         _teamStatus == 'COMPLETE' ||
         _teamStatus == 'CONFIRMED' ||
         _teamStatus == 'APPROVED';
+    // DIRECT fee collection: the fee is information only, never a payment.
+    final isDirectFee = t.isDirectFeeCollection;
+    final directFee = widget.division.entryFee ?? t.entryFee ?? 0;
     final canPay =
+        !isDirectFee &&
         _entryFee != null &&
         _entryFee! > 0 &&
         !_isPaid &&
@@ -1789,7 +1793,36 @@ class _DoublesRegistrationFlowState
                   l10n.doublesRegWithPartner(_selectedPartner!.fullName),
                   style: TextStyle(fontSize: 14, color: colors.textSecondary),
                 ),
-              if (_entryFee != null &&
+              if (isDirectFee && directFee > 0) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${l10n.doublesRegEntryFee('${NumberFormat.decimalPattern(Localizations.localeOf(context).toLanguageTag()).format(directFee.ceil())}${l10n.registerFeeUnit}')} · ${l10n.feeDirectNote}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: colors.warning,
+                    ),
+                  ),
+                ),
+                if (!isWaitlisted) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.doublesRegPaymentStatus(l10n.feeDirectStatus),
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                  ),
+                ],
+              ],
+              if (!isDirectFee &&
+                  _entryFee != null &&
                   _entryFee! > 0 &&
                   (canPay || _isPaid)) ...[
                 const SizedBox(height: 16),
@@ -1813,7 +1846,8 @@ class _DoublesRegistrationFlowState
                   ),
                 ),
               ],
-              if (_entryFee != null &&
+              if (!isDirectFee &&
+                  _entryFee != null &&
                   _entryFee! > 0 &&
                   (canPay || _isPaid) &&
                   !isWaitlisted) ...[
