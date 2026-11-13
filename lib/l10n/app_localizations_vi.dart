@@ -19651,6 +19651,58 @@ class AppLocalizationsVi extends AppLocalizations {
       'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
 
   @override
+  String get racketReceive => 'NHẬN';
+
+  @override
+  String get racketPickServer => 'Chọn người giao';
+
+  @override
+  String get racketPickFirstHint => 'Bấm vào VĐV để chọn người giao đầu.';
+
+  @override
+  String get racketPickServerHint => 'Bấm vào người đang giao để sửa.';
+
+  @override
+  String get racketServeUnknown =>
+      'Chưa rõ ai giao. Hoàn tác, hoặc ⋯ → Chọn người giao.';
+
+  @override
+  String racketSetPoint(String team) {
+    return 'Điểm set · $team';
+  }
+
+  @override
+  String racketGoldenPoint(int cap) {
+    return 'Điểm vàng: ai được $cap thắng';
+  }
+
+  @override
+  String racketGamePoint(String team) {
+    return 'Game point · $team';
+  }
+
+  @override
+  String racketAdvantage(String team) {
+    return 'Lợi thế $team';
+  }
+
+  @override
+  String get racketDecidingPoint => 'Điểm quyết định (No-Ad)';
+
+  @override
+  String get racketChangeEnds => 'Đổi sân';
+
+  @override
+  String racketTiebreakServe(int n) {
+    return 'Tie-break $n · đổi giao mỗi 2 điểm · đổi sân mỗi 6 điểm';
+  }
+
+  @override
+  String racketGames(int a, int b) {
+    return 'Game $a-$b';
+  }
+
+  @override
   String get bracketMgmt_manageTooltip => 'Quản lý';
 
   @override

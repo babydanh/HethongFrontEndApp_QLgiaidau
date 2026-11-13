@@ -1,7 +1,7 @@
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/racket_court_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,8 +9,8 @@ import 'package:integration_test/integration_test.dart';
 
 import 'support/bam_diem.dart';
 
-/// Tennis scoring through the real [TennisScorePanel]: every point is a tap on
-/// a "+" button, and every check reads what the panel shows or the live state.
+/// Tennis scoring through the real [RacketCourtPanel]: every point is a tap on
+/// a "+" button, and every check reads what the court shows or the live state.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   // A stuck test must fail with a stack trace instead of eating the 40 min job budget.
@@ -84,14 +84,14 @@ void main() {
       _seed(sets: const [SetScoreData(score1: 5, score2: 6)]),
     );
     _expectBoard(tester, '0', '0', serverIsB: true);
-    expect(find.textContaining('TIEBREAK · Each rally'), findsNothing);
+    expect(find.textContaining('Tie-break 7'), findsNothing);
 
     // Team A wins the 12th game: 6-6 and the tie-break starts.
     for (var i = 0; i < 4; i++) {
       await _point(tester, teamA: true);
     }
     expect(_sets(tester), [(6, 6, false)]);
-    expect(find.textContaining('TIEBREAK · Each rally'), findsOneWidget);
+    expect(find.textContaining('Tie-break 7'), findsOneWidget);
     _expectBoard(tester, '0', '0', serverIsB: false);
     await shooter.snap('tennis-tiebreak-bat-dau');
 
@@ -119,7 +119,7 @@ void main() {
     await _point(tester, teamA: true);
     expect(_sets(tester), [(7, 6, true)]);
     _expectBoard(tester, '0', '0', serverIsB: true);
-    expect(find.textContaining('TIEBREAK · Each rally'), findsNothing);
+    expect(find.textContaining('Tie-break 7'), findsNothing);
     expect(_read(tester).team1SetWins, 1);
     await shooter.snap('tennis-tiebreak-chot-set');
   });
@@ -205,7 +205,7 @@ void main() {
   });
 }
 
-const _panel = TennisScorePanel(params: bamDiemParams);
+const _panel = RacketCourtPanel(params: bamDiemParams);
 
 /// Best of 3 sets, the setup the panel tests use.
 ScorePanelState _seed({
@@ -220,35 +220,49 @@ ScorePanelState _seed({
   finishedSets: sets,
 );
 
-/// Taps the "+" of team A (the upper card) or team B (the lower card).
-Future<void> _point(WidgetTester tester, {required bool teamA}) =>
-    tapAndSettle(tester, find.byIcon(Icons.add_rounded).at(teamA ? 0 : 1));
+/// Taps the "+" of team A or team B.
+Future<void> _point(WidgetTester tester, {required bool teamA}) => tapAndSettle(
+  tester,
+  find.byKey(ValueKey('racketPlus${teamA ? 1 : 2}')),
+);
 
-/// The big score texts, team A first.
-List<String> _scores() => find
-    .byWidgetPredicate((w) => w is Text && w.style?.fontSize == 72)
-    .evaluate()
-    .map((e) => (e.widget as Text).data!)
-    .toList();
+/// The two big scores, team A first. The middle strip lists the team on the
+/// first half first, and the halves swap when the teams change ends.
+List<String> _scores(WidgetTester tester) {
+  final texts = find
+      .byWidgetPredicate((w) => w is Text && w.style?.fontSize == 40)
+      .evaluate()
+      .map((e) => (e.widget as Text).data!)
+      .toList();
+  return _read(tester).racketPick.endsFlipped
+      ? [texts[1], texts[0]]
+      : texts;
+}
 
-/// Checks both big scores and which card carries the "● SERVE" line.
+/// Checks both big scores and which side the "● SERVE" chip is on: team A is
+/// "An", team B is "Chi", and the chip sits in the server's cell.
 void _expectBoard(
   WidgetTester tester,
   String a,
   String b, {
   required bool serverIsB,
 }) {
-  expect(_scores(), [a, b]);
+  expect(_scores(tester), [a, b]);
   final serve = find.text('● SERVE');
   expect(serve, findsOneWidget);
-  final serveY = tester.getCenter(serve).dy;
-  final teamBY = tester.getCenter(find.text('Đội B')).dy;
-  expect(serveY > teamBY, serverIsB, reason: 'serve line on the wrong card');
+  final at = tester.getCenter(serve);
+  final distanceA = (at - tester.getCenter(find.text('An'))).distance;
+  final distanceB = (at - tester.getCenter(find.text('Chi'))).distance;
+  expect(
+    distanceB < distanceA,
+    serverIsB,
+    reason: 'serve chip is in the wrong cell',
+  );
 }
 
 /// The live panel state behind the widget.
 ScorePanelState _read(WidgetTester tester) => ProviderScope.containerOf(
-  tester.element(find.byType(TennisScorePanel)),
+  tester.element(find.byType(RacketCourtPanel)),
 ).read(scorePanelNotifierProvider(bamDiemParams));
 
 /// Games of each set as (team A, team B, finished).

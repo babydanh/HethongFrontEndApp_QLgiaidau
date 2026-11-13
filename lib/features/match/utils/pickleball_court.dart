@@ -348,6 +348,8 @@ class CourtLayout {
     required this.callServerNumber,
     required this.servingScore,
     required this.receivingScore,
+    this.receiverCell,
+    this.receiverPlayerIndex,
   });
 
   /// true: đội 1 nằm nửa đầu (trên/trái). false: đội 2 nằm nửa đầu.
@@ -368,6 +370,13 @@ class CourtLayout {
   final int? callServerNumber;
   final int? servingScore;
   final int? receivingScore;
+
+  /// Ô người nhận: chéo ô người giao, nên cùng phía (phải/trái) bên đội kia.
+  /// null khi chưa biết đội giao.
+  final CourtCell? receiverCell;
+
+  /// Người nhận, là index trong đội nhận; null nếu ô đó không có VĐV.
+  final int? receiverPlayerIndex;
 
   CourtTeamSlots slotsOf(int team) => team == 1 ? team1 : team2;
 }
@@ -403,9 +412,15 @@ bool endsFlipped(CourtState reconciled, CourtContext context) {
 CourtLayout resolveCourtLayout(CourtState state, CourtContext context) {
   final s = reconcileCourtState(state, context);
   final flipped = endsFlipped(s, context);
-  final team1 = _slotsFor(1, s, context);
-  final team2 = _slotsFor(2, s, context);
   final servingTeam = context.servingTeam;
+  final serverIndex = servingTeam == null
+      ? null
+      : _serverPlayerIndex(servingTeam, s, context);
+  final serverCell = servingTeam == null
+      ? null
+      : _cellOfPlayer(servingTeam, serverIndex!, s, context);
+  final team1 = _slotsFor(1, s, context, servingTeam, serverCell);
+  final team2 = _slotsFor(2, s, context, servingTeam, serverCell);
   if (servingTeam == null) {
     return CourtLayout(
       team1First: !flipped,
@@ -419,14 +434,16 @@ CourtLayout resolveCourtLayout(CourtState state, CourtContext context) {
       receivingScore: null,
     );
   }
-  final serverIndex = _serverPlayerIndex(servingTeam, s, context);
+  final receivingSlots = servingTeam == 1 ? team2 : team1;
   return CourtLayout(
     team1First: !flipped,
     team1: team1,
     team2: team2,
     servingTeam: servingTeam,
     serverPlayerIndex: serverIndex,
-    serverCell: _cellOfPlayer(servingTeam, serverIndex, s, context),
+    serverCell: serverCell,
+    receiverCell: serverCell,
+    receiverPlayerIndex: receivingSlots.playerIn(serverCell!),
     callServerNumber:
         context.scoringMode == CourtScoringMode.sideOut && context.isDoubles
         ? context.effectiveServerNumber
@@ -729,8 +746,23 @@ int _serverPlayerIndex(int team, CourtState s, CourtContext c) {
       0;
 }
 
-CourtTeamSlots _slotsFor(int team, CourtState s, CourtContext c) {
+/// Vị trí VĐV của [team]. Trận đơn: đội nhận đứng ô chéo người giao
+/// ([serverCell]), không theo điểm của chính mình.
+CourtTeamSlots _slotsFor(
+  int team,
+  CourtState s,
+  CourtContext c,
+  int? servingTeam,
+  CourtCell? serverCell,
+) {
   final count = c.playerCountOf(team);
+  if (!c.isDoubles && serverCell != null && team != servingTeam) {
+    final shown = count > 0 ? 0 : null;
+    return CourtTeamSlots(
+      rightPlayerIndex: serverCell == CourtCell.right ? shown : null,
+      leftPlayerIndex: serverCell == CourtCell.left ? shown : null,
+    );
+  }
   int? visible(CourtCell cell) {
     final idx = _playerIndexInCell(
       cell: cell,
