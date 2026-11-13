@@ -69,9 +69,8 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                 fit: StackFit.expand,
                 children: [
                   if (hasImage)
-                    Image.network(
-                      resolvedImageUrl,
-                      fit: BoxFit.cover,
+                    BlurredBannerImage(
+                      image: NetworkImage(resolvedImageUrl),
                       errorBuilder: (_, _, _) =>
                           _bannerGradient(AppTheme.primary, '🏆'),
                     )
