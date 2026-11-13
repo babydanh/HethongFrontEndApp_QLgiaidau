@@ -16426,6 +16426,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rosterImportStatusDivisionUnknown => 'Division not recognized';
 
   @override
+  String get rosterImportAiChecking => 'AI is reading the file layout...';
+
+  @override
+  String get rosterImportAiDone => 'Using the layout read by AI.';
+
+  @override
+  String get rosterImportAiUnavailable =>
+      'AI is not available; using the rule-based reading.';
+
+  @override
+  String get rosterImportAiError =>
+      'Could not ask AI (rate limit or server error); using the rule-based reading.';
+
+  @override
+  String get rosterImportAiEmpty =>
+      'AI found no athlete table; using the rule-based reading.';
+
+  @override
+  String rosterImportPendingPartnerCount(int count) {
+    return '$count athletes waiting for a partner';
+  }
+
+  @override
   String get rosterImportStatusUnknown => 'Needs review';
 
   @override

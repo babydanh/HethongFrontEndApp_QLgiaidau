@@ -3,11 +3,16 @@
 // Bám theo web: `ROSTER_COLUMN_ALIASES`, `matchRosterColumn`, `detectRosterSheetCandidates`
 // (src/utils/exportTournament.ts) và quy tắc kiểm tra cục bộ trong `rosterImportDraft.ts`.
 // Lỗi kiểm tra từ phía máy chủ (PLAYER2_REQUIRED, DUPLICATE_IN_FILE, ...) không có ở đây.
+//
+// Ghép cặp (STT gộp, phần VĐV lẻ, gợi ý đồng đội) nằm ở `roster_pairing.dart`; guard và AI layout ở
+// `roster_layout.dart`.
 
 import 'package:app_quanly_giaidau/core/services/roster_excel_reader.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_pairing.dart';
 
 /// Các cột của file danh sách VĐV mà app nhận diện.
 enum RosterSlot {
+  pairCode,
   teamName,
   player1Name,
   player1Email,
@@ -30,7 +35,7 @@ class RosterColumnMapping {
   int? indexOf(RosterSlot slot) => columns[slot];
 }
 
-/// Một dòng đã đọc từ sheet, kèm mã lỗi kiểm tra cục bộ.
+/// Một dòng đã đọc từ sheet, kèm mã lỗi kiểm tra cục bộ. Bất biến: ghép cặp trả về bản sao.
 class RosterParsedRow {
   const RosterParsedRow({
     required this.sheetName,
@@ -45,8 +50,14 @@ class RosterParsedRow {
     this.player2Email,
     this.player2Phone,
     this.elo,
-    this.isPaid,
+    this.eloSource,
+    this.isPaid = false,
     this.notes,
+    this.fileIndex = '',
+    this.pairCode,
+    this.pairCodeSize,
+    this.singles = false,
+    this.partnerHint,
   });
 
   final String sheetName;
@@ -62,14 +73,90 @@ class RosterParsedRow {
   final String? player2Name;
   final String? player2Email;
   final String? player2Phone;
+
+  /// Điểm của VĐV (cặp mang điểm trung bình); null khi không đọc được số.
   final num? elo;
-  final bool? isPaid;
+
+  /// Thang của điểm: `ELO` (100–3000) hoặc `DUPR` (2–8); null khi không có điểm.
+  final String? eloSource;
+
+  /// Đã thanh toán theo file. Mặc định chưa: file không xác nhận thì không ai được đánh dấu.
+  final bool isPaid;
 
   /// Ghi chú gốc của người nhập, web gửi vào `customResponses.notes`.
   final String? notes;
 
+  /// Số thứ tự của file (cột STT), '' khi sheet không có. Không phải dữ liệu VĐV.
+  final String fileIndex;
+
+  /// Mã cặp của file, mã kế thừa từ ô gộp, hoặc mã suy từ STT/gợi ý (`stt:…`, `hint:…`).
+  final String? pairCode;
+
+  /// Số dòng của nhóm mã khi khác hai: giao diện cảnh báo cặp chưa đủ.
+  final int? pairCodeSize;
+
+  /// Dòng thuộc danh sách VĐV chưa có cặp: không bao giờ ghép theo STT hay vị trí.
+  final bool singles;
+
+  /// Chữ ở cột gợi ý đồng đội: chỉ là manh mối ghép, không phải tên VĐV.
+  final String? partnerHint;
+
   /// Mã lỗi cục bộ: MISSING_NAME, MISSING_EMAIL, INVALID_EMAIL. Rỗng nghĩa là không có lỗi.
   final List<String> localErrors;
+
+  /// Dòng này đã có VĐV 2 (từ cột, ô chung hoặc ghép cặp).
+  bool get hasPlayer2 =>
+      player2Name != null || player2Email != null || player2Phone != null;
+
+  RosterParsedRow copyWith({
+    String? teamName,
+    bool clearTeamName = false,
+    String? player1Name,
+    String? player1Email,
+    String? player1Phone,
+    String? player2Name,
+    bool clearPlayer2Name = false,
+    String? player2Email,
+    bool clearPlayer2Email = false,
+    String? player2Phone,
+    bool clearPlayer2Phone = false,
+    num? elo,
+    bool clearElo = false,
+    String? eloSource,
+    bool? isPaid,
+    String? notes,
+    bool clearNotes = false,
+    String? pairCode,
+    int? pairCodeSize,
+    List<String>? localErrors,
+  }) {
+    return RosterParsedRow(
+      sheetName: sheetName,
+      sourceRowIndex: sourceRowIndex,
+      localErrors: localErrors ?? this.localErrors,
+      divisionName: divisionName,
+      teamName: clearTeamName ? null : (teamName ?? this.teamName),
+      player1Name: player1Name ?? this.player1Name,
+      player1Email: player1Email ?? this.player1Email,
+      player1Phone: player1Phone ?? this.player1Phone,
+      player2Name: clearPlayer2Name ? null : (player2Name ?? this.player2Name),
+      player2Email: clearPlayer2Email
+          ? null
+          : (player2Email ?? this.player2Email),
+      player2Phone: clearPlayer2Phone
+          ? null
+          : (player2Phone ?? this.player2Phone),
+      elo: clearElo ? null : (elo ?? this.elo),
+      eloSource: clearElo ? null : (eloSource ?? this.eloSource),
+      isPaid: isPaid ?? this.isPaid,
+      notes: clearNotes ? null : (notes ?? this.notes),
+      fileIndex: fileIndex,
+      pairCode: pairCode ?? this.pairCode,
+      pairCodeSize: pairCodeSize ?? this.pairCodeSize,
+      singles: singles,
+      partnerHint: partnerHint,
+    );
+  }
 }
 
 /// Số dòng header được quét từ đầu sheet (giống `ROSTER_HEADER_SCAN_ROWS` của web).
@@ -81,6 +168,7 @@ const int _maxRowsPerSheet = 5000;
 /// Thứ tự gán cột theo `ROSTER_COLUMN_SLOTS` của web. Bỏ `entryType` vì backend bỏ qua
 /// trường này (`roster-import.dto.ts`). `notes` đứng cuối nên wildcard của nó không cướp cột khác.
 const List<RosterSlot> _slotPriority = [
+  RosterSlot.pairCode,
   RosterSlot.teamName,
   RosterSlot.player1Name,
   RosterSlot.player1Email,
@@ -97,6 +185,23 @@ const List<RosterSlot> _slotPriority = [
 /// Alias của từng slot, giống `ROSTER_COLUMN_ALIASES` của web.
 /// `!x` là cột không được chứa từ x; `*x*` khớp theo ranh giới từ.
 const Map<RosterSlot, List<String>> _rosterAliases = {
+  RosterSlot.pairCode: [
+    'mã cặp',
+    'số cặp',
+    'cặp số',
+    'stt cặp',
+    'đôi số',
+    'số đôi',
+    'team no',
+    'team number',
+    'pair no',
+    'pair number',
+    'pair id',
+    'pair #',
+    'doubles pair',
+    '*cặp',
+    '*pair*',
+  ],
   RosterSlot.teamName: [
     '*tên đội*',
     '*tên cặp*',
@@ -147,6 +252,9 @@ const Map<RosterSlot, List<String>> _rosterAliases = {
     'điện thoại 1',
     'phone 1',
     'mobile 1',
+    'số điện thoại liên hệ',
+    'sđt liên hệ',
+    'điện thoại liên hệ',
     '*sđt*',
     '*sdt*',
     '*điện thoại*',
@@ -209,7 +317,9 @@ const Map<RosterSlot, List<String>> _rosterAliases = {
     'điểm elo',
     'elo',
     'điểm trình',
+    'trình điểm',
     'trình độ',
+    '*trình',
     '*dupr*',
     '*rating*',
     'điểm',
@@ -219,21 +329,25 @@ const Map<RosterSlot, List<String>> _rosterAliases = {
   RosterSlot.isPaid: [
     '!chua',
     'đã đóng lệ phí',
+    'xác nhận btc',
+    'btc xác nhận',
     'lệ phí',
     'đã đóng phí',
+    'đóng phí',
     'đã nộp phí',
-    '*entry fee paid*',
+    'đã đóng',
+    'chuyển khoản',
+    'thanh toán',
     'đã thanh toán',
+    '*entry fee paid*',
     '*paid*',
+    '*payment*',
     '*thanh toán*',
+    '*xác nhận*',
+    '*ck*',
+    '*phí*',
   ],
-  RosterSlot.notes: [
-    'ghi chú',
-    '*notes*',
-    '*note*',
-    '*comment*',
-    'ý kiến',
-  ],
+  RosterSlot.notes: ['ghi chú', '*notes*', '*note*', '*comment*', 'ý kiến'],
 };
 
 /// Chữ có dấu tiếng Việt và vài chữ Latin thường gặp, quy về chữ cái gốc.
@@ -255,7 +369,7 @@ final Map<String, String> _foldMap = {
 };
 
 /// Chuẩn hóa header như `normalizeHeader` của web: bỏ dấu, chữ thường, gộp khoảng trắng.
-String _normalizeHeader(String value) {
+String normalizeRosterHeader(String value) {
   final buffer = StringBuffer();
   for (final rune in value.toLowerCase().runes) {
     // Dấu tổ hợp U+0300..U+036F bị bỏ, tương ứng với web `[\u0300-\u036f]`.
@@ -266,10 +380,8 @@ String _normalizeHeader(String value) {
   return buffer.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
-Set<String> _tokensOf(String key) => key
-    .split(RegExp(r'[^a-z0-9]+'))
-    .where((token) => token.isNotEmpty)
-    .toSet();
+Set<String> _tokensOf(String key) =>
+    key.split(RegExp(r'[^a-z0-9]+')).where((token) => token.isNotEmpty).toSet();
 
 class _HeaderCandidate {
   _HeaderCandidate(this.index, this.key) : tokens = _tokensOf(key);
@@ -282,7 +394,7 @@ class _HeaderCandidate {
 /// Alias có `*`: `*x` chỉ khớp đầu, `x*` chỉ khớp cuối, `*x*` khớp theo ranh giới từ.
 class _EdgePattern {
   _EdgePattern(String alias)
-    : target = _normalizeHeader(alias.replaceAll('*', '')),
+    : target = normalizeRosterHeader(alias.replaceAll('*', '')),
       leading = alias.startsWith('*') && !alias.endsWith('*'),
       trailing = alias.endsWith('*') && !alias.startsWith('*');
 
@@ -305,7 +417,8 @@ int? _matchSlot(RosterSlot slot, List<_HeaderCandidate> pool) {
   final aliases = _rosterAliases[slot]!;
   final guards = [
     for (final alias in aliases)
-      if (alias.startsWith('!')) _tokensOf(_normalizeHeader(alias.substring(1))),
+      if (alias.startsWith('!'))
+        _tokensOf(normalizeRosterHeader(alias.substring(1))),
   ];
   final eligible = [
     for (final candidate in pool)
@@ -318,7 +431,7 @@ int? _matchSlot(RosterSlot slot, List<_HeaderCandidate> pool) {
   final patterns = aliases.where((alias) => !alias.startsWith('!')).toList();
   final loose = [
     for (final alias in patterns)
-      if (!alias.contains('*')) _normalizeHeader(alias),
+      if (!alias.contains('*')) normalizeRosterHeader(alias),
   ];
   final edges = [
     for (final alias in patterns)
@@ -347,7 +460,7 @@ int? _matchSlot(RosterSlot slot, List<_HeaderCandidate> pool) {
 RosterColumnMapping detectRosterColumnMapping(List<String> headers) {
   final pool = <_HeaderCandidate>[];
   for (var i = 0; i < headers.length; i++) {
-    final key = _normalizeHeader(headers[i]);
+    final key = normalizeRosterHeader(headers[i]);
     if (key.isNotEmpty) pool.add(_HeaderCandidate(i, key));
   }
 
@@ -395,8 +508,11 @@ final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 /// Số kiểu `1.250` hoặc `1,250` (dấu nghìn), chỉ khi các nhóm sau dấu đều đủ 3 chữ số.
 final RegExp _thousandsElo = RegExp(r'^\d{1,3}([.,\s]\d{3})+$');
 
-/// Số thập phân dùng dấu chấm hoặc phẩy, ví dụ `6.5` hoặc `6,5`.
-final RegExp _decimalElo = RegExp(r'^\d+([.,]\d+)?$');
+/// Số đầu tiên trong chữ tự do (`620 Robinson , 625-630 CCTV` cho 620).
+final RegExp _firstNumber = RegExp(r'\d+(?:[.,]\d+)?');
+
+/// Ô chỉ là một số: chữ của ô không cần ghi chú khi số đã đọc được.
+final RegExp _bareNumber = RegExp(r'^\d+(?:[.,]\d+)?$');
 
 /// Giá trị đã chuẩn hóa được coi là "đã đóng" (giống `PAID_TRUE` của web).
 const Set<String> _paidYes = {
@@ -404,11 +520,22 @@ const Set<String> _paidYes = {
   'true',
   'paid',
   '1',
+  'x',
+  'v',
+  'ok',
   'co',
   'roi',
+  'da',
+  '✓',
+  '✔',
+  '✅',
   'da dong',
   'da nop',
   'da thanh toan',
+  'da ck',
+  'da chuyen khoan',
+  'da dong phi',
+  'da nop phi',
 };
 
 /// Giá trị đã chuẩn hóa được coi là "chưa đóng" (giống `PAID_FALSE` của web).
@@ -423,19 +550,48 @@ const Set<String> _paidNo = {
   'chua nop',
 };
 
-num? _parseElo(String text) {
-  if (_thousandsElo.hasMatch(text)) {
-    return int.parse(text.replaceAll(RegExp(r'[.,\s]'), ''));
+/// Số tiền: chữ số với dấu `.`/`,` ngăn nhóm và đơn vị tùy chọn (`500000`, `500.000đ`, `300k`).
+final RegExp _moneyAmount = RegExp(r'^\d[\d.,\s]*(?:k|tr|d|vnd|vnđ|đ)?$');
+
+/// Điểm trong một ô: số đầu tiên từ 2.0 đến 8.0 là DUPR, từ 100 đến 999 là ELO. Ô chỉ có số nghìn
+/// (`1.250`, `1250`) là ELO đến 3000. Không có số hợp lệ thì trả null và người gọi giữ chữ làm ghi chú.
+({num value, String source})? parseRosterScore(String text) {
+  final trimmed = text.trim();
+  if (_thousandsElo.hasMatch(trimmed)) {
+    final value = int.parse(trimmed.replaceAll(RegExp(r'[.,\s]'), ''));
+    return value >= 100 && value <= 3000 ? (value: value, source: 'ELO') : null;
   }
-  if (!_decimalElo.hasMatch(text)) return null;
-  return double.parse(text.replaceAll(',', '.'));
+  final match = _firstNumber.firstMatch(trimmed);
+  if (match == null) return null;
+  final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
+  if (value == null) return null;
+  final isInteger = value == value.roundToDouble();
+  if (isInteger && value >= 100 && value <= 999) {
+    return (value: value.round(), source: 'ELO');
+  }
+  // Một số trần 1000–3000 (`1250`) là ELO; trong chữ tự do thì không đủ chắc.
+  if (isInteger &&
+      value >= 1000 &&
+      value <= 3000 &&
+      _bareNumber.hasMatch(trimmed)) {
+    return (value: value.round(), source: 'ELO');
+  }
+  if (value >= 2 && value <= 8) return (value: value, source: 'DUPR');
+  return null;
 }
 
-bool? _parsePaid(String text) {
-  final key = _normalizeHeader(text);
+/// Dấu thanh toán của một ô: `x`, `✓`, `đã ck`, `paid`, `1` và số tiền lớn hơn 0 là đã trả; `chưa`,
+/// `không`, `no`, `0` là chưa. Chữ khác (hoặc trống) giữ [fallback]: nhập từ file dùng false.
+bool parseRosterPaid(String text, {bool fallback = false}) {
+  final key = normalizeRosterHeader(text);
   if (_paidYes.contains(key)) return true;
   if (_paidNo.contains(key)) return false;
-  return null;
+  if (key.isEmpty) return fallback;
+  if (_moneyAmount.hasMatch(key)) {
+    final amount = int.tryParse(key.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+    if (amount > 0) return true;
+  }
+  return fallback;
 }
 
 /// Lỗi cục bộ của một dòng, cùng quy tắc với `revalidateLocally` của web.
@@ -462,37 +618,297 @@ List<String> _localErrors({
   return List.unmodifiable(errors);
 }
 
-/// Đọc các dòng dữ liệu nằm dưới [headerRowIndex] (0-based). Dòng trống và dòng phía trên bị bỏ.
+/// Header là số thứ tự của file, không phải dữ liệu VĐV (so sau `normalizeRosterHeader`).
+const Set<String> _indexHeaders = {
+  'stt',
+  'tt',
+  'so tt',
+  'so thu tu',
+  'no',
+  'no.',
+  '#',
+};
+
+/// Dữ liệu cá nhân không bao giờ giữ, kể cả làm ghi chú: ngày sinh, giấy tờ, địa chỉ.
+const List<String> _sensitiveHeaderWords = [
+  'ngay sinh',
+  'nam sinh',
+  'sinh nhat',
+  'dob',
+  'birth',
+  'cccd',
+  'cmnd',
+  'can cuoc',
+  'chung minh',
+  'dinh danh',
+  'ho chieu',
+  'passport',
+  'giay to',
+  'id number',
+  'id card',
+  'national id',
+  'identity',
+  'citizen',
+  'dia chi',
+  'address',
+  'noi o',
+  'thuong tru',
+  'tam tru',
+  'que quan',
+  'ma so thue',
+];
+
+/// Cột gợi ý đồng đội (`VĐV đăng ký đứng chung`, `đồng đội`, `partner`): manh mối ghép, không phải slot.
+const List<String> _partnerHintKeys = [
+  'dang ky dung chung',
+  'dung chung',
+  'dang ky cung',
+  'dong doi',
+  'partner',
+  'ghep voi',
+  'ghep cap voi',
+];
+
+bool isPartnerHintHeader(String header) {
+  final key = normalizeRosterHeader(header);
+  return _partnerHintKeys.any(key.contains);
+}
+
+/// Cột gợi ý đồng đội: header giống gợi ý mà chưa slot nào lấy; null khi không có.
+int? findPartnerHintColumn(List<String> headers, RosterColumnMapping mapping) {
+  final used = mapping.columns.values.toSet();
+  for (var i = 0; i < headers.length; i++) {
+    if (!used.contains(i) && isPartnerHintHeader(headers[i])) return i;
+  }
+  return null;
+}
+
+/// Kiểm tra cột mã cặp và cột đồng đội. Cột mã cặp chỉ giữ khi ≥ 80% ô đọc được là mã (`Cặp đôi` trên
+/// cột tên không phải cột mã). Cột `đồng đội`/`partner` (slot VĐV 2 hoặc tên đội) mà ≥ 50% giá trị là
+/// biệt danh của dòng khác thì là cột gợi ý: slot đó bị bỏ.
+RosterColumnMapping confirmRosterColumns(
+  List<List<String>> dataRows,
+  List<String> headers,
+  RosterColumnMapping mapping,
+) {
+  final columns = Map<RosterSlot, int>.of(mapping.columns);
+  String cell(List<String> cells, int column) =>
+      column < cells.length ? cells[column] : '';
+
+  final pairColumn = columns[RosterSlot.pairCode];
+  if (pairColumn != null &&
+      !looksLikeCodeColumn([for (final r in dataRows) cell(r, pairColumn)])) {
+    columns.remove(RosterSlot.pairCode);
+    final hasName =
+        columns.containsKey(RosterSlot.player1Name) ||
+        columns.containsKey(RosterSlot.teamName);
+    final values = [for (final r in dataRows) cell(r, pairColumn)];
+    // `A / B` dưới tiêu đề `Cặp VĐV`, sheet chưa có cột tên và đã có cột nội dung: đó là cột VĐV.
+    if (!hasName &&
+        columns.containsKey(RosterSlot.divisionName) &&
+        looksLikeSameCell(values)) {
+      columns[RosterSlot.player1Name] = pairColumn;
+    }
+  }
+
+  final nameColumn =
+      columns[RosterSlot.player1Name] ?? columns[RosterSlot.teamName];
+  if (nameColumn != null) {
+    final names = [
+      for (final r in dataRows)
+        if (cell(r, nameColumn).trim().isNotEmpty) cell(r, nameColumn),
+    ];
+    bool isNicknameColumn(int? column) {
+      if (column == null || column >= headers.length) return false;
+      if (!isPartnerHintHeader(headers[column])) return false;
+      final hints = [
+        for (final r in dataRows)
+          if (cell(r, column).trim().isNotEmpty &&
+              !isEmptyPartnerHint(cell(r, column)))
+            cell(r, column),
+      ];
+      if (hints.isEmpty) return false;
+      final nickname = hints
+          .where((h) => names.any((n) => partnerHintMatchesName(h, n)))
+          .length;
+      return nickname * 2 >= hints.length;
+    }
+
+    if (isNicknameColumn(columns[RosterSlot.player2Name])) {
+      columns.remove(RosterSlot.player2Name);
+    }
+    if (columns.containsKey(RosterSlot.player1Name) &&
+        isNicknameColumn(columns[RosterSlot.teamName])) {
+      columns.remove(RosterSlot.teamName);
+    }
+  }
+  return RosterColumnMapping(columns);
+}
+
+/// Điền ô gộp dọc: giá trị ô neo được chép xuống các ô trống bên dưới, để cả hai dòng của một cặp mang
+/// STT và dấu thanh toán. Gộp một dòng (tiêu đề) giữ nguyên, và gộp bắt đầu ở dòng header bị bỏ qua.
+RosterGridSheet fillRosterMerges(RosterGridSheet sheet) {
+  if (sheet.mergedRegions.isEmpty) return sheet;
+  final rows = [for (final r in sheet.rows) List<String>.of(r)];
+  for (final region in sheet.mergedRegions) {
+    final range = parseA1Range(region);
+    if (range == null || range.endRow <= range.startRow) continue;
+    if (range.startRow >= rows.length) continue;
+    if (_isHeaderLikeRow(rows[range.startRow])) continue;
+    for (var c = range.startColumn; c <= range.endColumn; c++) {
+      final anchor = c < rows[range.startRow].length
+          ? rows[range.startRow][c]
+          : '';
+      if (anchor.isEmpty) continue;
+      for (
+        var r = range.startRow + 1;
+        r <= range.endRow && r < rows.length;
+        r++
+      ) {
+        final cells = rows[r];
+        while (cells.length <= c) {
+          cells.add('');
+        }
+        if (cells[c].isEmpty) cells[c] = anchor;
+      }
+    }
+  }
+  return RosterGridSheet(
+    name: sheet.name,
+    rows: rows,
+    mergedRegions: sheet.mergedRegions,
+  );
+}
+
+/// Dòng có ít nhất hai nhãn cột nhận diện được: dòng header, không điền ô gộp từ đây.
+bool _isHeaderLikeRow(List<String> cells) {
+  final filled = cells.where((c) => c.trim().isNotEmpty).length;
+  if (filled < 2) return false;
+  final mapping = detectRosterColumnMapping(cells);
+  return mapping.indexOf(RosterSlot.player1Name) != null &&
+      mapping.columns.length >= 2;
+}
+
+String _cellAt(List<String> cells, int? column) {
+  if (column == null || column >= cells.length) return '';
+  return cells[column].trim();
+}
+
+/// Đọc các dòng dữ liệu nằm dưới [headerRowIndex] (0-based; -1 nghĩa là không có dòng header). Dòng trống
+/// và dòng chỉ có STT bị bỏ; dòng tiêu đề phần `DANH SÁCH VĐV CHƯA CÓ CẶP` bắt đầu phần VĐV lẻ (cờ
+/// `singles`); dòng tiêu đề `Cặp n` đặt mã cho các dòng sau. Mã cặp lấy từ cột mã cặp (ô trống kế thừa mã
+/// dòng trên), STT và gợi ý đồng đội; việc gộp hai dòng thành cặp do `pairRowsByCode` làm sau khi biết nội dung đôi.
+/// [singlesFromRow] (1-based) đánh dấu mọi dòng từ đó trở đi là VĐV lẻ (do AI chỉ ra).
 List<RosterParsedRow> parseRosterSheet(
   RosterGridSheet sheet, {
   required int headerRowIndex,
   required RosterColumnMapping mapping,
+  int? firstDataRowIndex,
+  int? lastRowIndex,
+  int singlesFromRow = 0,
+  bool defaultPaid = false,
+  String defaultDivisionLabel = '',
+  Set<String> titleLabels = const {},
 }) {
+  final headers = headerRowIndex >= 0
+      ? sheet.rows[headerRowIndex]
+      : const <String>[];
+  String headerOf(int column) =>
+      column < headers.length && headers[column].trim().isNotEmpty
+      ? headers[column].trim()
+      : '[${_columnLetter(column)}]';
+  final width = sheet.rows.fold<int>(
+    headers.length,
+    (m, r) => r.length > m ? r.length : m,
+  );
+
+  final usedColumns = mapping.columns.values.toSet();
+  final hintColumn = findPartnerHintColumn(headers, mapping);
+  final indexColumn = _firstWhereIndex(
+    headers,
+    (h) => _indexHeaders.contains(normalizeRosterHeader(h)),
+  );
+  final notedColumns = <int>[];
+  for (var c = 0; c < width; c++) {
+    if (usedColumns.contains(c) || c == hintColumn) continue;
+    final key = normalizeRosterHeader(c < headers.length ? headers[c] : '');
+    if (key.isEmpty || _indexHeaders.contains(key)) continue;
+    if (_sensitiveHeaderWords.any(key.contains)) continue;
+    notedColumns.add(c);
+  }
+
+  // Cột mã cặp, hoặc cột đội gồm toàn mã lặp (header kiểu `Đôi`).
+  final pairColumn = mapping.indexOf(RosterSlot.pairCode);
+  final teamColumn = mapping.indexOf(RosterSlot.teamName);
+  final bodyStart = firstDataRowIndex ?? headerRowIndex + 1;
+  final bodyEnd = (lastRowIndex ?? sheet.rows.length - 1).clamp(
+    -1,
+    sheet.rows.length - 1,
+  );
+  final teamCells = [
+    for (var r = bodyStart; r <= bodyEnd; r++)
+      _cellAt(sheet.rows[r], teamColumn),
+  ];
+  final codeColumn =
+      pairColumn ??
+      (teamColumn != null && looksLikePairCodes(teamCells) ? teamColumn : null);
+
   final parsed = <RosterParsedRow>[];
-  for (var r = headerRowIndex + 1; r < sheet.rows.length; r++) {
+  var pairTitle = '';
+  var previousCode = '';
+  var inSinglesSection = false;
+  for (var r = bodyStart; r <= bodyEnd; r++) {
     if (parsed.length >= _maxRowsPerSheet) break;
     final cells = sheet.rows[r];
+    final sourceRow = r + 1;
 
     String? read(RosterSlot slot) {
-      final column = mapping.indexOf(slot);
-      if (column == null || column >= cells.length) return null;
-      final text = cells[column].trim();
+      final text = _cellAt(cells, mapping.indexOf(slot));
       return text.isEmpty ? null : text;
     }
 
-    final teamName = read(RosterSlot.teamName);
+    // Dòng chỉ có tên một nội dung do AI nêu là tiêu đề, không phải VĐV.
+    final filledCells = cells.where((c) => c.trim().isNotEmpty).toList();
+    if (filledCells.length == 1 &&
+        titleLabels.contains(normalizeRosterHeader(filledCells.first))) {
+      continue;
+    }
+    if (isSinglesSectionRow(cells)) {
+      inSinglesSection = true;
+      pairTitle = '';
+      previousCode = '';
+      continue;
+    }
+    final titleOfRow = titleRowCode(cells);
+    if (titleOfRow.isNotEmpty) {
+      pairTitle = titleOfRow;
+      previousCode = '';
+      continue;
+    }
+
+    final teamName = codeColumn == teamColumn && teamColumn != null
+        ? null
+        : read(RosterSlot.teamName);
     final player1Name = read(RosterSlot.player1Name);
     final player1Email = read(RosterSlot.player1Email);
     final player1Phone = read(RosterSlot.player1Phone);
     final player2Name = read(RosterSlot.player2Name);
     final player2Email = read(RosterSlot.player2Email);
     final player2Phone = read(RosterSlot.player2Phone);
-    final eloText = read(RosterSlot.elo);
-    final paidText = read(RosterSlot.isPaid);
-    final divisionName = read(RosterSlot.divisionName);
-    final notes = read(RosterSlot.notes);
 
-    // Cùng quy tắc bỏ dòng với web (buildRosterDraftRows): không có tên, đội, email hay SĐT thì bỏ.
+    // Tiêu đề lặp giữa dữ liệu (`Họ và tên VĐV` ở ô tên) không phải VĐV.
+    final nameColumn = mapping.indexOf(RosterSlot.player1Name) ?? teamColumn;
+    final nameCell = _cellAt(cells, nameColumn);
+    if (nameCell.isNotEmpty &&
+        nameColumn != null &&
+        nameColumn < headers.length &&
+        normalizeRosterHeader(nameCell) ==
+            normalizeRosterHeader(headers[nameColumn])) {
+      previousCode = '';
+      continue;
+    }
+
+    // Cùng quy tắc bỏ dòng với web: không có tên, đội, email hay SĐT thì bỏ (dòng chỉ có STT).
     final hasIdentity =
         teamName != null ||
         player1Name != null ||
@@ -500,13 +916,58 @@ List<RosterParsedRow> parseRosterSheet(
         player1Phone != null ||
         player2Name != null ||
         player2Phone != null;
-    if (!hasIdentity) continue;
+    if (!hasIdentity) {
+      previousCode = '';
+      continue;
+    }
+
+    // Ô mã trống dưới dòng tự ghi mã thì kế thừa mã đó (ô gộp): một bước.
+    final codeCell = codeColumn == null ? '' : _cellAt(cells, codeColumn);
+    final ownCode = pairColumn != null
+        ? pairCodeKey(codeCell)
+        : normalizePairCode(codeCell);
+    var code = '';
+    if (player2Name == null) {
+      if (ownCode.isNotEmpty) {
+        code = ownCode;
+      } else {
+        final inherited = codeCell.isNotEmpty ? '' : previousCode;
+        code = inherited.isNotEmpty ? inherited : pairTitle;
+      }
+    }
+    previousCode = player2Name != null ? '' : ownCode;
+
+    final singles =
+        inSinglesSection || (singlesFromRow > 0 && sourceRow >= singlesFromRow);
+    final scoreText = _cellAt(cells, mapping.indexOf(RosterSlot.elo));
+    final score = scoreText.isEmpty ? null : parseRosterScore(scoreText);
+    final scoreHeader = mapping.indexOf(RosterSlot.elo);
+    // Điểm không phải một số trần (hoặc không đọc được) thì chữ giữ trong ghi chú để không mất tin.
+    final scoreNote =
+        scoreText.isNotEmpty &&
+            scoreHeader != null &&
+            (score == null || !_bareNumber.hasMatch(scoreText))
+        ? '${headerOf(scoreHeader)}: $scoreText'
+        : '';
+    final extras = [
+      for (final c in notedColumns)
+        if (_cellAt(cells, c).isNotEmpty)
+          '${headerOf(c)}: ${_cellAt(cells, c)}',
+    ];
+    final notes = [
+      read(RosterSlot.notes) ?? '',
+      ...extras,
+      scoreNote,
+    ].where((n) => n.isNotEmpty).join(' · ');
+    final hint = hintColumn == null ? '' : _cellAt(cells, hintColumn);
 
     parsed.add(
       RosterParsedRow(
         sheetName: sheet.name,
-        sourceRowIndex: r + 1,
-        divisionName: divisionName,
+        sourceRowIndex: sourceRow,
+        divisionName:
+            read(RosterSlot.divisionName) ??
+            (defaultDivisionLabel.isEmpty ? null : defaultDivisionLabel),
         teamName: teamName,
         player1Name: player1Name,
         player1Email: player1Email,
@@ -514,9 +975,21 @@ List<RosterParsedRow> parseRosterSheet(
         player2Name: player2Name,
         player2Email: player2Email,
         player2Phone: player2Phone,
-        elo: eloText == null ? null : _parseElo(eloText),
-        isPaid: paidText == null ? null : _parsePaid(paidText),
-        notes: notes,
+        elo: score?.value,
+        eloSource: score?.source,
+        isPaid: parseRosterPaid(
+          _cellAt(cells, mapping.indexOf(RosterSlot.isPaid)),
+          fallback: defaultPaid,
+        ),
+        notes: notes.isEmpty
+            ? null
+            : (notes.length > rosterNotesMax
+                  ? notes.substring(0, rosterNotesMax)
+                  : notes),
+        fileIndex: indexColumn == null ? '' : _cellAt(cells, indexColumn),
+        pairCode: code.isNotEmpty && !singles ? code : null,
+        singles: singles,
+        partnerHint: hint.isEmpty ? null : hint,
         localErrors: _localErrors(
           name: player1Name,
           email: player1Email,
@@ -525,5 +998,31 @@ List<RosterParsedRow> parseRosterSheet(
       ),
     );
   }
-  return parsed;
+  // Mã từ số thứ tự của file trước, rồi gợi ý đồng đội cho các dòng còn chưa có cặp.
+  return assignHintPairCodes(assignSttPairCodes(parsed));
 }
+
+int? _firstWhereIndex(List<String> items, bool Function(String) test) {
+  for (var i = 0; i < items.length; i++) {
+    if (test(items[i])) return i;
+  }
+  return null;
+}
+
+/// `A` = 0, `Z` = 25, `AA` = 26: tên cột ở dạng chữ.
+String _columnLetter(int index) {
+  var letters = '';
+  for (var value = index + 1; value > 0; value = (value - 1) ~/ 26) {
+    letters = String.fromCharCode(65 + ((value - 1) % 26)) + letters;
+  }
+  return letters;
+}
+
+/// Cụm alias (không dấu `*`, không `!`) của các slot, đã chuẩn hóa: nhãn cột mà bộ nhận diện của app
+/// đọc được. Dùng cho digest AI để nhãn cột không bị che.
+List<String> rosterAliasPhrases([Iterable<RosterSlot>? slots]) => [
+  for (final slot in slots ?? RosterSlot.values)
+    for (final alias in _rosterAliases[slot] ?? const <String>[])
+      if (!alias.startsWith('!'))
+        normalizeRosterHeader(alias.replaceAll('*', '')),
+];

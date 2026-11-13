@@ -121,8 +121,9 @@ void main() {
 
     test('một cột chỉ được gán cho đúng một slot', () {
       for (final headers in [_headersVi, _headersEn]) {
-        final columns = detectRosterColumnMapping(headers).columns.values
-            .toList();
+        final columns = detectRosterColumnMapping(
+          headers,
+        ).columns.values.toList();
 
         expect(columns.toSet().length, columns.length);
       }
@@ -207,7 +208,10 @@ void main() {
     test('thiếu cả tên lẫn email thì báo MISSING_NAME và MISSING_EMAIL', () {
       final row = _parseOne(_dataRow(phone: '0901234567'));
 
-      expect(row.localErrors, unorderedEquals(['MISSING_NAME', 'MISSING_EMAIL']));
+      expect(
+        row.localErrors,
+        unorderedEquals(['MISSING_NAME', 'MISSING_EMAIL']),
+      );
     });
 
     test('có tên nhưng thiếu email thì chỉ báo MISSING_EMAIL', () {
@@ -240,7 +244,11 @@ void main() {
 
     test('VĐV 2 có tên nhưng thiếu email vẫn hợp lệ cục bộ', () {
       final row = _parseOne(
-        _dataRow(name: 'Nguyễn Văn A', email: 'a@example.com', player2Name: 'Trần Văn B'),
+        _dataRow(
+          name: 'Nguyễn Văn A',
+          email: 'a@example.com',
+          player2Name: 'Trần Văn B',
+        ),
       );
 
       expect(row.localErrors, isEmpty);
@@ -317,34 +325,38 @@ void main() {
   });
 
   group('elo và isPaid', () {
-    test('elo đọc số nguyên, dấu nghìn, thập phân; không đọc được thì null', () {
-      const cases = <String, num?>{
-        '1250': 1250,
-        '1.250': 1250,
-        '1,250': 1250,
-        '6.5': 6.5,
-        '6,5': 6.5,
-        'abc': null,
-      };
+    test(
+      'elo đọc số nguyên, dấu nghìn, thập phân; không đọc được thì null',
+      () {
+        const cases = <String, num?>{
+          '1250': 1250,
+          '1.250': 1250,
+          '1,250': 1250,
+          '6.5': 6.5,
+          '6,5': 6.5,
+          'abc': null,
+        };
 
-      for (final entry in cases.entries) {
-        final row = _parseOne(
-          _dataRow(name: 'A', email: 'a@example.com', elo: entry.key),
-        );
+        for (final entry in cases.entries) {
+          final row = _parseOne(
+            _dataRow(name: 'A', email: 'a@example.com', elo: entry.key),
+          );
 
-        expect(row.elo, entry.value, reason: 'elo "${entry.key}"');
-      }
-    });
+          expect(row.elo, entry.value, reason: 'elo "${entry.key}"');
+        }
+      },
+    );
 
-    test('isPaid nhận giá trị như web, không rõ thì null', () {
-      const cases = <String, bool?>{
+    // Đổi theo quyết định 2026-11-13: ô không xác nhận thanh toán là chưa trả (false), không còn null.
+    test('isPaid nhận giá trị như web, không rõ thì chưa trả', () {
+      const cases = <String, bool>{
         'Có': true,
         'Không': false,
         'Yes': true,
         'No': false,
         'Đã thanh toán': true,
         'Chưa đóng': false,
-        'abc': null,
+        'abc': false,
       };
 
       for (final entry in cases.entries) {
