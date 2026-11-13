@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -441,10 +442,9 @@ class _TournamentCardWithBannerState
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (widget.tournament.locationAddress != null &&
-                                  widget.tournament.locationAddress!
-                                      .trim()
-                                      .isNotEmpty) ...[
+                              if (TournamentLocationFormatter.tournamentFullLocation(
+                                widget.tournament,
+                              ).isNotEmpty) ...[
                                 const SizedBox(height: 3),
                                 Row(
                                   children: [
@@ -456,8 +456,9 @@ class _TournamentCardWithBannerState
                                     const SizedBox(width: 3),
                                     Expanded(
                                       child: Text(
-                                        widget.tournament.locationAddress!
-                                            .trim(),
+                                        TournamentLocationFormatter.tournamentFullLocation(
+                                          widget.tournament,
+                                        ),
                                         style: TextStyle(
                                           fontSize: 10.5,
                                           color: colors.textMuted,

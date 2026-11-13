@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'dart:async';
 
@@ -1439,9 +1440,14 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   ) {
     final parts = entry.key.split('\u0000');
     final title = parts[0].isEmpty ? parts[1] : parts[0];
-    final location = entry.value.isEmpty
+    final first = entry.value.isEmpty ? null : entry.value.first;
+    final location = first == null
         ? ''
-        : _matchWardAndCity(entry.value.first);
+        : TournamentLocationFormatter.matchFullLocationFromConfig(
+            courtName: null,
+            courtAddress: first.courtAddress,
+            tournamentConfig: first.tournamentConfig,
+          );
     return _resultRow(
       colors: colors,
       title: title,
@@ -1479,7 +1485,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         : team2Members.first.avatarUrl;
     final team1Image = _preferredImageUrl(match.team1LogoUrl, team1Avatar);
     final team2Image = _preferredImageUrl(match.team2LogoUrl, team2Avatar);
-    final location = _joinLocation(match.court, _matchWardAndCity(match));
+    final location = TournamentLocationFormatter.matchFullLocationFromConfig(
+      courtName: match.court,
+      courtAddress: match.courtAddress,
+      tournamentConfig: match.tournamentConfig,
+    );
     final setScores = match.sets
         .map((set) => '${set.score1}–${set.score2}')
         .join('  ');
@@ -1792,9 +1802,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         : DateFormat.yMMMd(
             Localizations.localeOf(context).toString(),
           ).format(tournament.startDate!);
-    final location = _joinLocation(
-      tournament.venueName,
-      _tournamentWardAndCity(tournament),
+    final location = TournamentLocationFormatter.tournamentFullLocation(
+      tournament,
     );
 
     return _resultRow(
@@ -1919,27 +1928,6 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         }
       }
     }
-    return _joinLocation(ward, city);
-  }
-
-  String _tournamentWardAndCity(Tournament tournament) {
-    final config = tournament.locationConfig;
-    final nested = config?['location'];
-    final location = nested is Map ? Map<String, dynamic>.from(nested) : config;
-    return _wardAndCity(location, cityFallback: tournament.city);
-  }
-
-  String _matchWardAndCity(MatchModel match) {
-    final config = match.tournamentConfig;
-    final nested = config?['location'];
-    final location = nested is Map ? Map<String, dynamic>.from(nested) : config;
-    return _wardAndCity(location);
-  }
-
-  String _wardAndCity(Map<String, dynamic>? location, {String? cityFallback}) {
-    final ward = (location?['ward'] ?? location?['wardName'])?.toString();
-    final city = (location?['province'] ?? location?['city'] ?? cityFallback)
-        ?.toString();
     return _joinLocation(ward, city);
   }
 
