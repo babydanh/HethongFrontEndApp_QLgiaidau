@@ -22,6 +22,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_suggest_list.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -174,6 +176,18 @@ class _CreatePublicQuickTournamentScreenState
   final _maxTeammateGapController = TextEditingController();
   final _venueNameController = TextEditingController();
   final _locationAddressController = TextEditingController();
+  SocialPlace? _pickedVenue;
+
+  /// Id of the directory venue picked from the suggestions, only while both
+  /// texts are still exactly what the pick filled in.
+  String? get _pickedVenueId {
+    final picked = _pickedVenue;
+    if (picked == null) return null;
+    final unchanged =
+        _venueNameController.text == picked.name &&
+        _locationAddressController.text == picked.formattedAddress;
+    return unchanged ? picked.venueId : null;
+  }
 
   String _sport = AppConstants.sportPickleball;
   List<_QuickTournamentContentDraft> _contentDrafts = const [
@@ -631,6 +645,7 @@ class _CreatePublicQuickTournamentScreenState
           'venueName': _venueNameController.text.trim(),
         if (_locationAddressController.text.trim().isNotEmpty)
           'locationAddress': _locationAddressController.text.trim(),
+        if (_pickedVenueId != null) 'venueId': _pickedVenueId,
         'startDate': startDateTime.toUtc().toIso8601String(),
         // Không gửi `startTime`: `startDate` đã là mốc UTC đầy đủ. Backend
         // ghép `startTime` với phần ngày UTC của `startDate` và coi là giờ
@@ -925,6 +940,22 @@ class _CreatePublicQuickTournamentScreenState
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: colors.border),
                 ),
+              ),
+            ),
+            ListenableBuilder(
+              listenable: _venueNameController,
+              builder: (_, _) => VenueSuggestList(
+                // Hide the list once the picked venue's name is in the field.
+                query: _venueNameController.text == _pickedVenue?.name
+                    ? ''
+                    : _venueNameController.text,
+                onPick: (place) {
+                  _pickedVenue = place;
+                  _venueNameController.text = place.name;
+                  _locationAddressController.text = place.formattedAddress;
+                  // Programmatic text changes skip onChanged.
+                  _detectAddressSuggestion();
+                },
               ),
             ),
             const SizedBox(height: 8),

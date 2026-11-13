@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_suggest_list.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_sheet.dart';
@@ -148,6 +150,7 @@ class _TournamentManagementVenuesSectionState
             widget.tournamentId,
             name: name,
             locationAddress: address,
+            venueId: values.venueId,
             isDefault: values.isDefault,
             initialCourtCount: values.initialCourtCount,
             courtPrefix: values.courtPrefix?.trim().isEmpty == true
@@ -335,12 +338,16 @@ class _VenueValues {
     this.isDefault = false,
     this.initialCourtCount,
     this.courtPrefix,
+    this.venueId,
   });
   final String name;
   final String address;
   final bool isDefault;
   final int? initialCourtCount;
   final String? courtPrefix;
+
+  /// Directory venue to attach instead of creating a new one.
+  final String? venueId;
 }
 
 class _VenueDialog extends StatefulWidget {
@@ -366,6 +373,17 @@ class _VenueDialogState extends State<_VenueDialog> {
   // Same default as the Web and the Backend, so the field is never blank.
   late final _prefix = TextEditingController(text: 'Sân');
   bool _default = false;
+  SocialPlace? _picked;
+
+  /// Id of the directory venue picked from the suggestions, only while both
+  /// texts are still exactly what the pick filled in.
+  String? get _pickedVenueId {
+    final picked = _picked;
+    if (picked == null) return null;
+    final unchanged =
+        _name.text == picked.name && _address.text == picked.formattedAddress;
+    return unchanged ? picked.venueId : null;
+  }
 
   @override
   void dispose() {
@@ -381,17 +399,23 @@ class _VenueDialogState extends State<_VenueDialog> {
 
   void _submit() {
     final parsedCount = int.tryParse(_count.text.trim());
+    final venueId = _pickedVenueId;
     Navigator.pop(
       context,
       _VenueValues(
         name: _name.text,
         address: _address.text,
         isDefault: _default,
+        // An existing directory venue already has its own courts.
         initialCourtCount:
-            widget.showCourtFields && parsedCount != null && parsedCount > 0
+            widget.showCourtFields &&
+                venueId == null &&
+                parsedCount != null &&
+                parsedCount > 0
             ? parsedCount
             : null,
         courtPrefix: _prefix.text,
+        venueId: venueId,
       ),
     );
   }
@@ -632,6 +656,17 @@ class _VenueDialogState extends State<_VenueDialog> {
                       required: true,
                       autofocus: true,
                     ),
+                    // Only when adding: editing must not swap the venue.
+                    if (widget.showCourtFields)
+                      VenueSuggestList(
+                        // Hide the list once the picked venue's name is in.
+                        query: _name.text == _picked?.name ? '' : _name.text,
+                        onPick: (place) => setState(() {
+                          _picked = place;
+                          _name.text = place.name;
+                          _address.text = place.formattedAddress;
+                        }),
+                      ),
                     const SizedBox(height: 14),
                     _field(
                       key: const ValueKey('venue-dialog-address'),
