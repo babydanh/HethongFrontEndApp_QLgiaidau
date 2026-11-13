@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -89,9 +90,8 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               if (hasBanner)
-                Image.network(
-                  bannerUrl,
-                  fit: BoxFit.cover,
+                BlurredBannerImage(
+                  image: NetworkImage(bannerUrl),
                   errorBuilder: (_, _, _) => _FallbackBanner(colors: colors),
                 )
               else

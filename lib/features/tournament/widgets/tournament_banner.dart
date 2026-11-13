@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 
@@ -183,9 +184,8 @@ class _BannerCarousel extends StatelessWidget {
                           initialIndex: index,
                         );
                       },
-                      child: Image.network(
-                        resolvedList[index],
-                        fit: BoxFit.cover,
+                      child: BlurredBannerImage(
+                        image: NetworkImage(resolvedList[index]),
                         errorBuilder: (context, error, stackTrace) =>
                             _FallbackBanner(),
                       ),
@@ -779,9 +779,8 @@ class _TournamentBannerState extends State<TournamentBanner> {
                         final imgUrl = images[index].startsWith("http")
                             ? images[index]
                             : "https://sporto.asia${images[index]}";
-                        return Image.network(
-                          imgUrl,
-                          fit: BoxFit.cover,
+                        return BlurredBannerImage(
+                          image: NetworkImage(imgUrl),
                           errorBuilder: (context, error, stackTrace) {
                             return const SportoBrandFallback(
                               withTagline: true,

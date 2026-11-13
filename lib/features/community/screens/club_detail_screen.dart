@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

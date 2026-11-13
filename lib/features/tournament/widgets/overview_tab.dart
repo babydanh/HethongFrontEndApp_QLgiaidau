@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -1053,9 +1054,8 @@ class _OverviewTabState extends State<OverviewTab> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.network(
-          firstUrl,
-          fit: BoxFit.cover,
+        BlurredBannerImage(
+          image: NetworkImage(firstUrl),
           // Brand placeholder instead of an empty banner while downloading.
           frameBuilder: (ctx, child, frame, wasSync) =>
               wasSync || frame != null ? child : fallback(),

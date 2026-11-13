@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/blurred_banner_image.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -196,17 +197,7 @@ class TournamentCardCarousel extends StatelessWidget {
                   children: [
                     Container(
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade900,
-                        image:
-                            tournament.bannerUrl != null &&
-                                tournament.bannerUrl!.isNotEmpty
-                            ? DecorationImage(
-                                image: NetworkImage(tournament.bannerUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
+                      color: Colors.blue.shade900,
                       child:
                           tournament.bannerUrl == null ||
                               tournament.bannerUrl!.isEmpty
@@ -219,6 +210,13 @@ class TournamentCardCarousel extends StatelessWidget {
                             )
                           : null,
                     ),
+                    if (tournament.bannerUrl != null &&
+                        tournament.bannerUrl!.isNotEmpty)
+                      Positioned.fill(
+                        child: BlurredBannerImage(
+                          image: NetworkImage(tournament.bannerUrl!),
+                        ),
+                      ),
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
