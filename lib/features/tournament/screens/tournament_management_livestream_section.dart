@@ -1,9 +1,9 @@
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_board.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/livestream_pairing_qr_sheet.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,14 +17,14 @@ const _deviceNameMaxLength = 255;
 
 /// Livestream management that the mobile API is allowed to drive, laid out as
 /// the Lavish design (screen 11): cameras and courts first
-/// ([TournamentCameraPanel]), then the tournament's live sessions (status,
+/// ([CourtCameraBoard]), then the tournament's live sessions (status,
 /// re-check, stop), then the community's reusable camera devices (collapsed
 /// until opened: register a device, its pairing QR).
 ///
 /// Registering a community camera *device* sends a display name only, and the
 /// server assigns the id and every publish credential.
 ///
-/// Still absent: starting a match stream (`start`). The camera panel never
+/// Still absent: starting a match stream (`start`). The camera board never
 /// fetches, models or displays a stream key, publish URL or camera
 /// credential; only the Backend decides who may write (403 shows as an error).
 class TournamentManagementLivestreamSection extends ConsumerStatefulWidget {
@@ -229,7 +229,7 @@ class _TournamentManagementLivestreamSectionState
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          TournamentCameraPanel(tournamentId: widget.tournamentId),
+          CourtCameraBoard(tournamentId: widget.tournamentId),
           _buildSessions(l10n),
           if (communityId == null)
             Padding(

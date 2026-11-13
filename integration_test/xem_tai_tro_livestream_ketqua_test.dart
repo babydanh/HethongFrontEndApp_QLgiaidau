@@ -14,7 +14,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_board.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
@@ -67,6 +67,9 @@ void main() {
           tournamentManagementRepositoryProvider.overrideWithValue(
             _VenueRepository(),
           ),
+          managedMatchesWithDivisionProvider.overrideWith(
+            (ref, params) => Stream.value(const <MatchModel>[]),
+          ),
         ],
         home: const Scaffold(
           body: TournamentManagementLivestreamSection(
@@ -78,10 +81,17 @@ void main() {
     );
     await shooter.snap('livestream-camera');
 
-    await scrollTo(tester, find.byType(TournamentCameraPanel));
+    await scrollTo(tester, find.byType(CourtCameraBoard));
     await shooter.snap('livestream-khoi-camera');
     await scrollBy(tester, 420);
     await shooter.snap('livestream-khoi-san');
+
+    // Thẻ sân thu gọn: QR nằm trong popup của sân.
+    final courtCard = find.byKey(const ValueKey('court-camera-card-court-1'));
+    await scrollTo(tester, courtCard);
+    await tester.tap(courtCard);
+    await settle(tester);
+    await shooter.snap('livestream-popup-san');
 
     // Design 11: tapping the QR box only asks for confirmation; the stream
     // key is never requested here. The dialog is dismissed afterwards.
