@@ -605,6 +605,7 @@ class _RacketCellTile extends StatelessWidget {
     final VoidCallback? tap =
         onPick ?? (actions.isEmpty ? null : () => _showActions(context, name));
     return Semantics(
+      excludeSemantics: true,
       label:
           '$sideLabel: $name'
           '${isServer ? ', ${l10n.pickleballCourtServeTag}' : ''}'
