@@ -70,6 +70,34 @@ The scoring screen MUST NOT show a "Đổi giao" button for badminton and tennis
 - **WHEN** trọng tài bấm một ô VĐV khi đã có điểm
 - **THEN** không đổi người giao (chỉ `⋯` → "Chọn người giao" mới sửa) và không có thay đổi điểm
 
+### Requirement: Kéo thả và bấm thao tác dùng luật của pickleball
+
+Long-pressing a player or the GIAO chip and dropping it SHALL swap cells, switch ends or set the server by the `resolveCourtDrop` rules. Every change MUST go through the notifier so it is undoable, and each drop MUST also be available as a tap action and a semantics action.
+
+#### Scenario: Đổi ô trong đôi cầu lông
+- **WHEN** trọng tài nhấn giữ VĐV A rồi thả lên đồng đội B
+- **THEN** A và B đổi ô phải/trái, người giao đổi theo ô, Hoàn tác trả lại
+
+#### Scenario: Đổi sân bằng kéo
+- **WHEN** trọng tài kéo một VĐV sang nửa sân đội kia
+- **THEN** hai đội đổi nửa sân và Hoàn tác trả lại
+
+#### Scenario: Trận đơn
+- **WHEN** trận đơn và trọng tài kéo VĐV vào ô trống hoặc nửa sân của mình
+- **THEN** không có viền sáng và không ghi thay đổi nào, còn kéo sang nửa sân đội kia vẫn đổi sân
+
+#### Scenario: Tennis đôi đội đang giao
+- **WHEN** trọng tài kéo VĐV của đội đang giao lên đồng đội
+- **THEN** không có viền sáng và không đổi ô, còn đội nhận thì đổi ô được
+
+#### Scenario: Kéo chip GIAO sang đội kia
+- **WHEN** trọng tài nhấn giữ chip GIAO rồi thả lên VĐV đội kia
+- **THEN** VĐV đó là người giao, đội đó cầm giao, và Hoàn tác trả lại người giao cũ
+
+#### Scenario: Không kéo được
+- **WHEN** người dùng TalkBack hoặc chỉ bấm một ô VĐV khi đã có điểm
+- **THEN** nhận được các thao tác tương đương: "Đổi chỗ phải/trái" (chỉ đôi), "Giao tại đây", không có thao tác nào cho người đang giao ngoài đổi sân
+
 ### Requirement: Hoàn tác trả lại đúng người giao
 
 Undo SHALL be repeatable up to 50 steps and MUST restore points, game points, the server and the receiver exactly as before the undone step; the undo button MUST be disabled when there is nothing to undo.

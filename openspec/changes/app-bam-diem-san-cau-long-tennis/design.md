@@ -18,8 +18,16 @@
 7. **Tennis đôi**: người giao của đội = người thứ `(số lượt giao của đội) mod 2` tính từ người giao đầu của đội đó; số lượt giao suy ra từ tổng số game đã chơi (tie-break tính một game). Không lưu thêm.
 8. **Màn dọc và ngang** cùng dùng một widget, đổi trục như `PickleballCourtView`. Dùng lại `pickleball_court_palette.dart` (màu đội) và widget avatar/tên VĐV; không dùng lại `pickleball_court_scoreboard.dart` (1381 dòng, gắn chặt với side-out và kéo thả). [SUY LUẬN] có thể trích vài widget nhỏ dùng chung khi code; chỉ trích khi trùng thật.
 
+9. **Kéo thả dùng lại, không viết lại**: `resolveCourtDrop` (`court_drag.dart`) là hàm thuần, không phụ thuộc môn; dùng nguyên cho cầu lông và tennis. Thêm một lớp mỏng `racketResolveDrop` (file mới `lib/features/match/utils/racket_court_drag.dart`) chỉ để chặn hai ca luật cấm: trận đơn không có `SwapPlaces`, và tennis đôi không đổi ô đội **đang giao** (thứ tự giao cố định, đổi ô của đội nhận thì được). Widget dùng lại `CourtDraggable` (nhấn giữ 250 ms), `CourtDropOutline`, `courtPlayerActions`.
+10. **Thả trái bóng = trọng tài chỉnh tay**: `SetServer` đi qua `racketCorrectServer`, được phép đổi cả đội giao (khác pickleball chỉ cho side-out) vì cầu lông/tennis đội giao do luật suy ra; đây là cách sửa khi trọng tài bấm nhầm. Hoàn tác trả lại. Chỉ cho thả khi biết người giao hiện tại; lúc 0-0 chưa có điểm thì thả trái bóng = chọn người giao đầu.
+11. **Đổi ô và đổi sân lưu trong state phiên**: `RacketServePick` thêm `rightStarterTeam1/2` (cầu lông: ai đứng ô phải lúc 0; tennis: ai nhận từ ô phải) và `endsFlipped` (đổi sân tay, XOR với đổi sân theo luật). Chỉ sống trong phiên như người giao đầu.
+12. **Pickleball nhận**: `CourtLayout` (`pickleball_court.dart:340`) thêm `receiverCell` và `receiverPlayerIndex`. Đôi: ô nhận là ô chéo người giao (cùng `CourtCell` bên đội kia). Đơn: sửa `_slotsFor` (:732) để người của đội nhận đứng ô chéo người giao, không theo điểm của chính họ; ô còn lại của đội trống. Thay đổi này chỉ ảnh hưởng vị trí vẽ, không đổi luật tính điểm hay dữ liệu lưu.
+13. **Đã bỏ qua có chủ ý** (ghi để khỏi hỏi lại): sau khi bấm `−` ở cầu lông đôi chỉ biết **đội** giao, chưa biết VĐV nào, nên chip GIAO ẩn tới điểm kế hoặc chọn bằng bấm ô/kéo trái bóng; tennis đôi trong tie-break hai VĐV luân phiên theo lượt giao của đội (mô hình trong mock Lavish, 39 test logic).
+
 ## Risks / open
 
 - Tải lại màn mất lịch sử giao của cầu lông (không lưu Backend). Chấp nhận, ghi ở Out of scope.
 - `integration_test/xem_bam_diem_*` đang khẳng định text cũ ("GIAO · ô phải"); phải sửa và chạy trên cloud.
 - Màn nhỏ: bốn ô tên VĐV dài; cắt tên bằng ellipsis, kiểm 375px.
+- Kéo thả trong cuộn dọc: `CourtDraggable` dùng nhấn giữ 250 ms nên không tranh cuộn; màn dọc vẫn phải kiểm trên máy thật.
+- Mock Lavish đơn giản hơn App ở pickleball (`_reconcileTurn`); App là nguồn đúng, mock chỉ để xem thao tác.
