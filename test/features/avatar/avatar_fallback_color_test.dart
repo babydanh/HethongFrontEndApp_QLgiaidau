@@ -5,14 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-    'TC-APP-AVATAR-01 RankAvatar không ảnh dùng màu theo tên + chữ trắng',
+    'TC-APP-AVATAR-01 RankAvatar không ảnh dùng màu theo tên + chữ cái đầu trắng',
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: RankAvatar(name: 'Nguyễn Hoàng Phong')),
         ),
       );
-      final text = tester.widget<Text>(find.text('NP'));
+      final text = tester.widget<Text>(find.text('N'));
       expect(text.style?.color, Colors.white);
       final colors = tester
           .widgetList<Container>(find.byType(Container))

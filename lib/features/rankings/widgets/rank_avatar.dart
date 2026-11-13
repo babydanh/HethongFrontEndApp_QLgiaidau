@@ -16,7 +16,7 @@ class RankAvatar extends StatelessWidget {
   final double ringWidth;
 
   /// Shown inside the ring when there is no photo (or it fails to load);
-  /// defaults to the shared Web-style initials on a name-based colour.
+  /// defaults to the first letter of [name], white on the shared name-based colour.
   final Widget? placeholder;
 
   const RankAvatar({
@@ -88,7 +88,7 @@ class RankAvatar extends StatelessWidget {
       color: avatarFallbackColor(name),
       alignment: Alignment.center,
       child: Text(
-        avatarInitials(name),
+        name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
         style: TextStyle(
           fontSize: size * 0.32,
           fontWeight: FontWeight.w800,
