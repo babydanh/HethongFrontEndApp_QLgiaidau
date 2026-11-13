@@ -24,6 +24,13 @@ String stripHtmlTags(String text) => text
     .replaceAll(RegExp(r'\n{3,}'), '\n\n')
     .trim();
 
+/// One-line plain preview of an HTML description: tags become spaces (so
+/// adjacent blocks keep their words apart), entities are decoded and
+/// whitespace is collapsed.
+String htmlPreviewText(String html) => stripHtmlTags(
+  html.replaceAll(RegExp(r'<[^>]*>'), ' '),
+).replaceAll(RegExp(r'\s+'), ' ').trim();
+
 /// Hiển thị nội dung mô tả (HTML hoặc text thuần) bằng một bộ style duy nhất.
 ///
 /// Thay cho `HtmlWidget` rải rác ở từng màn. Trước đó mỗi màn tự truyền
@@ -73,7 +80,11 @@ class RichTextDisplay extends StatelessWidget {
         baseFontSize: size,
         linkColor: const Color(0xFF2563EB),
       ),
-      textStyle: base.copyWith(fontSize: size, height: height, color: textColor),
+      textStyle: base.copyWith(
+        fontSize: size,
+        height: height,
+        color: textColor,
+      ),
     );
   }
 }

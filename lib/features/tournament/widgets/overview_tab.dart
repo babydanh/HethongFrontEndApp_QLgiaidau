@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
@@ -686,10 +687,7 @@ class _OverviewTabState extends State<OverviewTab> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                t.description
-                                    .replaceAll(RegExp(r'<[^>]*>'), ' ')
-                                    .replaceAll(RegExp(r'\s+'), ' ')
-                                    .trim(),
+                                htmlPreviewText(t.description),
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

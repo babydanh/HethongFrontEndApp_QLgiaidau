@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -412,10 +413,8 @@ List<String> prizeLines(String? html) => (html ?? '')
       RegExp(r'<\s*(br|/p|/li|/div|/h[1-6])[^>]*>', caseSensitive: false),
       '\n',
     )
-    .replaceAll(RegExp(r'<[^>]*>'), ' ')
-    .replaceAll('&nbsp;', ' ')
     .split('\n')
-    .map((line) => line.replaceAll(RegExp(r'\s+'), ' ').trim())
+    .map(htmlPreviewText)
     .where((line) => line.isNotEmpty)
     .toList(growable: false);
 
