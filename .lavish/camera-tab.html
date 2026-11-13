@@ -70,18 +70,10 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
   </div>
 
   <div id="cards" style="padding:0 var(--px)">
-   <div class="cam" data-c="1"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 1</b><span class="pill bad"><i class="dot live"></i>LIVE</span><svg class="chev"><use href="#i-chev"/></svg></div>
-    <div class="body"><div class="url"><input value="rtmp://live.sporto.asia/s1/abc123" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
-     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
-   <div class="cam" data-c="2"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 2</b><span class="pill ok">Có tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div>
-    <div class="body"><div class="url"><input value="https://cam.example.com/s2.m3u8" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
-     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
-   <div class="cam" data-c="3"><div class="top" tabindex="0"><svg class="ico bad"><use href="#i-cam"/></svg><b>Sân 3</b><span class="pill bad">Mất tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div>
-    <div class="body"><div class="url"><input value="https://cam.example.com/s3.m3u8" type="password"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
-     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
-   <div class="cam" data-c="4"><div class="top" tabindex="0"><svg class="ico "><use href="#i-camoff"/></svg><b>Sân 4</b><span class="pill">Chưa gắn</span><svg class="chev"><use href="#i-chev"/></svg></div>
-    <div class="body"><div class="url"><input placeholder="Dán URL phát (https://…)"><button class="ib" title="Hiện / ẩn URL"><svg><use href="#i-link"/></svg></button></div>
-     <div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save">Lưu</button></div></div></div>
+   <div class="cam" data-c="1"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 1</b><span class="pill bad"><i class="dot live"></i>LIVE</span><svg class="chev"><use href="#i-chev"/></svg></div></div>
+   <div class="cam" data-c="2"><div class="top" tabindex="0"><svg class="ico ok"><use href="#i-cam"/></svg><b>Sân 2</b><span class="pill ok">Có tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div></div>
+   <div class="cam" data-c="3"><div class="top" tabindex="0"><svg class="ico bad"><use href="#i-cam"/></svg><b>Sân 3</b><span class="pill bad">Mất tín hiệu</span><svg class="chev"><use href="#i-chev"/></svg></div></div>
+   <div class="cam" data-c="4"><div class="top" tabindex="0"><svg class="ico "><use href="#i-camoff"/></svg><b>Sân 4</b><span class="pill">Chưa gắn</span><svg class="chev"><use href="#i-chev"/></svg></div></div>
   </div>
 
   <div class="hd" style="margin-top:6px"><span>Trận</span></div>
@@ -99,6 +91,11 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
    <button class="btn"><svg><use href="#i-plus"/></svg>Tạo sân</button></div>
  </div>
 
+ <div class="sheet-bg" id="courtSheet"><div class="sheet tall"><div class="grab"></div>
+  <div class="csh"><b id="cName">Sân 1</b><span id="cPill"></span><button class="ib" id="cClose" title="Đóng"><svg><use href="#i-plus" style="transform:rotate(45deg);transform-origin:12px 12px"/></svg></button></div>
+  <div class="urlrow" id="urlRow"><span class="k">URL phát</span><span class="v" id="urlMask">••••••••••••</span><button class="ib" id="urlEye" title="Hiện / ẩn"><svg><use href="#i-link"/></svg></button><button class="ib" id="urlEdit" title="Sửa URL"><svg><use href="#i-edit"/></svg></button></div>
+  <div class="urled" id="urlEd"><input id="urlIn" placeholder="https://…"><div class="acts"><button class="ib" title="Kiểm tra lại"><svg><use href="#i-refresh"/></svg></button><button class="ib" id="urlClear" title="Xoá URL"><svg><use href="#i-unlink"/></svg></button><button class="btn save show" id="urlSave">Lưu</button></div></div>
+  <div id="cMatches"></div></div></div>
  <div class="sheet-bg" id="sheet"><div class="sheet"><div class="grab"></div>
   <div class="hd" style="padding-top:4px">Chuyển <span id="sm" style="text-transform:none;letter-spacing:0">B1</span> sang sân</div>
   <div class="opt"><i class="dot live"></i>Sân 1<small>LIVE</small></div>
@@ -108,7 +105,7 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
 </div>
 <div class="note2"><b>Ghi chú thiết kế (dành cho người duyệt)</b>
 <p>Đây là <b>một thành phần dùng chung</b> — danh sách thẻ sân thu gọn, bấm mở URL — đặt ở <b>cả tab Camera và mục Livestream</b>.</p>
-<p><b>Việc code sẽ làm:</b></p><ol>
+<p><b>Popup sân</b> (bottom sheet khi bấm thẻ): trận chưa xong (đang đấu → sắp tới theo giờ) ở trên, trận xong ở dưới; URL ẩn, bấm mới sửa.</p><p><b>Việc code sẽ làm:</b></p><ol>
 <li>Gộp <code>tournament_camera_panel.dart</code> và <code>court_camera_row.dart</code> + <code>camera_tab_header.dart</code> thành một widget thẻ sân (thu gọn / mở).</li>
 <li>Cả hai nơi gọi cùng widget: <code>tournament_management_camera_section.dart</code> và <code>tournament_management_livestream_section.dart</code>.</li>
 <li>Xoá phần trùng (<code>_CameraRow</code>, <code>_CourtRow</code>, ô URL lặp), bỏ chữ hướng dẫn kéo thả.</li>
@@ -121,6 +118,12 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--page);color:var(--t
 <style>.note2{width:390px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px var(--px);font-size:12px;line-height:1.55;color:var(--muted)}.note2 b{color:var(--text)}.note2 p{margin:6px 0 2px}.note2 ol,.note2 ul{padding-left:18px}.note2 code{font-size:11px;background:var(--soft);padding:1px 4px;border-radius:4px}</style>
 <style>
 .cam{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;background:var(--surface)}
+.sheet.tall{max-height:78%;overflow:auto}.csh{display:flex;align-items:center;gap:8px;padding:2px var(--px) 8px}.csh b{font-size:16px;flex:1}
+.urlrow{display:flex;align-items:center;gap:8px;margin:0 var(--px);padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer}.urlrow .k{font-weight:700;color:var(--muted);font-size:12px}.urlrow .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.urlrow .ib{width:32px;height:32px}.urled{display:none;margin:8px var(--px) 0}.urled.show{display:block}.urled input{width:100%;height:40px;border:1px solid var(--chipline);border-radius:12px;background:var(--surface);color:var(--text);padding:0 12px;font:500 13px Inter,sans-serif}
+.mr{display:flex;align-items:center;gap:10px;padding:10px var(--px);border-bottom:1px solid var(--row)}.mr.done{opacity:.6}.mr .cd{width:50px;font-weight:800;font-size:12px}.mr .cd small{display:block;color:var(--muted);font-weight:600;font-size:11px}
+.mr .tm{flex:1;min-width:0;font-size:13px;line-height:1.35}.mr .tm div{display:flex;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mr .tm .sc{margin-left:auto;font-weight:800}
+.emp1{padding:14px var(--px);color:var(--muted)}
 .cam .top{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:32px}.cam .body{display:none;margin-top:10px}.cam.open .body{display:block}.chev{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:2;transition:transform .15s}.cam.open .chev{transform:rotate(90deg)}.cam .top b{flex:1;font-size:14px}
 .ico{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ico.ok{stroke:var(--ok)}.ico.bad{stroke:var(--bad)}
 .url{display:flex;gap:8px}.url input{flex:1;min-width:0;height:40px;border:1px solid var(--chipline);border-radius:12px;background:var(--surface);color:var(--text);padding:0 12px;font:500 13px Inter,sans-serif}
@@ -137,10 +140,26 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 $('#theme').onclick=()=>document.body.classList.toggle('dark');
 $$('.tools [data-s]').forEach(b=>b.onclick=()=>{$$('.tools [data-s]').forEach(x=>x.classList.toggle('on',x==b));$('#full').style.display=b.dataset.s=='full'?'':'none';$('#empty').style.display=b.dataset.s=='empty'?'':'none'});
 $$('#courtChips .chip').forEach(c=>c.onclick=()=>{$$('#courtChips .chip').forEach(x=>x.classList.toggle('on',x==c));$$('.cam').forEach(k=>k.style.display=(c.dataset.c=='all'||k.dataset.c==c.dataset.c)?'':'none')});
-$$('.cam .top').forEach(t=>t.onclick=()=>t.parentElement.classList.toggle('open'));
-$$('.cam .url .ib').forEach(b=>b.onclick=()=>{const i=b.previousElementSibling;i.type=i.type=='password'?'text':'password'});
-$$('.cam input').forEach(i=>{const s=i.closest('.cam').querySelector('.save'),o=i.value;i.oninput=()=>s.classList.toggle('show',i.value!==o);});
 $$('[data-pick]').forEach(b=>b.onclick=()=>{$('#sm').textContent=b.closest('.m').querySelector('b').textContent.split(' ')[0];$('#sheet').classList.add('show')});
 $('#sheet').onclick=e=>{if(e.target.id=='sheet'||e.target.closest('.opt'))$('#sheet').classList.remove('show')};
+
+const COURTS={1:{n:'Sân 1',u:'rtmp://live.sporto.asia/s1/abc123',p:'<span class="pill bad"><i class="dot live"></i>LIVE</span>',m:[
+ ['A0','07:00','Hùng / Nam','Long / Khoa','done','11–7'],['A1','08:00','An / Bình','Cường / Dũng','live','7–5'],['B1','09:00','Mai / Lan','Hoa / Thảo','soon'],['A4','07:00 hôm qua','Tuấn / Vinh','Sơn / Phát','done','11–9']]},
+ 2:{n:'Sân 2',u:'https://cam.example.com/s2.m3u8',p:'<span class="pill ok">Có tín hiệu</span>',m:[['A2','08:00','Hải / Quân','Đạt / Phúc','soon'],['B2','09:00','Yến / Chi','Vy / Ngọc','soon']]},
+ 3:{n:'Sân 3',u:'https://cam.example.com/s3.m3u8',p:'<span class="pill bad">Mất tín hiệu</span>',m:[['C2','15:00','Bảo / Trinh','Kiên / Hà','soon'],['C1','14:00','Tín / My','Lâm / Nga','done','11–6']]},
+ 4:{n:'Sân 4',u:'',p:'<span class="pill">Chưa gắn</span>',m:[]}};
+const ORD={live:0,soon:1,done:2};
+function openCourt(id){const c=COURTS[id];$('#cName').textContent=c.n;$('#cPill').innerHTML=c.p;
+ $('#urlMask').textContent=c.u?'••••••••••••':'Chưa có URL';$('#urlMask').dataset.show='';$('#urlIn').value=c.u;$('#urlEd').classList.remove('show');
+ const ms=[...c.m].sort((a,b)=>ORD[a[4]]-ORD[b[4]]);
+ $('#cMatches').innerHTML=ms.length?ms.map(m=>`<div class="mr ${m[4]}"><div class="cd">${m[0]}<small>${m[1]}</small></div><div class="tm"><div>${m[2]}<span class="sc">${m[5]?m[5].split('–')[0]:''}</span></div><div>${m[3]}<span class="sc">${m[5]?m[5].split('–')[1]:''}</span></div></div>${m[4]=='live'?'<span class="pill bad"><i class="dot live"></i>Đang đấu</span>':m[4]=='soon'?'<span class="pill ac">Sắp tới</span>':'<span class="pill">Xong</span>'}</div>`).join(''):'<div class="emp1">Chưa có trận</div>';
+ $('#courtSheet').classList.add('show');$('#courtSheet').dataset.id=id}
+$$('.cam .top').forEach(t=>t.onclick=()=>openCourt(t.parentElement.dataset.c));
+$('#cClose').onclick=()=>$('#courtSheet').classList.remove('show');
+$('#courtSheet').onclick=e=>{if(e.target.id=='courtSheet')$('#courtSheet').classList.remove('show')};
+$('#urlEye').onclick=e=>{e.stopPropagation();const c=COURTS[$('#courtSheet').dataset.id],v=$('#urlMask');if(!c.u)return;v.dataset.show=v.dataset.show?'':'1';v.textContent=v.dataset.show?c.u:'••••••••••••'};
+$('#urlEdit').onclick=e=>{e.stopPropagation();$('#urlEd').classList.toggle('show')};
+$('#urlRow').onclick=()=>$('#urlEd').classList.toggle('show');
+$('#urlSave').onclick=$('#urlClear').onclick=()=>$('#urlEd').classList.remove('show');
 </script>
 </body></html>
