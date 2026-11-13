@@ -7958,5 +7958,9 @@
   "camWallSignalIdle": "Chưa phát",
   "camWallNoCourt": "Chưa gắn sân",
   "feeDirectNote": "Thanh toán trực tiếp cho BTC",
-  "feeDirectStatus": "Thu trực tiếp"
+  "feeDirectStatus": "Thu trực tiếp",
+  "courtCamNoMatches": "Chưa có trận",
+  "courtCamUrlLabel": "URL phát",
+  "courtCamUrlEmpty": "Chưa có URL",
+  "courtCamUrlEdit": "Sửa URL"
 }

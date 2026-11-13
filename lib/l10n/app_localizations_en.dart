@@ -20062,4 +20062,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feeDirectStatus => 'Collected directly';
+
+  @override
+  String get courtCamNoMatches => 'No matches yet';
+
+  @override
+  String get courtCamUrlLabel => 'Stream URL';
+
+  @override
+  String get courtCamUrlEmpty => 'No URL';
+
+  @override
+  String get courtCamUrlEdit => 'Edit URL';
 }

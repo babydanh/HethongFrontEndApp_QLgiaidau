@@ -19977,4 +19977,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get feeDirectStatus => 'Thu trực tiếp';
+
+  @override
+  String get courtCamNoMatches => 'Chưa có trận';
+
+  @override
+  String get courtCamUrlLabel => 'URL phát';
+
+  @override
+  String get courtCamUrlEmpty => 'Chưa có URL';
+
+  @override
+  String get courtCamUrlEdit => 'Sửa URL';
 }

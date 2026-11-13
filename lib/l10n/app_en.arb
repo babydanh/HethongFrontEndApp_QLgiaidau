@@ -7930,5 +7930,9 @@
   "camWallSignalIdle": "Not live",
   "camWallNoCourt": "No court",
   "feeDirectNote": "Pay the organizer directly",
-  "feeDirectStatus": "Collected directly"
+  "feeDirectStatus": "Collected directly",
+  "courtCamNoMatches": "No matches yet",
+  "courtCamUrlLabel": "Stream URL",
+  "courtCamUrlEmpty": "No URL",
+  "courtCamUrlEdit": "Edit URL"
 }

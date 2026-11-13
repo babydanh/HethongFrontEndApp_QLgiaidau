@@ -35928,6 +35928,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thu trực tiếp'**
   String get feeDirectStatus;
+
+  /// No description provided for @courtCamNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận'**
+  String get courtCamNoMatches;
+
+  /// No description provided for @courtCamUrlLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'URL phát'**
+  String get courtCamUrlLabel;
+
+  /// No description provided for @courtCamUrlEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có URL'**
+  String get courtCamUrlEmpty;
+
+  /// No description provided for @courtCamUrlEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa URL'**
+  String get courtCamUrlEdit;
 }
 
 class _AppLocalizationsDelegate
