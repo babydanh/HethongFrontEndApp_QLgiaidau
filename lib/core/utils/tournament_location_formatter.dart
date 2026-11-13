@@ -10,37 +10,26 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 class TournamentLocationFormatter {
   const TournamentLocationFormatter._();
 
+  /// Compact form for small cards: the last two normalised parts of the
+  /// tournament location (e.g. "Phường 10, Thành phố Hồ Chí Minh"), like the
+  /// Web. Uses the same parts as [tournamentFullLocation], so a stale
+  /// `locationConfig` snapshot is never mixed in.
   static String tournamentShortLocation(Tournament tournament) {
-    final location = tournament.locationConfig;
-    final structuredParts = _uniqueParts([
-      location?['ward']?.toString(),
-      location?['district']?.toString(),
-      (location?['province'] ?? tournament.city)?.toString(),
-    ]);
-
-    if (structuredParts.length >= 2) {
-      return structuredParts.join(', ');
-    }
-
-    final raw =
-        (location?['display'] ??
-                location?['address'] ??
-                tournament.locationAddress ??
-                tournament.city ??
-                '')
-            .toString()
-            .trim();
-    if (raw.isNotEmpty) {
-      final parts = _uniqueParts(raw.split(','));
-      if (parts.length > 2) return parts.sublist(parts.length - 2).join(', ');
-      if (parts.isNotEmpty) return parts.join(', ');
-    }
-
-    return tournamentFullLocation(tournament);
+    final parts = _tournamentLocationParts(tournament);
+    if (parts.length > 2) return parts.sublist(parts.length - 2).join(', ');
+    return parts.join(', ');
   }
 
   static String tournamentFullLocation(Tournament tournament) =>
       _tournamentLocationParts(tournament).join(', ');
+
+  static String tournamentFullLocationOr(
+    Tournament tournament,
+    String fallback,
+  ) {
+    final full = tournamentFullLocation(tournament);
+    return full.isEmpty ? fallback : full;
+  }
 
   /// Two display lines of the tournament location: the venue (or first part)
   /// and the address that follows it. Empty strings when there is no data.
@@ -57,24 +46,32 @@ class TournamentLocationFormatter {
     );
   }
 
+  static List<String> _tournamentLocationParts(Tournament tournament) =>
+      tournamentLocationParts(
+        venueName: tournament.venueName,
+        locationAddress: tournament.locationAddress,
+        city: tournament.city,
+        legacyLocation: tournament.locationConfig,
+      );
+
   // Same precedence as the Web: the venue / address of the tournament is what
   // is shown; the older `locationConfig` snapshot is only a fallback and is
   // never mixed in (it can hold text typed before a saved venue was picked).
-  static List<String> _tournamentLocationParts(Tournament tournament) {
-    final own = _uniqueParts([
-      tournament.venueName,
-      tournament.locationAddress,
-      tournament.city,
-    ]);
+  static List<String> tournamentLocationParts({
+    String? venueName,
+    String? locationAddress,
+    String? city,
+    Map<String, dynamic>? legacyLocation,
+  }) {
+    final own = _uniqueParts([venueName, locationAddress, city]);
     if (own.isNotEmpty) return own;
-    final location = tournament.locationConfig;
     return _uniqueParts([
-      location?['display']?.toString(),
-      location?['venueName']?.toString(),
-      location?['address']?.toString(),
-      location?['ward']?.toString(),
-      location?['district']?.toString(),
-      location?['province']?.toString(),
+      legacyLocation?['venueName']?.toString(),
+      legacyLocation?['address']?.toString(),
+      legacyLocation?['ward']?.toString(),
+      legacyLocation?['district']?.toString(),
+      legacyLocation?['province']?.toString(),
+      legacyLocation?['display']?.toString(),
     ]);
   }
 
@@ -101,46 +98,40 @@ class TournamentLocationFormatter {
     return clean;
   }
 
+  /// Court, court address, then the tournament venue / address / city. The
+  /// legacy `locationConfig` snapshot is used only when nothing else exists.
   static String matchFullLocation({
     required Tournament tournament,
     String? courtName,
     String? courtAddress,
   }) {
-    final location = tournament.locationConfig;
-    return _uniqueParts([
+    final parts = _uniqueParts([
       courtName,
       courtAddress,
       tournament.venueName,
       tournament.locationAddress,
-      location?['display']?.toString(),
-      location?['venueName']?.toString(),
-      location?['address']?.toString(),
-      location?['ward']?.toString(),
-      location?['district']?.toString(),
-      location?['province']?.toString(),
       tournament.city,
-    ]).join(', ');
+    ]);
+    if (parts.isNotEmpty) return parts.join(', ');
+    return _tournamentLocationParts(tournament).join(', ');
   }
 
+  /// Same rule when only the match payload is at hand: the court (which
+  /// already falls back to the tournament venue name) and its address; the
+  /// snapshot in `tournamentConfig.location` is a fallback for old records.
   static String matchFullLocationFromConfig({
     required String? courtName,
     required String? courtAddress,
     Map<String, dynamic>? tournamentConfig,
   }) {
+    final parts = _uniqueParts([courtName, courtAddress]);
+    if (parts.isNotEmpty) return parts.join(', ');
     final rawLocation = tournamentConfig?['location'];
-    final location = rawLocation is Map
-        ? Map<String, dynamic>.from(rawLocation)
-        : null;
-    return _uniqueParts([
-      courtName,
-      courtAddress,
-      location?['display']?.toString(),
-      location?['venueName']?.toString(),
-      location?['address']?.toString(),
-      location?['ward']?.toString(),
-      location?['district']?.toString(),
-      location?['province']?.toString(),
-    ]).join(', ');
+    return tournamentLocationParts(
+      legacyLocation: rawLocation is Map
+          ? Map<String, dynamic>.from(rawLocation)
+          : null,
+    ).join(', ');
   }
 
   static String _normalizeKey(String input) {
