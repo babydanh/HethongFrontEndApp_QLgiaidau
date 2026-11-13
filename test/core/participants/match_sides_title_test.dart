@@ -29,6 +29,15 @@ void main() {
     expect(_title(_match()), 'Chưa xác định VS Chưa xác định');
   });
 
+  test('TC-MATCHTITLE-04 short label of a side with no team or player', () {
+    String short(MatchModel m, int side) =>
+        matchSideShortLabel(m, side, undetermined: 'Chưa xác định');
+
+    expect(short(_match(), 1), 'Chưa xác định');
+    expect(short(_match(team2: 'Beta'), 1), 'Chưa xác định');
+    expect(short(_match(team2: 'Beta'), 2), 'Beta');
+  });
+
   test('TC-MATCHTITLE-03 only one side known: the other reads undetermined', () {
     expect(_title(_match(team1: 'Alpha')), 'Alpha VS Chưa xác định');
     expect(_title(_match(team2: 'Beta')), 'Chưa xác định VS Beta');
