@@ -299,8 +299,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                   ),
 
                   // Địa điểm thi đấu (nếu có)
-                  if (t.locationAddress != null &&
-                      t.locationAddress!.isNotEmpty) ...[
+                  if (t.fullLocation.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -312,7 +311,7 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            t.locationAddress!,
+                            t.fullLocation,
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.textMuted,

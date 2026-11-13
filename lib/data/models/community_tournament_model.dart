@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+
 /// Model cho giải đấu trong CLB — từ API response
 class CommunityTournamentModel {
   final String id;
@@ -9,6 +11,8 @@ class CommunityTournamentModel {
   final int teamCount;
   final String? startDate;
   final String? locationAddress;
+  final String? venueName;
+  final String? city;
   final String? bannerUrl;
   final String? logoUrl;
 
@@ -36,6 +40,8 @@ class CommunityTournamentModel {
     this.teamCount = 0,
     this.startDate,
     this.locationAddress,
+    this.venueName,
+    this.city,
     this.bannerUrl,
     this.logoUrl,
     this.isLite = false,
@@ -49,6 +55,30 @@ class CommunityTournamentModel {
     this.isRecurring = false,
     this.recurringConfig,
   });
+
+  /// Tên sân, địa chỉ, thành phố ghép theo cùng thứ tự với Web.
+  String get fullLocation => TournamentLocationFormatter.tournamentLocationParts(
+    venueName: venueName,
+    locationAddress: locationAddress,
+    city: city,
+  ).join(', ');
+
+  static String? _text(dynamic value) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? null : text;
+  }
+
+  static String? _venueText(dynamic venue, String key) =>
+      venue is Map ? _text(venue[key]) : null;
+
+  // Có sân gắn kèm thì địa chỉ là của sân (như Web), không lấy địa chỉ riêng.
+  static String? _locationAddress(Map<String, dynamic> json) {
+    final venue = json['venue'];
+    final name = _venueText(venue, 'name');
+    final address = _venueText(venue, 'locationAddress');
+    if (name != null || address != null) return address;
+    return _text(json['locationAddress']);
+  }
 
   factory CommunityTournamentModel.fromJson(Map<String, dynamic> json) {
     // Sport từ category object hoặc trực tiếp
@@ -117,9 +147,9 @@ class CommunityTournamentModel {
       maxTeams: maxTeams,
       teamCount: teamCount,
       startDate: json['startDate']?.toString(),
-      locationAddress:
-          json['locationAddress']?.toString() ??
-          json['venue']?['locationAddress']?.toString(),
+      venueName: _venueText(json['venue'], 'name'),
+      city: _text(json['city']),
+      locationAddress: _locationAddress(json),
       bannerUrl: json['bannerUrl']?.toString(),
       logoUrl: json['logoUrl']?.toString() ?? json['logo_url']?.toString(),
       isLite: isLite,
