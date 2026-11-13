@@ -13037,7 +13037,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementCameraMatchPoolHint =>
-      'Nhấn giữ một trận rồi kéo thả lên sân, hoặc chọn sân từ menu của trận.';
+      'Chọn sân ở menu ⋯ của từng trận.';
 
   @override
   String get tournamentManagementCameraMatchPoolEmpty =>
@@ -19856,6 +19856,25 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get camTabClearFilter => 'Xoá lọc';
+
+  @override
+  String get camCourtAll => 'Tất cả sân';
+
+  @override
+  String camCourtMatchCount(int count) {
+    return '$count trận';
+  }
+
+  @override
+  String get camCourtOpenMatches => 'Chưa đấu · đang đấu';
+
+  @override
+  String get camCourtFinishedMatches => 'Đã đấu xong';
+
+  @override
+  String camCourtOpenSheet(String court) {
+    return 'Mở chi tiết $court';
+  }
 
   @override
   String get camTabHelpHeading => 'Cách dùng tab Camera';

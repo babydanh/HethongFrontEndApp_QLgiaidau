@@ -343,7 +343,7 @@ void main() {
     expect(find.text('Chưa có trận'), findsOneWidget);
   });
 
-  testWidgets('TC-CAMWALL-APP-30 court card: camera line and ⏻ is local', (
+  testWidgets('TC-CAMWALL-APP-30 court popup: camera line and ⏻ is local', (
     tester,
   ) async {
     await _size(tester, const Size(390, 1600));
@@ -353,6 +353,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // The court card is collapsed; the camera line lives in its popup.
+    expect(find.byType(CameraCourtInfo), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('camera-court-tile-court-1')));
+    await tester.pumpAndSettle();
     expect(find.byType(CameraCourtInfo), findsOneWidget);
     expect(find.text('Camera: Camera 1'), findsOneWidget);
     expect(find.text('Đang chiếu: Alpha now – Beta now'), findsOneWidget);

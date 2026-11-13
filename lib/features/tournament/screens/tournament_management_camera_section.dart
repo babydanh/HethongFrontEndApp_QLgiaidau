@@ -7,12 +7,10 @@ import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/camera_live_status_action.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_create_flow.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_match_filter.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_info.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_header.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -52,16 +50,16 @@ List<MatchModel> _assignableMatches(List<MatchModel> matches) => matches
     )
     .toList(growable: false);
 
-/// Organizer camera board: one card per court, one pool of matches.
+/// Organizer camera board: one collapsed card per court (tap for the court
+/// popup with its matches), one pool of matches.
 ///
 /// Assigning a match to a court goes through `PATCH /matches/{id}/schedule`
 /// with the court id — the backend then hands the match that court's camera.
 /// Nothing is moved locally: the match list is server state, so a failed write
 /// leaves the board exactly as it was.
 ///
-/// Dragging is the fast path, not the only one — a match can also be assigned
-/// from its own court menu, or by selecting it and pressing the button on the
-/// target court.
+/// A match is assigned from the court menu (⋯) on its row; there is no
+/// drag-and-drop.
 class TournamentManagementCameraSection extends ConsumerStatefulWidget {
   const TournamentManagementCameraSection({
     super.key,
@@ -83,8 +81,8 @@ class _TournamentManagementCameraSectionState
     extends ConsumerState<TournamentManagementCameraSection> {
   late Future<List<Map<String, dynamic>>> _venuesFuture;
 
-  /// Match picked with a single tap, waiting for a court to be chosen.
-  String? _selectedMatchId;
+  /// Court shown alone; null = every court.
+  String? _courtFilterId;
 
   CameraMatchFilter _filter = const CameraMatchFilter();
 
@@ -152,10 +150,7 @@ class _TournamentManagementCameraSectionState
       );
       return;
     }
-    setState(() {
-      _busyMatchIds.add(match.id);
-      _selectedMatchId = null;
-    });
+    setState(() => _busyMatchIds.add(match.id));
     try {
       await ref
           .read(matchRepositoryProvider)
@@ -226,6 +221,45 @@ class _TournamentManagementCameraSectionState
     }
   }
 
+  /// Collapsed card for one court; tapping opens the court popup. Byes and
+  /// matches without both sides are not worth a row there.
+  Widget _courtTile(
+    AppLocalizations l10n,
+    TournamentCourtRef court,
+    List<MatchModel> matches,
+    List<TournamentCameraModel> cameras,
+  ) {
+    final courtMatches = matches
+        .where(
+          (match) =>
+              match.courtId == court.id &&
+              match.hasTeams &&
+              !match.isByeMatch &&
+              !match.isFullByeMatch,
+        )
+        .toList(growable: false);
+    final courtCamera = cameraForCourt(cameras, court.id);
+    return CameraCourtTile(
+      key: ValueKey('camera-court-tile-${court.id}'),
+      court: court,
+      camera: courtCamera,
+      matchCount: courtMatches.length,
+      onTap: () => showCameraCourtSheet(
+        context,
+        tournamentId: widget.tournamentId,
+        court: court,
+        camera: courtCamera,
+        courtMatches: courtMatches,
+        allMatches: matches,
+        cameras: cameras,
+        readOnly: widget.readOnly,
+        labelOf: (match) => _matchLabel(l10n, match),
+        hasCameraOf: (match) => _matchHasCamera(match, cameras),
+        onPickCamera: _assignCameraToMatch,
+      ),
+    );
+  }
+
   void _showMessage(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
@@ -280,9 +314,15 @@ class _TournamentManagementCameraSectionState
           hasCameraOnCourt: (courtId) =>
               cameraForCourt(cameras, courtId) != null,
         );
-        final selectedMatch = assignable
-            .where((match) => match.id == _selectedMatchId)
-            .firstOrNull;
+        final activeCourtId = courts.any((court) => court.id == _courtFilterId)
+            ? _courtFilterId
+            : null;
+        final shownCourts = activeCourtId == null
+            ? courts
+            : courts.where((court) => court.id == activeCourtId).toList();
+        final poolMatches = activeCourtId == null
+            ? visible
+            : visible.where((match) => match.courtId == activeCourtId).toList();
 
         // Sized to its content and never scrolls on its own: the host page
         // scrolls, so the tournament header moves with it like on other tabs.
@@ -326,10 +366,11 @@ class _TournamentManagementCameraSectionState
                 matchLabelOf: (match) => _matchLabel(l10n, match),
               ),
             ),
-            if (selectedMatch != null)
-              _SelectionBanner(
-                label: _matchLabel(l10n, selectedMatch),
-                onClear: () => setState(() => _selectedMatchId = null),
+            if (courts.length > 1)
+              _CourtChips(
+                courts: courts,
+                selectedId: activeCourtId,
+                onSelected: (id) => setState(() => _courtFilterId = id),
               ),
             const SizedBox(height: AppTheme.spacingMD),
             if (snapshot.connectionState == ConnectionState.waiting)
@@ -343,39 +384,20 @@ class _TournamentManagementCameraSectionState
               _MatchPool(
                 tournamentId: widget.tournamentId,
                 cameras: cameras,
-                matches: visible,
+                matches: poolMatches,
                 filterActive: _filter.isActive && assignable.isNotEmpty,
                 onClearFilter: () =>
                     setState(() => _filter = const CameraMatchFilter()),
                 isLoading: matchesAsync.isLoading,
                 courts: courts,
                 busyMatchIds: _busyMatchIds,
-                selectedMatchId: _selectedMatchId,
                 readOnly: widget.readOnly,
-                onSelected: (match) =>
-                    setState(() => _selectedMatchId = match.id),
                 onAssign: _assignToCourt,
               ),
               const SizedBox(height: AppTheme.spacingMD),
-              for (final court in courts) ...[
-                _CourtDropCard(
-                  tournamentId: widget.tournamentId,
-                  court: court,
-                  camera: cameraForCourt(cameras, court.id),
-                  matchesHere: visible
-                      .where((match) => match.courtId == court.id)
-                      .toList(growable: false),
-                  assignable: assignable,
-                  allMatches: matches,
-                  cameras: cameras,
-                  busyMatchIds: _busyMatchIds,
-                  selectedMatch: selectedMatch,
-                  readOnly: widget.readOnly,
-                  onAssign: (match) => _assignToCourt(match, court),
-                  onPickCamera: (match, camera) =>
-                      _assignCameraToMatch(match, camera),
-                ),
-                const SizedBox(height: AppTheme.spacingMD),
+              for (final court in shownCourts) ...[
+                _courtTile(l10n, court, matches, cameras),
+                const SizedBox(height: AppTheme.spacingSM),
               ],
             ],
           ],
@@ -385,61 +407,44 @@ class _TournamentManagementCameraSectionState
   }
 }
 
-/// Banner shown while a match is selected and waiting for a court.
-class _SelectionBanner extends StatelessWidget {
-  const _SelectionBanner({required this.label, required this.onClear});
+/// Court filter: "Tất cả sân" plus one chip per court.
+class _CourtChips extends StatelessWidget {
+  const _CourtChips({
+    required this.courts,
+    required this.selectedId,
+    required this.onSelected,
+  });
 
-  final String label;
-  final VoidCallback onClear;
+  final List<TournamentCourtRef> courts;
+  final String? selectedId;
+  final ValueChanged<String?> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      margin: const EdgeInsets.only(top: AppTheme.spacingSM),
-      padding: const EdgeInsets.all(AppTheme.spacingSM),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      ),
-      child: Row(
-        children: [
-          const ExcludeSemantics(
-            child: Icon(Icons.touch_app_rounded, size: 18),
+    return Wrap(
+      spacing: AppTheme.spacingSM,
+      runSpacing: AppTheme.spacingXS,
+      children: [
+        ChoiceChip(
+          key: const ValueKey('camera-court-chip-all'),
+          label: Text(l10n.camCourtAll),
+          selected: selectedId == null,
+          onSelected: (_) => onSelected(null),
+        ),
+        for (final court in courts)
+          ChoiceChip(
+            key: ValueKey('camera-court-chip-${court.id}'),
+            label: Text(court.name.isEmpty ? court.id : court.name),
+            selected: selectedId == court.id,
+            onSelected: (_) => onSelected(court.id),
           ),
-          const SizedBox(width: AppTheme.spacingSM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.tournamentManagementCameraSelectHint,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  l10n.tournamentManagementCameraSelectedMatch(label),
-                  style: TextStyle(color: colors.textSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: onClear,
-            child: Text(l10n.tournamentManagementCameraClearSelection),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-/// Drag sources, plus the tap and court-menu assignment paths.
+/// Matches that can be given a court from the row's ⋯ menu.
 class _MatchPool extends StatelessWidget {
   const _MatchPool({
     required this.tournamentId,
@@ -450,9 +455,7 @@ class _MatchPool extends StatelessWidget {
     required this.isLoading,
     required this.courts,
     required this.busyMatchIds,
-    required this.selectedMatchId,
     required this.readOnly,
-    required this.onSelected,
     required this.onAssign,
   });
 
@@ -466,9 +469,7 @@ class _MatchPool extends StatelessWidget {
   final bool isLoading;
   final List<TournamentCourtRef> courts;
   final Set<String> busyMatchIds;
-  final String? selectedMatchId;
   final bool readOnly;
-  final ValueChanged<MatchModel> onSelected;
   final Future<void> Function(MatchModel, TournamentCourtRef) onAssign;
 
   @override
@@ -506,213 +507,12 @@ class _MatchPool extends StatelessWidget {
                     hasCamera: _matchHasCamera(matches[i], cameras),
                     readOnly: readOnly,
                     isBusy: busyMatchIds.contains(matches[i].id),
-                    isSelected: selectedMatchId == matches[i].id,
-                    draggable: true,
                     courts: courts,
-                    onSelected: () => onSelected(matches[i]),
                     onAssign: (court) => onAssign(matches[i], court),
                   ),
                 ],
               ],
             ),
-    );
-  }
-}
-
-/// A court: drop target, playback-URL control and the matches scheduled there.
-class _CourtDropCard extends StatelessWidget {
-  const _CourtDropCard({
-    required this.tournamentId,
-    required this.court,
-    required this.camera,
-    required this.assignable,
-    required this.allMatches,
-    required this.matchesHere,
-    required this.cameras,
-    required this.busyMatchIds,
-    required this.selectedMatch,
-    required this.readOnly,
-    required this.onAssign,
-    required this.onPickCamera,
-  });
-
-  final String tournamentId;
-  final TournamentCourtRef court;
-  final TournamentCameraModel? camera;
-
-  /// Every match that can be dropped here, not just the ones already on this
-  /// court — the dragged match comes from the pool.
-  final List<MatchModel> assignable;
-
-  /// Every match of the tournament, finished ones included: the camera may
-  /// still be showing one of them.
-  final List<MatchModel> allMatches;
-  final List<MatchModel> matchesHere;
-  final List<TournamentCameraModel> cameras;
-  final Set<String> busyMatchIds;
-  final MatchModel? selectedMatch;
-  final bool readOnly;
-  final Future<void> Function(MatchModel match) onAssign;
-  final Future<void> Function(MatchModel match, TournamentCameraModel camera)
-  onPickCamera;
-
-  MatchModel? _byId(String matchId) =>
-      assignable.where((match) => match.id == matchId).firstOrNull;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final courtTitle = court.name.isEmpty ? court.id : court.name;
-    final courtCamera = camera;
-    final hasSelection = selectedMatch != null && !readOnly;
-
-    final card = Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(
-          color: hasSelection ? AppTheme.primary : colors.border,
-          width: hasSelection ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const ExcludeSemantics(
-                child: Icon(
-                  Icons.sports_tennis_rounded,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacingSM),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      courtTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (court.venueName.isNotEmpty)
-                      Text(
-                        court.venueName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (courtCamera != null) ...[
-            const SizedBox(height: AppTheme.spacingXS),
-            CameraCourtInfo(
-              tournamentId: tournamentId,
-              camera: courtCamera,
-              matches: allMatches,
-              matchLabelOf: (match) => _matchLabel(l10n, match),
-            ),
-          ],
-          const SizedBox(height: AppTheme.spacingSM),
-          CourtCameraUrlRow(
-            tournamentId: tournamentId,
-            courtId: court.id,
-            courtName: courtTitle,
-            readOnly: readOnly,
-          ),
-          if (courtCamera != null) ...[
-            const SizedBox(height: AppTheme.spacingSM),
-            CameraLiveStatusAction(cameraId: courtCamera.id),
-          ],
-          const SizedBox(height: AppTheme.spacingSM),
-          Divider(height: 1, color: colors.border),
-          const SizedBox(height: AppTheme.spacingSM),
-          Text(
-            l10n.tournamentManagementCameraMatchesHere(matchesHere.length),
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacingXS),
-          if (matchesHere.isEmpty)
-            Text(
-              l10n.tournamentManagementCameraNoMatchesHere,
-              style: TextStyle(color: colors.textMuted, fontSize: 12),
-            )
-          else
-            for (var i = 0; i < matchesHere.length; i++) ...[
-              if (i > 0) Divider(height: 1, color: colors.border),
-              CameraMatchRow(
-                tournamentId: tournamentId,
-                match: matchesHere[i],
-                label: _matchLabel(l10n, matchesHere[i]),
-                hasCamera: _matchHasCamera(matchesHere[i], cameras),
-                readOnly: readOnly,
-                isBusy: busyMatchIds.contains(matchesHere[i].id),
-                showCourtChip: false,
-                cameras: cameras,
-                onPickCamera: (value) => onPickCamera(matchesHere[i], value),
-              ),
-            ],
-          if (hasSelection) ...[
-            const SizedBox(height: AppTheme.spacingSM),
-            SizedBox(
-              height: kMinTouchTarget,
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: busyMatchIds.contains(selectedMatch!.id)
-                    ? null
-                    : () => onAssign(selectedMatch!),
-                icon: const Icon(Icons.add_location_alt_outlined),
-                label: Text(
-                  l10n.tournamentManagementCameraAssignHere(
-                    _matchLabel(l10n, selectedMatch!),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-
-    return DragTarget<CourtMatchDragData>(
-      // A match already scheduled here has nothing to move, so it is refused
-      // at the edge instead of answering with a "no change" message.
-      onWillAcceptWithDetails: (details) =>
-          _byId(details.data.matchId)?.courtId != court.id,
-      onAcceptWithDetails: (details) {
-        final match = _byId(details.data.matchId);
-        if (match != null) onAssign(match);
-      },
-      builder: (context, candidates, rejected) {
-        final isDropTarget = candidates.isNotEmpty;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          decoration: BoxDecoration(
-            color: isDropTarget
-                ? AppTheme.primary.withValues(alpha: 0.14)
-                : null,
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-          ),
-          child: card,
-        );
-      },
     );
   }
 }

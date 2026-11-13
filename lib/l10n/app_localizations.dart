@@ -23695,7 +23695,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementCameraMatchPoolHint.
   ///
   /// In vi, this message translates to:
-  /// **'Nhấn giữ một trận rồi kéo thả lên sân, hoặc chọn sân từ menu của trận.'**
+  /// **'Chọn sân ở menu ⋯ của từng trận.'**
   String get tournamentManagementCameraMatchPoolHint;
 
   /// No description provided for @tournamentManagementCameraMatchPoolEmpty.
@@ -35718,6 +35718,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xoá lọc'**
   String get camTabClearFilter;
+
+  /// No description provided for @camCourtAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả sân'**
+  String get camCourtAll;
+
+  /// No description provided for @camCourtMatchCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận'**
+  String camCourtMatchCount(int count);
+
+  /// No description provided for @camCourtOpenMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đấu · đang đấu'**
+  String get camCourtOpenMatches;
+
+  /// No description provided for @camCourtFinishedMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đấu xong'**
+  String get camCourtFinishedMatches;
+
+  /// No description provided for @camCourtOpenSheet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở chi tiết {court}'**
+  String camCourtOpenSheet(String court);
 
   /// No description provided for @camTabHelpHeading.
   ///

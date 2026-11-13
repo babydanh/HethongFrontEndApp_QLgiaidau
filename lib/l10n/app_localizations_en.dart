@@ -13083,7 +13083,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementCameraMatchPoolHint =>
-      'Long-press a match and drop it on a court, or pick a court from the match menu.';
+      'Pick a court from each match\'s ⋯ menu.';
 
   @override
   String get tournamentManagementCameraMatchPoolEmpty =>
@@ -19941,6 +19941,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camTabClearFilter => 'Clear filter';
+
+  @override
+  String get camCourtAll => 'All courts';
+
+  @override
+  String camCourtMatchCount(int count) {
+    return '$count matches';
+  }
+
+  @override
+  String get camCourtOpenMatches => 'Upcoming · live';
+
+  @override
+  String get camCourtFinishedMatches => 'Finished';
+
+  @override
+  String camCourtOpenSheet(String court) {
+    return 'Open $court details';
+  }
 
   @override
   String get camTabHelpHeading => 'How to use the Camera tab';
