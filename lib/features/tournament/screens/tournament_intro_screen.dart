@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1238,7 +1239,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       context: context,
       title: tournament.name,
       subtitle:
-          '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
+          '${TournamentLocationFormatter.tournamentFullLocationOr(tournament, l10n.vietnam)} • ${tournament.category ?? tournament.sport}',
       webUrl: shareUrl,
       imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
       badgeText: tournament.isClubLite

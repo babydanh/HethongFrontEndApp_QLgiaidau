@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2577,11 +2578,11 @@ class _TournamentRegisterScreenState
             endDateStr != null ? '$startDateStr - $endDateStr' : startDateStr,
             colors,
           ),
-          if (t.locationAddress != null && t.locationAddress!.isNotEmpty)
+          if (TournamentLocationFormatter.tournamentFullLocation(t).isNotEmpty)
             _buildInfoRow(
               Icons.location_on_rounded,
               l10n.registerLocationTitle,
-              t.locationAddress!,
+              TournamentLocationFormatter.tournamentFullLocation(t),
               colors,
             ),
           _buildInfoRow(

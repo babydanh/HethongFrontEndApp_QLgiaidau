@@ -941,7 +941,7 @@ class _TournamentBannerState extends State<TournamentBanner> {
                                   context: context,
                                   title: tournament.name,
                                   subtitle:
-                                      '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
+                                      '${TournamentLocationFormatter.tournamentFullLocationOr(tournament, l10n.vietnam)} • ${tournament.category ?? tournament.sport}',
                                   webUrl:
                                       'https://sporto.asia/tournaments/${tournament.id}',
                                   imageUrl:
