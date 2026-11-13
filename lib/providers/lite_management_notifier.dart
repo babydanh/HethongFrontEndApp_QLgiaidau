@@ -889,7 +889,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       await _dio.patch(
         '/tournaments/$tournamentId',
         data: {
-          'locationAddress': locationAddress.trim(),
+          // No locationAddress here: UpdateTournamentDto rejects unknown keys (400).
           if (effectiveProvince.trim().isNotEmpty)
             'city': effectiveProvince.trim(),
           'tournamentConfig': nextTournamentConfig,
@@ -962,7 +962,6 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         '/tournaments/$tournamentId',
         data: {
           'description': description.trim(),
-          'locationAddress': locationAddress.trim(),
           'tournamentConfig': nextTournamentConfig,
         },
       );

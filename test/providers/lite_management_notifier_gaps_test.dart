@@ -774,7 +774,7 @@ void main() {
       final patch = adapter.requests
           .firstWhere((r) => r.method == 'PATCH')
           .body!;
-      expect(patch['locationAddress'], '1 Lê Lợi');
+      expect(patch.containsKey('locationAddress'), isFalse); // DTO would 400
       expect(patch['city'], 'TP.HCM'); // falls back to the loaded province
       final location = (patch['tournamentConfig'] as Map)['location'] as Map;
       expect(location['display'], 'Sân A, 1 Lê Lợi, Bến Nghé, TP.HCM');
@@ -836,7 +836,7 @@ void main() {
           .map((r) => r.body!)
           .toList();
       expect(patches[0]['description'], 'mô tả');
-      expect(patches[0]['locationAddress'], 'địa chỉ');
+      expect(patches[0].containsKey('locationAddress'), isFalse); // DTO would 400
       expect(
         (patches[0]['tournamentConfig'] as Map).containsKey('location'),
         isFalse,

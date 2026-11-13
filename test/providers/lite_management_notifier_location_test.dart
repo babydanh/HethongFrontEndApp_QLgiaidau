@@ -81,4 +81,62 @@ void main() {
     // The save badge resets after 2.5 s; wait so no timer outlives the test.
     await Future<void>.delayed(const Duration(milliseconds: 2600));
   });
+
+  // TC-VENUE-TEXT-APP-05
+  test('PATCH /tournaments/:id never sends locationAddress (the update DTO '
+      'rejects it with 400)', () async {
+    final adapter = FakeApiAdapter({
+      'GET /tournaments/$_id': const FakeReply(200, {
+        'data': {
+          'id': _id,
+          'name': 'Giải Lite',
+          'matchType': 'DOUBLES',
+          'status': 'REGISTRATION',
+          'tournamentConfig': {'isLite': true},
+          'divisions': [
+            {'id': 'd1', 'matchType': 'DOUBLES'},
+          ],
+        },
+      }),
+      'GET /tournaments/lite/$_id/participants': const FakeReply(200, {
+        'data': [],
+      }),
+      'PATCH /tournaments/$_id': const FakeReply(200, {}),
+      'PATCH /tournaments/$_id/venue': const FakeReply(200, {}),
+    });
+    final container = ProviderContainer(
+      overrides: [dioClientProvider.overrideWithValue(fakeDioClient(adapter))],
+    );
+    addTearDown(container.dispose);
+    final notifier = container.read(liteManagementProvider.notifier);
+    await notifier.init(_id);
+
+    expect(
+      await notifier.updateLocation(
+        _id,
+        venueName: 'Sân A',
+        locationAddress: '1 Lê Lợi',
+      ),
+      isTrue,
+    );
+    expect(
+      await notifier.updateLiteDetails(
+        _id,
+        description: 'Mô tả',
+        locationAddress: '1 Lê Lợi',
+        venueName: 'Sân A',
+      ),
+      isTrue,
+    );
+
+    final tournamentPatches = adapter.requests
+        .where((r) => r.method == 'PATCH' && r.path == '/tournaments/$_id')
+        .toList();
+    expect(tournamentPatches, hasLength(2));
+    for (final request in tournamentPatches) {
+      expect((request.body as Map).containsKey('locationAddress'), isFalse);
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 2600));
+  });
 }
