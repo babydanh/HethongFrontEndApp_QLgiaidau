@@ -243,4 +243,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('TC-RACKET-W-14 server cell exposes one clean semantics label', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await _pump(tester, _view(_Spy()));
+    // Child texts (name, SERVE chip) must not leak into the label.
+    expect(find.bySemanticsLabel('Right: Lan, SERVE'), findsOneWidget);
+    expect(find.bySemanticsLabel('Right: Bao, RECEIVE'), findsOneWidget);
+    semantics.dispose();
+  });
 }
