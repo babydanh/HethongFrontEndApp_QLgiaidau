@@ -32905,6 +32905,72 @@ abstract class AppLocalizations {
   /// **'Đổi sân camera'**
   String get tournamentCameraEditTitle;
 
+  /// No description provided for @tournamentCameraSourcePush.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera / điện thoại'**
+  String get tournamentCameraSourcePush;
+
+  /// No description provided for @tournamentCameraSourceLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Live YouTube / Facebook'**
+  String get tournamentCameraSourceLive;
+
+  /// No description provided for @tournamentCameraLiveLinkLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán link live YouTube hoặc Facebook'**
+  String get tournamentCameraLiveLinkLabel;
+
+  /// No description provided for @tournamentCameraLiveLinkHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở video đang live, bấm Chia sẻ rồi sao chép link. Chỉ nhận live công khai.'**
+  String get tournamentCameraLiveLinkHint;
+
+  /// No description provided for @tournamentCameraLivePaste.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán'**
+  String get tournamentCameraLivePaste;
+
+  /// No description provided for @tournamentCameraLiveErrorChannel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Link này là trang kênh hoặc trang cá nhân. Hãy mở video đang live rồi sao chép link.'**
+  String get tournamentCameraLiveErrorChannel;
+
+  /// No description provided for @tournamentCameraLiveErrorNoId.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy mã video trong link. Hãy sao chép lại link video đang live.'**
+  String get tournamentCameraLiveErrorNoId;
+
+  /// No description provided for @tournamentCameraLiveErrorUnsupported.
+  ///
+  /// In vi, this message translates to:
+  /// **'Link chưa đúng. Chỉ nhận link YouTube (youtube.com, youtu.be) hoặc Facebook (facebook.com, fb.watch).'**
+  String get tournamentCameraLiveErrorUnsupported;
+
+  /// No description provided for @tournamentCameraLivePreviewTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trước'**
+  String get tournamentCameraLivePreviewTitle;
+
+  /// No description provided for @tournamentCameraLivePreviewHelp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thấy hình? Kiểm tra live có công khai, đã bắt đầu và cho phép nhúng không.'**
+  String get tournamentCameraLivePreviewHelp;
+
+  /// No description provided for @tournamentCameraLiveSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu camera live'**
+  String get tournamentCameraLiveSave;
+
   /// No description provided for @tournamentCameraNameLabel.
   ///
   /// In vi, this message translates to:

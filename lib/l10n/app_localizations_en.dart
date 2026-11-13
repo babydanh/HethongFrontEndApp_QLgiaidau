@@ -18335,6 +18335,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraEditTitle => 'Change camera court';
 
   @override
+  String get tournamentCameraSourcePush => 'Camera / phone';
+
+  @override
+  String get tournamentCameraSourceLive => 'YouTube / Facebook live';
+
+  @override
+  String get tournamentCameraLiveLinkLabel =>
+      'Paste a YouTube or Facebook live link';
+
+  @override
+  String get tournamentCameraLiveLinkHint =>
+      'Open the live video, tap Share and copy the link. Public lives only.';
+
+  @override
+  String get tournamentCameraLivePaste => 'Paste';
+
+  @override
+  String get tournamentCameraLiveErrorChannel =>
+      'This is a channel or profile page. Open the live video and copy its link.';
+
+  @override
+  String get tournamentCameraLiveErrorNoId =>
+      'No video id found in the link. Copy the live video link again.';
+
+  @override
+  String get tournamentCameraLiveErrorUnsupported =>
+      'Unsupported link. Only YouTube (youtube.com, youtu.be) and Facebook (facebook.com, fb.watch) links are accepted.';
+
+  @override
+  String get tournamentCameraLivePreviewTitle => 'Preview';
+
+  @override
+  String get tournamentCameraLivePreviewHelp =>
+      'No picture? Check that the live is public, has started and allows embedding.';
+
+  @override
+  String get tournamentCameraLiveSave => 'Save live camera';
+
+  @override
   String get tournamentCameraNameLabel => 'Camera name';
 
   @override

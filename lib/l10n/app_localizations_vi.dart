@@ -18261,6 +18261,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraEditTitle => 'Đổi sân camera';
 
   @override
+  String get tournamentCameraSourcePush => 'Camera / điện thoại';
+
+  @override
+  String get tournamentCameraSourceLive => 'Live YouTube / Facebook';
+
+  @override
+  String get tournamentCameraLiveLinkLabel =>
+      'Dán link live YouTube hoặc Facebook';
+
+  @override
+  String get tournamentCameraLiveLinkHint =>
+      'Mở video đang live, bấm Chia sẻ rồi sao chép link. Chỉ nhận live công khai.';
+
+  @override
+  String get tournamentCameraLivePaste => 'Dán';
+
+  @override
+  String get tournamentCameraLiveErrorChannel =>
+      'Link này là trang kênh hoặc trang cá nhân. Hãy mở video đang live rồi sao chép link.';
+
+  @override
+  String get tournamentCameraLiveErrorNoId =>
+      'Không tìm thấy mã video trong link. Hãy sao chép lại link video đang live.';
+
+  @override
+  String get tournamentCameraLiveErrorUnsupported =>
+      'Link chưa đúng. Chỉ nhận link YouTube (youtube.com, youtu.be) hoặc Facebook (facebook.com, fb.watch).';
+
+  @override
+  String get tournamentCameraLivePreviewTitle => 'Xem trước';
+
+  @override
+  String get tournamentCameraLivePreviewHelp =>
+      'Không thấy hình? Kiểm tra live có công khai, đã bắt đầu và cho phép nhúng không.';
+
+  @override
+  String get tournamentCameraLiveSave => 'Lưu camera live';
+
+  @override
   String get tournamentCameraNameLabel => 'Tên camera';
 
   @override

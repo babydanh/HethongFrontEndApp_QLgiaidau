@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/features/match/utils/live_embed.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_embed_player.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_player.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_replay_player.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -102,10 +104,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     final playback = ref.watch(matchPlaybackProvider(widget.matchId));
     final livePlayback = playback.asData?.value;
     final url = livePlayback?.playbackUrl;
-    final replay = ref
-        .watch(matchReplayProvider(widget.matchId))
-        .asData
-        ?.value;
+    final replay = ref.watch(matchReplayProvider(widget.matchId)).asData?.value;
 
     final canToggle =
         url != null && replay != null && widget.onToggleReplay != null;
@@ -116,17 +115,26 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         _resolvedFor = url;
         _url = url;
       }
-      final live = LiveVideoPlayer(
-        url: _url!,
-        label: livePlayback?.cameraName,
-        showStreamStats: widget.showStreamStats,
-        fill: widget.fill,
-        fullscreen: widget.fullscreen,
-        onToggleFullscreen: widget.onToggleFullscreen,
-        showLiveDot: widget.showLiveDot,
-        onControlsVisibleChanged: widget.onControlsVisibleChanged,
-        onAspectRatioChanged: widget.onAspectRatioChanged,
-      );
+      // Link YouTube/Facebook (camera nguồn "Live YouTube / Facebook") phát bằng
+      // WebView; mọi URL còn lại đi đường video_player như cũ.
+      final embed = LiveEmbed.parse(_url);
+      final Widget live = embed.isOk
+          ? LiveEmbedPlayer(
+              key: ValueKey<String>('live-embed-${embed.embedUrl}'),
+              embed: embed,
+              fill: widget.fill,
+            )
+          : LiveVideoPlayer(
+              url: _url!,
+              label: livePlayback?.cameraName,
+              showStreamStats: widget.showStreamStats,
+              fill: widget.fill,
+              fullscreen: widget.fullscreen,
+              onToggleFullscreen: widget.onToggleFullscreen,
+              showLiveDot: widget.showLiveDot,
+              onControlsVisibleChanged: widget.onControlsVisibleChanged,
+              onAspectRatioChanged: widget.onAspectRatioChanged,
+            );
       return canToggle ? _withToggle(live, replayShown: false) : live;
     }
 
