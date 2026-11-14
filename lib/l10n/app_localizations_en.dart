@@ -16464,6 +16464,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rosterImportStatusUnknown => 'Needs review';
 
   @override
+  String get rosterMapOpen => 'Map columns';
+
+  @override
+  String get rosterMapTitle => 'Map columns';
+
+  @override
+  String get rosterMapHeaderRow => 'Header row';
+
+  @override
+  String get rosterMapPairSingle => 'Singles';
+
+  @override
+  String get rosterMapPairColumns => 'One player per column';
+
+  @override
+  String get rosterMapPairSameCell => 'Two players in one cell';
+
+  @override
+  String get rosterMapPairConsecutiveRows => '2 consecutive rows = 1 pair';
+
+  @override
+  String get rosterMapSeparator => 'Separator';
+
+  @override
+  String get rosterMapSlotPlayer1Name => 'Name';
+
+  @override
+  String get rosterMapSlotPlayer1Phone => 'Phone';
+
+  @override
+  String get rosterMapSlotPlayer1Email => 'Email';
+
+  @override
+  String get rosterMapSlotPlayer2Name => 'Player 2 name';
+
+  @override
+  String get rosterMapSlotPlayer2Phone => 'Player 2 phone';
+
+  @override
+  String get rosterMapSlotPlayer2Email => 'Player 2 email';
+
+  @override
+  String get rosterMapSlotTeamName => 'Team';
+
+  @override
+  String get rosterMapSlotPairCode => 'Pair code';
+
+  @override
+  String get rosterMapSlotDivisionName => 'Event';
+
+  @override
+  String get rosterMapSlotIsPaid => 'Fee paid';
+
+  @override
+  String get rosterMapSlotElo => 'ELO';
+
+  @override
+  String get rosterMapNote => 'Note';
+
+  @override
+  String get rosterMapIndexLabel => 'No.';
+
+  @override
+  String get rosterMapLockedLabel => 'Not saved';
+
+  @override
+  String rosterMapRows(int count) {
+    return '$count rows';
+  }
+
+  @override
+  String get rosterMapPickName => 'Pick the Name column';
+
+  @override
+  String get rosterMapDone => 'Done';
+
+  @override
+  String get rosterMapHeaderShifted =>
+      'The header is inside a merged cell, so columns may be shifted. Try another header row.';
+
+  @override
+  String rosterMapColumnFallback(String letter) {
+    return 'Column $letter';
+  }
+
+  @override
+  String get rosterMapNoColumns => 'This sheet has no rows to map.';
+
+  @override
+  String rosterMapSkippedSheet(String name) {
+    return '$name (not readable yet)';
+  }
+
+  @override
   String get rosterImportTemplateFailed =>
       'Could not create the template. Please try again.';
 
