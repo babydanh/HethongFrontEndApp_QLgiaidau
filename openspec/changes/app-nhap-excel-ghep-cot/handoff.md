@@ -8,9 +8,9 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot2 (từ ori
 
 ## Trạng thái
 - Xong và ĐÃ LÊN MAIN: đợt 1 (task 1.1–3.2), commit `c9c5f187`.
-- Đợt 2 (4.1–4.7) code xong trên nhánh `cloud/danh1-app-ghep-cot-dot2-151122`, chưa lên main (phiên local gộp qua `merge-lane.py`). `tasks.md` đã `[x]` 4.1–4.7; 5.1 chỉ còn chờ CI nhánh xanh.
+- Đợt 2 (4.1–4.7) code xong trên nhánh `cloud/danh1-app-ghep-cot-dot2-151122`, chưa lên main (phiên local gộp qua `merge-lane.py`). `tasks.md` đã `[x]` toàn bộ 16/16 (5.1 xong: đã push nhánh, CI `ci.yml` run 43576213566 xanh gồm analyze + test).
 - Đã kiểm trên máy cloud (2026-11-14): `flutter test --no-pub test/features/organizer_ops/ test/features/participants_roster_excel_test.dart test/tournament_management_repository_api_test.dart test/features/tournament_management_hub_screen_test.dart` → 293 test xanh; `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/domain/entities lib/l10n` chỉ còn 1 info có từ trước (`lib/domain/entities/tournament.dart:706`, ngoài change này); `openspec validate app-nhap-excel-ghep-cot --strict` hợp lệ.
-- Còn cho phiên local: xem CI nhánh, thử tay trên máy thật (thẻ ở 360 dp, chế độ tối), rồi gộp.
+- Còn cho phiên local: `safe-push-check` báo chồng file với nhánh khác (l10n, roster dot1, ...) nhưng người dùng đã cho push nhánh cloud/ này; khi gộp main phải rebase/giải quyết chồng file. Thử tay trên máy thật (thẻ ở 360 dp, chế độ tối), rồi gộp.
 
 ## Đã làm ở đợt 2 (khác kế hoạch)
 - `roster_import_sheet.dart` còn 1681 dòng (không < 1300 như tiêu chí 4.1): file thực lúc làm là 1851 dòng; 4.1 tách ~300, 4.3 bỏ ~220, 4.5 thêm ~350. File mới đều < 800. Nợ: tách `_runPreview/_commit/_applyRowEdit` thành notifier là change riêng.

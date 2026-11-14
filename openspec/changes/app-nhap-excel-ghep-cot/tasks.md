@@ -113,6 +113,6 @@
 
 ## 5. Cổng cuối
 
-- [ ] 5.1 `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/domain/entities lib/l10n` exit 0, rồi `flutter test --no-pub` trên mọi file test đã thêm/sửa ở nhóm 1–4 và các test liên quan: `test/features/organizer_ops/*roster*_test.dart`, `test/features/participants_roster_excel_test.dart`, `test/tournament_management_repository_api_test.dart`, `test/features/tournament_management_hub_screen_test.dart` exit 0; push nhánh `cloud/...` và CI (`ci.yml` analyze + test đầy đủ) xanh; chạy `openspec validate app-nhap-excel-ghep-cot --strict` exit 0; `python ~/bin/merge-lane.py` chỉ khi người dùng bảo.
+- [x] 5.1 `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/domain/entities lib/l10n` exit 0, rồi `flutter test --no-pub` trên mọi file test đã thêm/sửa ở nhóm 1–4 và các test liên quan: `test/features/organizer_ops/*roster*_test.dart`, `test/features/participants_roster_excel_test.dart`, `test/tournament_management_repository_api_test.dart`, `test/features/tournament_management_hub_screen_test.dart` exit 0; push nhánh `cloud/...` và CI (`ci.yml` analyze + test đầy đủ) xanh; chạy `openspec validate app-nhap-excel-ghep-cot --strict` exit 0; `python ~/bin/merge-lane.py` chỉ khi người dùng bảo.
   - Files: không.
   - Phụ thuộc: tất cả task trên.
