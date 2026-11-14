@@ -100,8 +100,9 @@ void main() {
     await _pumpCourt(tester, _state(), doubles: true);
 
     expect(find.text('0-0-1'), findsOneWidget);
-    expect(find.text('LOSE SERVE'), findsOneWidget);
-    expect(find.text('→ Serve 2'), findsOneWidget);
+    // Serve 1 after the opening: the one serve button reads "Switch server".
+    expect(find.text('Switch server'), findsOneWidget);
+    expect(find.text('Change serve'), findsNothing);
     await shooter.snap('doi-a-giao-0-0');
 
     // The serving team scores three times: the call follows the score.
@@ -117,7 +118,9 @@ void main() {
     expect(find.textContaining('won the rally'), findsNothing);
     expect(find.text('3-0-2'), findsOneWidget);
     expect(_read(tester), (s1: 3, s2: 0, team: 1, server: 2));
-    expect(find.text('→ Hand over'), findsOneWidget);
+    // Server 2 now: the next press hands the serve over.
+    expect(find.text('Change serve'), findsOneWidget);
+    expect(find.text('Switch server'), findsNothing);
     await shooter.snap('doi-giao-2');
 
     // Receiver plus (2): the serve passes to team B, score still 3-0.
@@ -142,8 +145,8 @@ void main() {
 
     // Singles call has no server number.
     expect(find.text('0-0'), findsOneWidget);
-    expect(find.text('→ Hand over'), findsOneWidget);
-    expect(find.text('→ Serve 2'), findsNothing);
+    expect(find.text('Change serve'), findsOneWidget);
+    expect(find.text('Switch server'), findsNothing);
 
     await _plus(tester, 1);
     await _plus(tester, 1);
@@ -157,7 +160,7 @@ void main() {
     expect(find.textContaining('server 2'), findsNothing);
     expect(find.text('0-2'), findsOneWidget);
     expect(_read(tester), (s1: 2, s2: 0, team: 2, server: 1));
-    expect(find.text('→ Serve 2'), findsNothing);
+    expect(find.text('Switch server'), findsNothing);
     await shooter.snap('don-doi-giao-ngay');
 
     await _plus(tester, 2);
@@ -173,8 +176,9 @@ void main() {
 
     await _plus(tester, 1);
     expect(find.text('1-0-1'), findsOneWidget);
-    expect(find.text('→ Hand over'), findsOneWidget);
-    expect(find.text('→ Serve 2'), findsNothing);
+    // Opening serve: one fault ends it, so the button hands over (no server 2).
+    expect(find.text('Change serve'), findsOneWidget);
+    expect(find.text('Switch server'), findsNothing);
 
     // The first fault of the game passes the serve straight to team B.
     await _plus(tester, 2);
@@ -191,9 +195,9 @@ void main() {
     final shooter = BamDiemShooter(tester, binding);
     await _pumpCourt(tester, _state(lite: true), doubles: true);
 
-    // Lite has no lose-serve preview, only the plain change-serve button.
-    expect(find.text('CHANGE SERVE'), findsOneWidget);
-    expect(find.text('→ Hand over'), findsNothing);
+    // Lite still tracks the serve turn (server 1, after the opening), so the
+    // serve button is there; only the rule that locks the receiver is off.
+    expect(find.text('Switch server'), findsOneWidget);
     await _plus(tester, 1);
     await _plus(tester, 1);
     expect(find.text('2-0-1'), findsOneWidget);
