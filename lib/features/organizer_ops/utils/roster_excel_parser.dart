@@ -601,6 +601,10 @@ bool parseRosterPaid(String text, {bool fallback = false}) {
   return fallback;
 }
 
+/// Email đúng định dạng (không phân biệt hoa thường, đã bỏ khoảng trắng hai đầu).
+bool rosterIsEmailFormat(String email) =>
+    _emailPattern.hasMatch(email.trim().toLowerCase());
+
 /// Lỗi cục bộ của một dòng, cùng quy tắc với `revalidateLocally` của web.
 List<String> rosterLocalErrors({
   required String? name,
