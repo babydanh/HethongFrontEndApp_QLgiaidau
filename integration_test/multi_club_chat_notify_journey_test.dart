@@ -37,7 +37,7 @@ void main() {
       name: clubName,
     );
     // CLB mới ở trạng thái PENDING cho tới khi ADMIN duyệt.
-    await api.approveCommunityAsAdmin(clubId);
+    await _approveClub(api, clubId);
   });
 
   SocialShooter shooterOf(WidgetTester tester, String code) =>
@@ -332,7 +332,8 @@ void main() {
           (w) => w is Text && (w.data ?? '').startsWith('Thanh-vien-tra-loi-'),
         ),
         findsWidgets,
-        reason: 'dòng phụ của phòng CLB là tin mới nhất (tin trả lời của thành viên)',
+        reason:
+            'dòng phụ của phòng CLB là tin mới nhất (tin trả lời của thành viên)',
       );
       await leaveSocialSession(tester, container);
     },
@@ -434,7 +435,7 @@ void main() {
         token: actor('clubOwner').token,
         name: socialTag('MultiC CLB hai'),
       );
-      await api.approveCommunityAsAdmin(secondClub);
+      await _approveClub(api, secondClub);
       await api.inviteCommunityMember(
         token: actor('clubOwner').token,
         communityId: secondClub,
@@ -455,9 +456,9 @@ void main() {
       await tester.pump();
       await _waitUntilTrue(
         tester,
-        () async =>
-            (await api.listNotifications(token: actor('member').token))
-                .every((n) => n['isRead'] == true),
+        () async => (await api.listNotifications(
+          token: actor('member').token,
+        )).every((n) => n['isRead'] == true),
         what: 'mọi thông báo của thành viên đã đọc ở Backend',
       );
       await socialWait(tester, const Duration(seconds: 2));
@@ -794,4 +795,21 @@ Future<String> _waitRoomLastMessage(
     return last == expected;
   }, what: 'tin mới nhất của phòng $roomId là "$expected"');
   return last;
+}
+
+/// ADMIN duyệt CLB. Helper chung `approveCommunityAsAdmin` gửi status ACTIVE nhưng Backend đòi
+/// APPROVED hoặc REJECTED (HTTP 400), nên gọi thẳng ở đây (không sửa support/).
+Future<void> _approveClub(BackendApi api, String communityId) async {
+  final adminToken = await api.login(kAdminEmail, kE2ePassword);
+  final code = await api.statusOf(
+    'PATCH',
+    '/communities/$communityId/review',
+    token: adminToken,
+    data: {'status': 'APPROVED'},
+  );
+  expect(
+    code,
+    inInclusiveRange(200, 299),
+    reason: 'ADMIN duyệt CLB nhận HTTP $code',
+  );
 }
