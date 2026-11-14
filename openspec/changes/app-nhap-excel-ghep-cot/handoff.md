@@ -7,9 +7,15 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot1 (từ clo
 Đọc theo thứ tự: `proposal.md` → `design.md` (đặc biệt mục "Đã kiểm lại bản bàn giao", D2, D7, D10) → `specs/app-roster-column-mapping/spec.md` → `tasks.md` (mục "Ghi chú chung" + nhóm 1–3). Bản vẽ giao diện: `mockup.html` cùng thư mục (mở bằng trình duyệt; khung 2 và 5 là popup; dữ liệu giả). Đừng làm theo khung 1 phần nút `Tiếp tục` (D10: không có nút đó).
 
 ## Trạng thái
-- Xong: kế hoạch OpenSpec đủ 4 artifact, `openspec validate app-nhap-excel-ghep-cot --strict` exit 0 (PR #29, nhánh `cloud/danh3-app-nhap-excel-ghep-cot-113202`).
-- Đang dở: chưa có dòng code nào; `tasks.md` còn 0/16 `[x]`.
-- Tiếp theo: làm TUẦN TỰ 1.1 → 1.2 → 1.3 → 1.4 → 2.1 → 2.2 → 3.1 → 3.2 trong MỘT worktree (các task chung file `roster_excel_parser.dart`, `roster_layout.dart`, `roster_import_sheet.dart`, không chia agent). Mỗi task: viết test đỏ trước (chạy thấy đỏ đúng lý do), code tối thiểu cho xanh, chạy đúng lệnh ở `Tiêu chí`, rồi mới đổi `- [ ]` thành `- [x]`, commit hẹp. Task 3.2 là cổng đợt 1.
+- Xong: kế hoạch OpenSpec (PR #29). **Đợt 1 code xong** trên nhánh `cloud/danh3-app-ghep-cot-dot1-125723`: task 1.1–1.4, 2.1, 2.2, 3.1. Máy cloud: `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/l10n` sạch; 8 file test của cổng 3.2 xanh (113 test). `tasks.md` 3.2 đánh `[x]` sau khi CI nhánh xanh.
+- Đang dở: chờ CI `ci.yml` của nhánh; chưa gộp `main` (người dùng/phiên local gộp qua `merge-lane.py`). Đợt 2 (nhóm 4–5) chưa làm.
+- Tiếp theo: xem CI xanh, người dùng duyệt đợt 1, rồi mới làm đợt 2 (task 4.1 tách `roster_import_sheet.dart` trước).
+- Lệch so với `tasks.md`/`design.md` (có chủ ý):
+  1. `RosterColumnKind.index` đổi thành `serial` (trùng `Enum.index`).
+  2. `showRosterColumnMappingSheet`/`RosterColumnMappingSheet` không nhận `isDoublesFor` (mỗi `RosterMappingDraft` đã mang sẵn hàm đó).
+  3. Thêm `RosterMappingResult.fromDrafts` (sheet bỏ qua đã đủ nhận diện thì thành khối đọc được).
+  4. TC-ROSTERMAP-28: nút `Ghép cột` tắt khi AI đang đọc nên không dựng được "AI trả lời sau Xong"; test kiểm thay: sau `Xong` thông báo `rosterImportAiDone` biến mất, không hỏi AI lại, bản sửa được giữ.
+  5. Nút `Ghép cột` chỉ hiện sau khi chọn file; cột rỗng hẳn (không tiêu đề, không dữ liệu, chưa ghép) không được liệt kê.
 
 ## Quyết định của người dùng cho lần apply này
 - Làm **đợt 1 trước**, đợt 2 sau (người dùng nói "apply", không chọn khác → theo đề xuất).
@@ -34,6 +40,7 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot1 (từ clo
 | Cách | Kết quả | Vì sao / bằng chứng |
 |---|---|---|
 | Lập kế hoạch trên máy cloud `danh3` | thành công | 16 task, validate `--strict` exit 0 |
+| Apply đợt 1 trên máy cloud `danh3` (TDD từng task) | thành công | 113 test xanh, analyze sạch |
 | Bố cục popup y hệt Web | bỏ | Người dùng: nhìn không hiểu, muốn ít chữ; chọn bố cục theo từng cột Excel + chip |
 
 ## Ràng buộc đang có
