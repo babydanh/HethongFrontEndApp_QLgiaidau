@@ -7,9 +7,18 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot1 (từ clo
 Đọc theo thứ tự: `proposal.md` → `design.md` (đặc biệt mục "Đã kiểm lại bản bàn giao", D2, D7, D10) → `specs/app-roster-column-mapping/spec.md` → `tasks.md` (mục "Ghi chú chung" + nhóm 1–3). Bản vẽ giao diện: `mockup.html` cùng thư mục (mở bằng trình duyệt; khung 2 và 5 là popup; dữ liệu giả). Đừng làm theo khung 1 phần nút `Tiếp tục` (D10: không có nút đó).
 
 ## Trạng thái
-- Xong: kế hoạch OpenSpec đủ 4 artifact, `openspec validate app-nhap-excel-ghep-cot --strict` exit 0 (PR #29, nhánh `cloud/danh3-app-nhap-excel-ghep-cot-113202`).
-- Đang dở: chưa có dòng code nào; `tasks.md` còn 0/16 `[x]`.
-- Tiếp theo: làm TUẦN TỰ 1.1 → 1.2 → 1.3 → 1.4 → 2.1 → 2.2 → 3.1 → 3.2 trong MỘT worktree (các task chung file `roster_excel_parser.dart`, `roster_layout.dart`, `roster_import_sheet.dart`, không chia agent). Mỗi task: viết test đỏ trước (chạy thấy đỏ đúng lý do), code tối thiểu cho xanh, chạy đúng lệnh ở `Tiêu chí`, rồi mới đổi `- [ ]` thành `- [x]`, commit hẹp. Task 3.2 là cổng đợt 1.
+- Xong: kế hoạch OpenSpec đủ 4 artifact (PR #29). **Code ĐỢT 1 xong trên nhánh `cloud/danh1-app-ghep-cot-dot1-131443`**: task 1.1–1.4, 2.1, 2.2, 3.1 đã `[x]`, mỗi task một commit. Cổng cục bộ của 3.2 đạt: `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/l10n` sạch và 8 file test của 3.2 xanh (109 test).
+- Còn lại của 3.2: CI nhánh (`ci.yml`) xanh sau push; chưa lên `main` (người dùng/phiên local gộp qua `merge-lane.py`).
+- KHÔNG làm: nhóm 4–5 (đợt 2). `tasks.md` còn 3.2 (đợi CI), 4.1–4.7, 5.1.
+
+### Chỗ lệch so với tasks.md/design.md (cần biết khi làm đợt 2)
+- `RosterColumnKind` là `{ normal, serial, sensitive }` (không phải `index`): `index` trùng thành viên có sẵn của `Enum`, không biên dịch được.
+- `showRosterColumnMappingSheet` / `RosterColumnMappingSheet` KHÔNG nhận `isDoublesFor` (YAGNI): mỗi `RosterMappingDraft` đã giữ hàm đó.
+- Thêm `RosterMappingResult.fromDrafts(drafts)` và `rosterColumnLetter(int)` công khai ở `roster_excel_parser.dart` (đổi từ `_columnLetter`).
+- Popup tự cuộn tới hàng chip khi mở một cột (chip dưới chân sheet thì không chạm được).
+- Nút `Ghép cột` chỉ hiện sau khi chọn file (chặt hơn "tắt khi `_fileName == null`"); nổi bật khi `_mappingNeedsAttention`.
+- `_applyMapping` có thêm `_previewGeneration++` để preview đang bay không ghi đè kết quả mới.
+- TC-ROSTERMAP-28 không dựng đúng chữ task được: nút tắt khi AI đang đọc nên không thể `Xong` trước khi AI trả lời. Test kiểm: AI xong → `Ghép cột` + `Xong` → hết `rosterImportAiDone`, AI không gọi lại, bản sửa giữ. Chốt bỏ câu trả lời muộn (`requestId != _layoutRequest`) là phòng thủ, chưa có test riêng.
 
 ## Quyết định của người dùng cho lần apply này
 - Làm **đợt 1 trước**, đợt 2 sau (người dùng nói "apply", không chọn khác → theo đề xuất).
@@ -34,6 +43,7 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot1 (từ clo
 | Cách | Kết quả | Vì sao / bằng chứng |
 |---|---|---|
 | Lập kế hoạch trên máy cloud `danh3` | thành công | 16 task, validate `--strict` exit 0 |
+| Viết code đợt 1 theo tasks.md 1.1→3.1 | thành công | TDD đỏ→xanh từng task, 109 test xanh |
 | Bố cục popup y hệt Web | bỏ | Người dùng: nhìn không hiểu, muốn ít chữ; chọn bố cục theo từng cột Excel + chip |
 
 ## Ràng buộc đang có
