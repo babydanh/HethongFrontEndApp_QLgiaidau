@@ -16403,6 +16403,100 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rosterImportStatusUnknown => 'Cần kiểm tra lại';
 
   @override
+  String get rosterMapOpen => 'Ghép cột';
+
+  @override
+  String get rosterMapTitle => 'Ghép cột';
+
+  @override
+  String get rosterMapHeaderRow => 'Hàng tiêu đề';
+
+  @override
+  String get rosterMapPairSingle => 'Đánh đơn';
+
+  @override
+  String get rosterMapPairColumns => 'Mỗi VĐV một cột';
+
+  @override
+  String get rosterMapPairSameCell => 'Hai VĐV một ô';
+
+  @override
+  String get rosterMapPairConsecutiveRows => '2 dòng liền nhau là 1 cặp';
+
+  @override
+  String get rosterMapSeparator => 'Ký tự ngăn';
+
+  @override
+  String get rosterMapSlotPlayer1Name => 'Tên';
+
+  @override
+  String get rosterMapSlotPlayer1Phone => 'SĐT';
+
+  @override
+  String get rosterMapSlotPlayer1Email => 'Email';
+
+  @override
+  String get rosterMapSlotPlayer2Name => 'Tên VĐV 2';
+
+  @override
+  String get rosterMapSlotPlayer2Phone => 'SĐT VĐV 2';
+
+  @override
+  String get rosterMapSlotPlayer2Email => 'Email VĐV 2';
+
+  @override
+  String get rosterMapSlotTeamName => 'Đội';
+
+  @override
+  String get rosterMapSlotPairCode => 'Mã cặp';
+
+  @override
+  String get rosterMapSlotDivisionName => 'Nội dung';
+
+  @override
+  String get rosterMapSlotIsPaid => 'Đã đóng phí';
+
+  @override
+  String get rosterMapSlotElo => 'ELO';
+
+  @override
+  String get rosterMapNote => 'Ghi chú';
+
+  @override
+  String get rosterMapIndexLabel => 'STT';
+
+  @override
+  String get rosterMapLockedLabel => 'Không lưu';
+
+  @override
+  String rosterMapRows(int count) {
+    return '$count dòng';
+  }
+
+  @override
+  String get rosterMapPickName => 'Chọn cột Tên';
+
+  @override
+  String get rosterMapDone => 'Xong';
+
+  @override
+  String get rosterMapHeaderShifted =>
+      'Tiêu đề đang nằm trong ô gộp, các cột có thể bị lệch. Thử đổi hàng tiêu đề.';
+
+  @override
+  String rosterMapColumnFallback(String letter) {
+    return 'Cột $letter';
+  }
+
+  @override
+  String get rosterMapNoColumns => 'Sheet chưa có dòng nào để ghép.';
+
+  @override
+  String rosterMapSkippedSheet(String name) {
+    return '$name (chưa đọc được)';
+  }
+
+  @override
   String get rosterImportTemplateFailed =>
       'Không tạo được file mẫu. Vui lòng thử lại.';
 
