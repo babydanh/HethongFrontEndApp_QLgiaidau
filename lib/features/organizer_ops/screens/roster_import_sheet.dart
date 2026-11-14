@@ -16,182 +16,13 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_column_
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_mapping_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_digest.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_draft.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_widgets.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_division_match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-
-/// Giới hạn số dòng mỗi lần nhập, giống `MAX_BATCH_PARTICIPANTS` của web.
-const int _maxBatchParticipants = 500;
-
-/// Mã kiểm tra cục bộ chặn dòng, giống `BLOCKING_ROW_STATUSES` của web (phần làm được ở app).
-const Set<String> _localBlockingCodes = {
-  'INVALID_EMAIL',
-  'MISSING_NAME',
-  'DUPLICATE_IN_FILE',
-  'PLAYER2_REQUIRED',
-  'PLAYER2_NOT_ALLOWED',
-};
-
-/// Mã server chặn dòng khi nhập. `MISSING_EMAIL` không chặn: dòng vẫn được nhập.
-const Set<String> _serverBlockingCodes = {
-  'INVALID_EMAIL',
-  'MISSING_NAME',
-  'DUPLICATE_IN_FILE',
-  'DUPLICATE_IN_TOURNAMENT',
-  'PLAYER2_REQUIRED',
-  'PLAYER2_NOT_ALLOWED',
-  'DIVISION_UNKNOWN',
-};
-
-const Set<String> _doublesMatchTypes = {'DOUBLES', 'MIXED_DOUBLES'};
 
 /// Giá trị dropdown cho lựa chọn "để trống". UserId thật luôn khác rỗng.
 const String _unlinkedValue = '';
-
-final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-
-/// Dấu tiếng Việt quy về chữ cái gốc, để so khớp tên nội dung không phân biệt dấu.
-const Map<String, String> _accentBases = {
-  'a': 'àáạảãâầấậẩẫăằắặẳẵ',
-  'e': 'èéẹẻẽêềếệểễ',
-  'i': 'ìíịỉĩ',
-  'o': 'òóọỏõôồốộổỗơờớợởỡ',
-  'u': 'ùúụủũưừứựửữ',
-  'y': 'ỳýỵỷỹ',
-  'd': 'đ',
-};
-
-/// Chuẩn hóa tên nội dung: bỏ khoảng trắng thừa, chữ thường, bỏ dấu.
-String _foldName(String value) {
-  var result = value.trim().toLowerCase();
-  for (final entry in _accentBases.entries) {
-    for (final accented in entry.value.split('')) {
-      result = result.replaceAll(accented, entry.key);
-    }
-  }
-  return result.replaceAll(RegExp(r'\s+'), ' ');
-}
-
-bool _isDoublesType(String matchType) =>
-    _doublesMatchTypes.contains(matchType.trim().toUpperCase());
-
-/// Tokens chữ-số của tên hạng mục đã chuẩn hóa (`_foldName`), dùng để suy luận
-/// kiểu thi đấu và giới tính từ tên trong file.
-Set<String> _nameTokens(String value) => _foldName(
-  value,
-).split(RegExp(r'[^a-z0-9]+')).where((token) => token.isNotEmpty).toSet();
-
-/// Cùng bộ từ, bất kể thứ tự (port `divisionLabelMatches` của web,
-/// `rosterLayout.ts`): `Nam đơn` khớp `Đơn nam`, còn `Đôi nam` và `Nam` không
-/// khớp `Đơn nam`. Dùng cho khớp tên hạng mục của dòng lẫn tái dùng khi tạo.
-bool _divisionLabelMatches(String label, String divisionName) {
-  final labelTokens = _nameTokens(label);
-  final nameTokens = _nameTokens(divisionName);
-  if (labelTokens.isEmpty || labelTokens.length != nameTokens.length) {
-    return false;
-  }
-  return nameTokens.containsAll(labelTokens);
-}
-
-/// Suy kiểu thi đấu cho hạng mục mới từ tên trong file (port
-/// `inferDivisionMatchType` của web, `pairLayout` web tương đương việc các dòng
-/// có VĐV 2): "hỗn hợp"/mixed/nam+nữ → đôi nam nữ, có "đôi"/doubles hoặc có
-/// dòng VĐV 2 → đôi, còn lại → đơn.
-String _inferMatchType(String label, {required bool anyRowHasPlayer2}) {
-  final folded = ' ${_foldName(label)} ';
-  final tokens = _nameTokens(label);
-  if (folded.contains(' hon hop ') ||
-      tokens.contains('mixed') ||
-      (tokens.contains('nam') && tokens.contains('nu'))) {
-    return 'MIXED_DOUBLES';
-  }
-  if (tokens.contains('doi') ||
-      tokens.contains('doubles') ||
-      tokens.contains('double') ||
-      anyRowHasPlayer2) {
-    return 'DOUBLES';
-  }
-  return 'SINGLES';
-}
-
-/// Giới tính tên hạng mục tuyên bố (port `inferDivisionGender` của web);
-/// null khi tên không nói gì (`Đôi Linh Hoạt`, `Doubles`) — hạng mục mở cho
-/// mọi giới tính.
-String? _inferGender(String label) {
-  final folded = ' ${_foldName(label)} ';
-  final tokens = _nameTokens(label);
-  final male =
-      tokens.contains('nam') ||
-      tokens.contains('men') ||
-      tokens.contains('male');
-  final female =
-      tokens.contains('nu') ||
-      tokens.contains('women') ||
-      tokens.contains('female');
-  if (folded.contains(' hon hop ') ||
-      tokens.contains('mixed') ||
-      (male && female)) {
-    return 'MIXED';
-  }
-  if (male) return 'MALE';
-  if (female) return 'FEMALE';
-  return null;
-}
-
-/// Lựa chọn tài khoản của một người chơi. `auto` là chưa chọn: được tự liên kết
-/// khi đúng một tài khoản khớp email chính xác (giống web `undecided`).
-enum _LinkChoice { auto, unlinked, linked }
-
-class _PlayerLink {
-  const _PlayerLink._(this.choice, this.userId);
-  const _PlayerLink.auto() : this._(_LinkChoice.auto, null);
-  const _PlayerLink.unlinked() : this._(_LinkChoice.unlinked, null);
-  const _PlayerLink.linked(String id) : this._(_LinkChoice.linked, id);
-
-  final _LinkChoice choice;
-  final String? userId;
-}
-
-/// Nội dung đích của một dòng. `divisionId` null nghĩa là không khớp giải.
-class _DivisionTarget {
-  const _DivisionTarget({
-    required this.key,
-    required this.label,
-    required this.divisionId,
-    required this.isDoubles,
-  });
-
-  factory _DivisionTarget.matched(TournamentDivision division) =>
-      _DivisionTarget(
-        key: division.id,
-        label: division.name,
-        divisionId: division.id,
-        isDoubles: _isDoublesType(division.matchType),
-      );
-
-  /// Khóa nhóm: id nội dung, hoặc `unmatched:<tên chuẩn hóa>` khi không khớp.
-  final String key;
-  final String label;
-  final String? divisionId;
-  final bool isDoubles;
-}
-
-/// Một dòng đọc từ Excel kèm trạng thái kiểm tra cục bộ và lựa chọn tài khoản.
-class _DraftRow {
-  _DraftRow({required this.index, required this.parsed, required this.target});
-
-  /// clientRowIndex: duy nhất trên toàn workbook.
-  final int index;
-  final RosterParsedRow parsed;
-
-  /// Nội dung đích; đổi được khi tạo hạng mục mới khớp tên trong file.
-  _DivisionTarget target;
-  List<String> localStatus = const [];
-  _PlayerLink player1Link = const _PlayerLink.auto();
-  _PlayerLink player2Link = const _PlayerLink.auto();
-
-  bool get localEligible => !localStatus.any(_localBlockingCodes.contains);
-
-  bool get hasPlayer2 => parsed.hasPlayer2;
-}
 
 /// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi.
 ///
@@ -207,13 +38,6 @@ enum _LayoutStatus {
   edited,
 }
 
-class _DraftGroup {
-  _DraftGroup(this.target);
-
-  final _DivisionTarget target;
-  final List<_DraftRow> rows = [];
-}
-
 class _ParsedWorkbook {
   const _ParsedWorkbook({
     required this.rows,
@@ -221,138 +45,9 @@ class _ParsedWorkbook {
     required this.skippedSheets,
   });
 
-  final List<_DraftRow> rows;
-  final List<_DraftGroup> groups;
+  final List<RosterDraftRow> rows;
+  final List<RosterDraftGroup> groups;
   final List<String> skippedSheets;
-}
-
-class _RowCandidates {
-  const _RowCandidates({required this.player1, required this.player2});
-
-  final List<RosterImportBatchCandidate> player1;
-  final List<RosterImportBatchCandidate> player2;
-}
-
-/// Payload đã dựng kèm khóa so sánh. Khóa đổi thì preview cũ không còn đúng.
-class _Plan {
-  const _Plan({required this.request, required this.key});
-
-  final RosterImportBatchRequest request;
-  final String key;
-}
-
-/// Kiểm tra cục bộ theo `revalidateLocally` của web: trùng email trong file và quy tắc VĐV 2.
-List<String> _localStatusOf(_DraftRow row, {required bool duplicate}) {
-  final parsed = row.parsed;
-  final codes = <String>[...parsed.localErrors];
-  void add(String code) {
-    if (!codes.contains(code)) codes.add(code);
-  }
-
-  if (parsed.player1Name == null) add('MISSING_NAME');
-  if (duplicate) add('DUPLICATE_IN_FILE');
-  // Quy tắc VĐV 2 chỉ áp dụng khi nội dung đã khớp giải; chưa khớp thì server báo DIVISION_UNKNOWN.
-  if (row.target.divisionId != null) {
-    if (row.target.isDoubles) {
-      if (parsed.player2Name == null &&
-          parsed.player2Email == null &&
-          parsed.player2Phone != null) {
-        add('PLAYER2_REQUIRED');
-      }
-    } else if (row.hasPlayer2) {
-      add('PLAYER2_NOT_ALLOWED');
-    }
-  }
-  return codes;
-}
-
-/// Dòng được server coi là đủ điều kiện nhập (giống `resolveRosterRowStates` của web).
-bool _isRowEligible(RosterImportBatchPreviewRow row) =>
-    row.isEligible &&
-    row.customResponseError == null &&
-    !row.status.any(_serverBlockingCodes.contains);
-
-/// Chỉ số các dòng có email hợp lệ xuất hiện nhiều lần trong file (cả VĐV 1
-/// lẫn VĐV 2) — dùng khi đọc file và khi remap sau khi tạo hạng mục.
-Set<int> _duplicateRowIndices(List<_DraftRow> rows) {
-  final owners = <String, List<int>>{};
-  for (final row in rows) {
-    for (final email in [row.parsed.player1Email, row.parsed.player2Email]) {
-      if (email == null) continue;
-      final key = email.trim().toLowerCase();
-      if (!_emailPattern.hasMatch(key)) continue;
-      owners.putIfAbsent(key, () => <int>[]).add(row.index);
-    }
-  }
-  final duplicates = <int>{};
-  for (final list in owners.values) {
-    if (list.length > 1) duplicates.addAll(list);
-  }
-  return duplicates;
-}
-
-/// Tài khoản duy nhất có email khớp chính xác (trim, không phân biệt hoa thường).
-String? _uniqueExactAccountId(
-  String? email,
-  List<RosterImportBatchCandidate>? candidates,
-) {
-  if (email == null || candidates == null) return null;
-  final normalized = email.trim().toLowerCase();
-  final matches = candidates
-      .where((candidate) => candidate.email.trim().toLowerCase() == normalized)
-      .toList(growable: false);
-  return matches.length == 1 ? matches.first.userId : null;
-}
-
-String _statusLabel(AppLocalizations l10n, String code) {
-  switch (code) {
-    case 'FOUND':
-      return l10n.rosterImportStatusFound;
-    case 'NOT_FOUND':
-      return l10n.rosterImportStatusNotFound;
-    case 'INVALID_EMAIL':
-      return l10n.rosterImportStatusInvalidEmail;
-    case 'MISSING_EMAIL':
-      return l10n.rosterImportStatusMissingEmail;
-    case 'MISSING_NAME':
-      return l10n.rosterImportStatusMissingName;
-    case 'DUPLICATE_IN_FILE':
-      return l10n.rosterImportStatusDuplicateInFile;
-    case 'DUPLICATE_IN_TOURNAMENT':
-      return l10n.rosterImportStatusDuplicateInTournament;
-    case 'PLAYER2_REQUIRED':
-      return l10n.rosterImportStatusPlayer2Required;
-    case 'PLAYER2_NOT_ALLOWED':
-      return l10n.rosterImportStatusPlayer2NotAllowed;
-    case 'DIVISION_UNKNOWN':
-      return l10n.rosterImportStatusDivisionUnknown;
-    default:
-      return l10n.rosterImportStatusUnknown;
-  }
-}
-
-Widget _toneChip(String text, Color color) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700),
-    ),
-  );
-}
-
-Widget _noticeText(String text, Color color) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(
-      text,
-      style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600),
-    ),
-  );
 }
 
 /// Màn nhập VĐV từ file Excel: chọn file, kiểm tra trên server, chọn tài khoản, rồi nhập các dòng đủ điều kiện.
@@ -375,8 +70,8 @@ class RosterImportSheet extends ConsumerStatefulWidget {
 }
 
 class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
-  List<_DraftRow> _rows = const [];
-  List<_DraftGroup> _groups = const [];
+  List<RosterDraftRow> _rows = const [];
+  List<RosterDraftGroup> _groups = const [];
   List<String> _skippedSheets = const [];
 
   /// Lưới đã điền ô gộp và các khối đang dùng (luật, rồi AI khi AI trả lời được).
@@ -389,12 +84,12 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   /// Tăng khi người dùng sửa dữ liệu (tài khoản, nội dung); câu trả lời AI đến sau đó bị bỏ.
   int _editRevision = 0;
-  final Map<int, _RowCandidates> _candidates = {};
+  final Map<int, RosterRowCandidates> _candidates = {};
   String? _fileName;
   String? _fileError;
   String? _previewError;
   RosterImportBatchPreview? _preview;
-  _Plan? _previewPlan;
+  RosterPlan? _previewPlan;
   bool _reading = false;
   bool _previewing = false;
   bool _committing = false;
@@ -440,15 +135,16 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   /// Nội dung đích: không có cột nội dung thì dùng nội dung đang mở; có tên mà
   /// không khớp (theo bộ từ, bất kể thứ tự — như web) thì không khớp giải.
-  _DivisionTarget _targetFor(String? rawName) {
-    if (rawName == null) return _DivisionTarget.matched(widget.defaultDivision);
-    final folded = _foldName(rawName);
+  RosterDivisionTarget _targetFor(String? rawName) {
+    if (rawName == null)
+      return RosterDivisionTarget.matched(widget.defaultDivision);
+    final folded = foldName(rawName);
     for (final division in _divisionPool) {
-      if (_divisionLabelMatches(rawName, division.name)) {
-        return _DivisionTarget.matched(division);
+      if (divisionLabelMatches(rawName, division.name)) {
+        return RosterDivisionTarget.matched(division);
       }
     }
-    return _DivisionTarget(
+    return RosterDivisionTarget(
       key: 'unmatched:$folded',
       label: rawName,
       divisionId: null,
@@ -461,9 +157,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   bool _isDoublesForLabel(String? divisionName) {
     final target = _targetFor(divisionName);
     if (target.divisionId != null) return target.isDoubles;
-    return _isDoublesType(
-      _inferMatchType(target.label, anyRowHasPlayer2: false),
-    );
+    return isDoublesType(inferMatchType(target.label, anyRowHasPlayer2: false));
   }
 
   /// Đọc workbook bằng luật: từng sheet có dòng header thành một khối; sheet không có thì bị bỏ qua.
@@ -488,11 +182,11 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     List<RosterReading> readings,
     List<String> skipped,
   ) {
-    final rows = <_DraftRow>[];
+    final rows = <RosterDraftRow>[];
     for (final reading in readings) {
       for (final parsed in assembleRosterRows(reading, _isDoublesForLabel)) {
         rows.add(
-          _DraftRow(
+          RosterDraftRow(
             index: rows.length,
             parsed: parsed,
             target: _targetFor(parsed.divisionName),
@@ -502,18 +196,18 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     }
 
     // Email hợp lệ xuất hiện nhiều lần trong file (cả VĐV 1 lẫn VĐV 2) thì mọi dòng liên quan bị trùng.
-    final duplicates = _duplicateRowIndices(rows);
+    final duplicates = rosterDuplicateRowIndices(rows);
     for (final row in rows) {
-      row.localStatus = _localStatusOf(
+      row.localStatus = rosterLocalStatusOf(
         row,
         duplicate: duplicates.contains(row.index),
       );
     }
 
-    final groupMap = <String, _DraftGroup>{};
+    final groupMap = <String, RosterDraftGroup>{};
     for (final row in rows) {
       groupMap
-          .putIfAbsent(row.target.key, () => _DraftGroup(row.target))
+          .putIfAbsent(row.target.key, () => RosterDraftGroup(row.target))
           .rows
           .add(row);
     }
@@ -605,7 +299,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       // Có tên nội dung chưa khớp: dừng ở bước xác nhận tạo nội dung trước khi preview server.
       _pendingDivisionConfirm = unmatched.isNotEmpty;
       _createChoice = {
-        for (final group in unmatched) _foldName(group.target.label),
+        for (final group in unmatched) foldName(group.target.label),
       };
       _createError = null;
     });
@@ -666,7 +360,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       _candidates.clear();
       _pendingDivisionConfirm = unmatched.isNotEmpty;
       _createChoice = {
-        for (final group in unmatched) _foldName(group.target.label),
+        for (final group in unmatched) foldName(group.target.label),
       };
       _createError = null;
     });
@@ -727,9 +421,9 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   /// (hoặc VĐV 2 của dòng). `genderRestriction` MIXED chỉ đi với
   /// MIXED_DOUBLES (Backend `tournament-input-policy.ts` từ chối MIXED cho
   /// đơn/đôi); với đơn/đôi chỉ gửi khi tên tuyên bố MALE/FEMALE rõ ràng.
-  Map<String, dynamic> _divisionPayloadFor(_DraftGroup group) {
+  Map<String, dynamic> _divisionPayloadFor(RosterDraftGroup group) {
     final label = group.target.label;
-    final matchType = _inferMatchType(
+    final matchType = inferMatchType(
       label,
       anyRowHasPlayer2: group.rows.any((row) => row.hasPlayer2),
     );
@@ -737,7 +431,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     if (matchType == 'MIXED_DOUBLES') {
       gender = 'MIXED';
     } else {
-      final inferred = _inferGender(label);
+      final inferred = inferGender(label);
       gender = inferred == 'MALE' || inferred == 'FEMALE' ? inferred : null;
     }
     return {
@@ -753,7 +447,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     String label,
   ) {
     for (final division in pool) {
-      if (_divisionLabelMatches(label, division.name)) return division;
+      if (divisionLabelMatches(label, division.name)) return division;
     }
     return null;
   }
@@ -768,7 +462,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     final toCreate = [
       for (final group in _groups)
         if (group.target.divisionId == null &&
-            _createChoice.contains(_foldName(group.target.label)))
+            _createChoice.contains(foldName(group.target.label)))
           group,
     ];
     setState(() {
@@ -852,8 +546,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   }
 
   /// Dựng payload từ các dòng đạt kiểm tra cục bộ. Trả null khi không có gì để gửi.
-  _Plan? _buildPlan() {
-    if (_rows.isEmpty || _rows.length > _maxBatchParticipants) return null;
+  RosterPlan? _buildPlan() {
+    if (_rows.isEmpty || _rows.length > rosterMaxBatchParticipants) return null;
     final groups = <RosterImportBatchGroup>[];
     for (final group in _groups) {
       final items = <RosterImportBatchItem>[];
@@ -870,10 +564,10 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     }
     if (groups.isEmpty) return null;
     final request = RosterImportBatchRequest(groups: groups);
-    return _Plan(request: request, key: jsonEncode(request.toJson()));
+    return RosterPlan(request: request, key: jsonEncode(request.toJson()));
   }
 
-  RosterImportBatchItem _itemFor(_DraftRow row) {
+  RosterImportBatchItem _itemFor(RosterDraftRow row) {
     final parsed = row.parsed;
     final name1 = parsed.player1Name ?? '';
     final name2 = parsed.player2Name;
@@ -915,19 +609,19 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   /// Tài khoản thực sự gửi lên: lựa chọn của người dùng, hoặc tự liên kết khi chưa chọn.
   String? _effectiveLink(
-    _PlayerLink link,
+    RosterPlayerLink link,
     String? email,
     List<RosterImportBatchCandidate>? candidates,
   ) {
-    if (link.choice == _LinkChoice.linked) return link.userId;
-    if (link.choice == _LinkChoice.unlinked) return null;
-    return _uniqueExactAccountId(email, candidates);
+    if (link.choice == RosterLinkChoice.linked) return link.userId;
+    if (link.choice == RosterLinkChoice.unlinked) return null;
+    return rosterUniqueExactAccountId(email, candidates);
   }
 
   void _absorbCandidates(RosterImportBatchPreview preview) {
     for (final group in preview.groups) {
       for (final row in group.rows) {
-        _candidates[row.clientRowIndex] = _RowCandidates(
+        _candidates[row.clientRowIndex] = RosterRowCandidates(
           player1: row.player1Candidates,
           player2: row.player2Candidates,
         );
@@ -953,7 +647,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       _previewing = true;
       _previewError = null;
     });
-    _Plan? sent;
+    RosterPlan? sent;
     RosterImportBatchPreview? response;
     try {
       for (var attempt = 0; attempt < 3; attempt++) {
@@ -1016,7 +710,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     );
   }
 
-  void _setLink(_DraftRow row, int player, _PlayerLink link) {
+  void _setLink(RosterDraftRow row, int player, RosterPlayerLink link) {
     _editRevision++;
     setState(() {
       if (player == 1) {
@@ -1028,11 +722,11 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     unawaited(_runPreview());
   }
 
-  void _chooseAccount(_DraftRow row, int player, String? value) {
+  void _chooseAccount(RosterDraftRow row, int player, String? value) {
     if (value == null) return;
     final link = value == _unlinkedValue
-        ? const _PlayerLink.unlinked()
-        : _PlayerLink.linked(value);
+        ? const RosterPlayerLink.unlinked()
+        : RosterPlayerLink.linked(value);
     _setLink(row, player, link);
   }
 
@@ -1045,7 +739,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     final result = <int>{};
     for (final group in preview.groups) {
       for (final row in group.rows) {
-        if (_isRowEligible(row)) result.add(row.clientRowIndex);
+        if (rosterIsRowEligible(row)) result.add(row.clientRowIndex);
       }
     }
     return result;
@@ -1067,7 +761,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   /// Nhóm preview tương ứng với nhóm cục bộ. Nhóm không khớp giải được nhận diện qua dòng.
   RosterImportBatchPreviewGroup? _previewGroupFor(
     RosterImportBatchPreview preview,
-    _DraftGroup group,
+    RosterDraftGroup group,
   ) {
     final divisionId = group.target.divisionId;
     final indices = {for (final row in group.rows) row.index};
@@ -1183,8 +877,11 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
         _rows.where((row) => row.localEligible).length;
 
     String? footerReason;
-    if (total > _maxBatchParticipants) {
-      footerReason = l10n.rosterImportTooManyRows(total, _maxBatchParticipants);
+    if (total > rosterMaxBatchParticipants) {
+      footerReason = l10n.rosterImportTooManyRows(
+        total,
+        rosterMaxBatchParticipants,
+      );
     } else if (currentPlan == null && total > 0) {
       footerReason = l10n.rosterImportNoEligibleRows;
     } else if (preview != null && previewCurrent) {
@@ -1213,7 +910,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
               .where(
                 (group) =>
                     group.target.divisionId == null &&
-                    _createChoice.contains(_foldName(group.target.label)),
+                    _createChoice.contains(foldName(group.target.label)),
               )
               .length
         : 0;
@@ -1252,11 +949,11 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           l10n.rosterImportHint,
           style: TextStyle(color: colors.textMuted, fontSize: 13),
         ),
-      if (fileError != null) _noticeText(fileError, colors.error),
+      if (fileError != null) rosterNoticeText(fileError, colors.error),
       for (final sheet in _skippedSheets)
-        _noticeText(l10n.rosterImportNoSheetHeader(sheet), colors.warning),
+        rosterNoticeText(l10n.rosterImportNoSheetHeader(sheet), colors.warning),
       if (_fileName != null && !_reading && _rows.isEmpty)
-        _noticeText(l10n.rosterImportNoRows, colors.warning),
+        rosterNoticeText(l10n.rosterImportNoRows, colors.warning),
       if (_layoutStatus == _LayoutStatus.loading)
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
@@ -1279,20 +976,20 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           ),
         ),
       if (_layoutStatus == _LayoutStatus.done)
-        _noticeText(l10n.rosterImportAiDone, colors.success),
+        rosterNoticeText(l10n.rosterImportAiDone, colors.success),
       if (_layoutStatus == _LayoutStatus.unavailable)
-        _noticeText(l10n.rosterImportAiUnavailable, colors.warning),
+        rosterNoticeText(l10n.rosterImportAiUnavailable, colors.warning),
       if (_layoutStatus == _LayoutStatus.error)
-        _noticeText(l10n.rosterImportAiError, colors.warning),
+        rosterNoticeText(l10n.rosterImportAiError, colors.warning),
       if (_layoutStatus == _LayoutStatus.empty)
-        _noticeText(l10n.rosterImportAiEmpty, colors.warning),
+        rosterNoticeText(l10n.rosterImportAiEmpty, colors.warning),
       if (_pendingPartnerCount > 0)
-        _noticeText(
+        rosterNoticeText(
           l10n.rosterImportPendingPartnerCount(_pendingPartnerCount),
           colors.textSecondary,
         ),
       if (_pendingDivisionConfirm) ...[
-        _noticeText(l10n.rosterImportCreateTitle, colors.warning),
+        rosterNoticeText(l10n.rosterImportCreateTitle, colors.warning),
         Text(
           l10n.rosterImportCreateHint,
           style: TextStyle(color: colors.textMuted, fontSize: 13),
@@ -1301,9 +998,9 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           if (group.target.divisionId == null)
             CheckboxListTile(
               key: ValueKey('roster-import-create-${group.target.key}'),
-              value: _createChoice.contains(_foldName(group.target.label)),
+              value: _createChoice.contains(foldName(group.target.label)),
               onChanged: (value) => setState(() {
-                final folded = _foldName(group.target.label);
+                final folded = foldName(group.target.label);
                 if (value ?? false) {
                   _createChoice.add(folded);
                 } else {
@@ -1339,7 +1036,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
             ),
           ],
         ),
-        if (createError != null) _noticeText(createError, colors.error),
+        if (createError != null) rosterNoticeText(createError, colors.error),
       ],
       // Đang tạo hạng mục: khối xác nhận đã tắt (_pendingDivisionConfirm =
       // false), spinner này là feedback duy nhất của bước tạo.
@@ -1581,7 +1278,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   Widget _groupHeader(
     BuildContext context,
-    _DraftGroup group,
+    RosterDraftGroup group,
     RosterImportBatchPreview? preview,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -1605,10 +1302,13 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
             ),
           ),
           if (previewGroup != null && !previewGroup.divisionMatched)
-            _noticeText(l10n.rosterImportDivisionUnmatched(label), colors.error)
+            rosterNoticeText(
+              l10n.rosterImportDivisionUnmatched(label),
+              colors.error,
+            )
           else ...[
             if (previewGroup != null && remaining != null)
-              _noticeText(
+              rosterNoticeText(
                 l10n.rosterImportCapacityInfo(
                   previewGroup.requestedTeamSlots.toInt(),
                   remaining.toInt(),
@@ -1616,7 +1316,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
                 colors.textSecondary,
               ),
             if (previewGroup != null && !previewGroup.capacityFits)
-              _noticeText(
+              rosterNoticeText(
                 l10n.rosterImportCapacityShortfall(label),
                 colors.error,
               ),
@@ -1628,7 +1328,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   Widget _rowCard(
     BuildContext context,
-    _DraftRow row,
+    RosterDraftRow row,
     RosterImportBatchPreviewRow? server,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -1642,7 +1342,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       parsed.player1Email,
       parsed.player2Email,
     ].whereType<String>().join(', ');
-    final eligible = server != null && _isRowEligible(server);
+    final eligible = server != null && rosterIsRowEligible(server);
     final codes = server != null ? server.status : row.localStatus;
     final candidates = _candidates[row.index];
     final customError = server?.customResponseError;
@@ -1721,12 +1421,12 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
               runSpacing: 6,
               children: [
                 for (final code in codes)
-                  _toneChip(
-                    _statusLabel(l10n, code),
+                  rosterToneChip(
+                    rosterStatusLabel(l10n, code),
                     _statusTone(context, code),
                   ),
                 if (customError != null)
-                  _toneChip(
+                  rosterToneChip(
                     l10n.rosterImportCustomResponseInvalid,
                     colors.error,
                   ),
@@ -1758,8 +1458,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   Color _statusTone(BuildContext context, String code) {
     final colors = context.colors;
     if (code == 'FOUND') return colors.success;
-    if (_serverBlockingCodes.contains(code) ||
-        _localBlockingCodes.contains(code)) {
+    if (rosterServerBlockingCodes.contains(code) ||
+        rosterLocalBlockingCodes.contains(code)) {
       return colors.error;
     }
     return colors.warning;
@@ -1767,7 +1467,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
 
   Widget _accountRow(
     BuildContext context,
-    _DraftRow row,
+    RosterDraftRow row,
     int player,
     List<RosterImportBatchCandidate> candidates,
     String? email,
@@ -1791,7 +1491,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     final link = player == 1 ? row.player1Link : row.player2Link;
     final effective = _effectiveLink(link, email, candidates);
     final String? selected;
-    if (link.choice == _LinkChoice.unlinked) {
+    if (link.choice == RosterLinkChoice.unlinked) {
       selected = _unlinkedValue;
     } else if (effective != null &&
         candidates.any((candidate) => candidate.userId == effective)) {
