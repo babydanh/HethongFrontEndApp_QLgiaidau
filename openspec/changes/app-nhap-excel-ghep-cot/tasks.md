@@ -10,7 +10,7 @@
 
 ## 1. Đợt 1: nền thuần Dart (không UI)
 
-- [ ] 1.1 Export hai hàm nhận diện cột khóa. Tiêu chí: `flutter test --no-pub test/features/organizer_ops/roster_excel_parser_test.dart` exit 0, gồm test mới `TC-ROSTERMAP-01` (`isRosterIndexHeader` đúng cho `STT`, `Số TT`, `No.`, `#`, sai cho `Họ và tên`) và `TC-ROSTERMAP-02` (`isSensitiveRosterHeader` đúng cho `Ngày sinh`, `CCCD`, `Địa chỉ`, `Mã số thuế`; sai cho `Email`, `Họ tên`), và mọi test cũ trong file vẫn pass.
+- [x] 1.1 Export hai hàm nhận diện cột khóa. Tiêu chí: `flutter test --no-pub test/features/organizer_ops/roster_excel_parser_test.dart` exit 0, gồm test mới `TC-ROSTERMAP-01` (`isRosterIndexHeader` đúng cho `STT`, `Số TT`, `No.`, `#`, sai cho `Họ và tên`) và `TC-ROSTERMAP-02` (`isSensitiveRosterHeader` đúng cho `Ngày sinh`, `CCCD`, `Địa chỉ`, `Mã số thuế`; sai cho `Email`, `Họ tên`), và mọi test cũ trong file vẫn pass.
   - Files: sửa `lib/features/organizer_ops/utils/roster_excel_parser.dart:622-660` (thêm `bool isRosterIndexHeader(String header) => _indexHeaders.contains(normalizeRosterHeader(header));` và `bool isSensitiveRosterHeader(String header)` dùng `_sensitiveHeaderWords.any(normalizeRosterHeader(header).contains)`), sửa `:829,835,836` dùng hai hàm này; test `test/features/organizer_ops/roster_excel_parser_test.dart` (thêm nhóm cuối `main`, sau dòng ~330).
   - Giao: `bool isRosterIndexHeader(String header)`, `bool isSensitiveRosterHeader(String header)`.
   - Chủ file chung: task này sở hữu `roster_excel_parser.dart` trong đợt 1; 1.2 sửa cùng file nên làm tuần tự sau 1.1 (cùng agent hoặc rebase).

@@ -658,6 +658,14 @@ const List<String> _sensitiveHeaderWords = [
   'ma so thue',
 ];
 
+/// Header là cột số thứ tự (STT, No., #...).
+bool isRosterIndexHeader(String header) =>
+    _indexHeaders.contains(normalizeRosterHeader(header));
+
+/// Header là dữ liệu cá nhân không lưu (ngày sinh, giấy tờ, địa chỉ).
+bool isSensitiveRosterHeader(String header) =>
+    _sensitiveHeaderWords.any(normalizeRosterHeader(header).contains);
+
 /// Cột gợi ý đồng đội (`VĐV đăng ký đứng chung`, `đồng đội`, `partner`): manh mối ghép, không phải slot.
 const List<String> _partnerHintKeys = [
   'dang ky dung chung',
@@ -824,16 +832,13 @@ List<RosterParsedRow> parseRosterSheet(
 
   final usedColumns = mapping.columns.values.toSet();
   final hintColumn = findPartnerHintColumn(headers, mapping);
-  final indexColumn = _firstWhereIndex(
-    headers,
-    (h) => _indexHeaders.contains(normalizeRosterHeader(h)),
-  );
+  final indexColumn = _firstWhereIndex(headers, isRosterIndexHeader);
   final notedColumns = <int>[];
   for (var c = 0; c < width; c++) {
     if (usedColumns.contains(c) || c == hintColumn) continue;
     final key = normalizeRosterHeader(c < headers.length ? headers[c] : '');
     if (key.isEmpty || _indexHeaders.contains(key)) continue;
-    if (_sensitiveHeaderWords.any(key.contains)) continue;
+    if (isSensitiveRosterHeader(key)) continue;
     notedColumns.add(c);
   }
 

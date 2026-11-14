@@ -368,4 +368,21 @@ void main() {
       }
     });
   });
+
+  group('nhận diện cột khóa (isRosterIndexHeader, isSensitiveRosterHeader)', () {
+    test('TC-ROSTERMAP-01 isRosterIndexHeader đúng cho cột số thứ tự', () {
+      for (final header in ['STT', 'Số TT', 'No.', '#']) {
+        expect(isRosterIndexHeader(header), isTrue, reason: header);
+      }
+      expect(isRosterIndexHeader('Họ và tên'), isFalse);
+    });
+
+    test('TC-ROSTERMAP-02 isSensitiveRosterHeader đúng cho dữ liệu cá nhân', () {
+      for (final header in ['Ngày sinh', 'CCCD', 'Địa chỉ', 'Mã số thuế']) {
+        expect(isSensitiveRosterHeader(header), isTrue, reason: header);
+      }
+      expect(isSensitiveRosterHeader('Email'), isFalse);
+      expect(isSensitiveRosterHeader('Họ tên'), isFalse);
+    });
+  });
 }
