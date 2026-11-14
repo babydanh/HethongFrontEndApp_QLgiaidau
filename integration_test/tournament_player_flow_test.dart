@@ -15,174 +15,174 @@ void main() {
 
   setUpAll(initializeAppForTests);
 
-  testWidgets(
-    'VĐV đăng ký đơn, được duyệt, xem nhánh và lịch, thấy nhà vô địch',
-    (tester) async {
-      final api = BackendApi();
-      final tag = 'E2E${DateTime.now().millisecondsSinceEpoch}';
-      final tournamentName = '$tag Giải đơn';
+  testWidgets('VĐV đăng ký đơn, được duyệt, xem nhánh và lịch, thấy nhà vô địch', (
+    tester,
+  ) async {
+    final api = BackendApi();
+    final tag = 'E2E${DateTime.now().millisecondsSinceEpoch}';
+    final tournamentName = '$tag Giải đơn';
 
-      // Dựng dữ liệu bằng API: BTC tạo giải, ADMIN duyệt, thêm 3 VĐV để còn đúng 1 suất cho VĐV kiểm thử.
-      final organizerToken = await api.login(kOrganizerEmail, kE2ePassword);
-      final created = await api.createLiteTournament(
-        token: organizerToken,
-        name: tournamentName,
-        matchType: 'SINGLES',
-        maxParticipants: 4,
-      );
-      final tournamentId = created.tournamentId;
-      final divisionId = created.divisionId;
-      await api.approveTournamentAsAdmin(tournamentId);
-      await api.importRoster(
-        token: organizerToken,
-        tournamentId: tournamentId,
-        divisionId: divisionId,
-        tag: tag,
-        count: 3,
-        singles: true,
-      );
+    // Dựng dữ liệu bằng API: BTC tạo giải, ADMIN duyệt, thêm 3 VĐV để còn đúng 1 suất cho VĐV kiểm thử.
+    final organizerToken = await api.login(kOrganizerEmail, kE2ePassword);
+    final created = await api.createLiteTournament(
+      token: organizerToken,
+      name: tournamentName,
+      matchType: 'SINGLES',
+      maxParticipants: 4,
+    );
+    final tournamentId = created.tournamentId;
+    final divisionId = created.divisionId;
+    await api.approveTournamentAsAdmin(tournamentId);
+    await api.importRoster(
+      token: organizerToken,
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+      tag: tag,
+      count: 3,
+      singles: true,
+    );
 
-      // Hồ sơ VĐV seed thiếu SĐT và giới tính: điền qua API trước khi đăng nhập trên app.
-      await preparePlayerProfile(api);
+    // Hồ sơ VĐV seed thiếu SĐT và giới tính: điền qua API trước khi đăng nhập trên app.
+    await preparePlayerProfile(api);
 
-      final container = await pumpApp(tester);
-      await ensureSignedOut(tester, container);
-      container.read(routerProvider).go('/login');
-      await loginWithForm(tester, email: kPlayerEmail, password: kE2ePassword);
-      await pumpUntilCondition(
-        tester,
-        () => container.read(authProvider).isAuthenticated,
-        what: 'VĐV $kPlayerEmail đã đăng nhập',
-      );
+    final container = await pumpApp(tester);
+    await ensureSignedOut(tester, container);
+    container.read(routerProvider).go('/login');
+    await loginWithForm(tester, email: kPlayerEmail, password: kE2ePassword);
+    await pumpUntilCondition(
+      tester,
+      () => container.read(authProvider).isAuthenticated,
+      what: 'VĐV $kPlayerEmail đã đăng nhập',
+    );
 
-      // 1. Danh sách → chi tiết. Trang chủ mở ở tab Khám phá; nội dung tab Giải đấu
-      // (ValueKey('tournaments'), home_screen.dart:805-809) chỉ dựng sau khi bấm nhãn nav "Giải đấu".
-      final navTournaments = find.descendant(
-        of: find.byType(FloatingBottomNav),
-        matching: find.text('Giải đấu'),
-      );
-      await pumpUntilFound(
-        tester,
-        navTournaments,
-        what: 'nhãn Giải đấu trên thanh điều hướng',
-      );
-      await tester.tap(navTournaments.first);
-      await tester.pump();
-      await pumpUntilFound(
-        tester,
-        find.byKey(const ValueKey('tournaments')),
-        what: 'tab Giải đấu trên trang chủ (sau khi bấm nhãn nav)',
-      );
-      await scrollToText(tester, tournamentName);
-      await tapCentered(tester, find.text(tournamentName));
-      await pumpUntilFound(
-        tester,
-        find.widgetWithText(FilledButton, 'Đăng ký'),
-        what: 'nút Đăng ký trên thanh đăng ký trang chi tiết giải (đăng ký đang mở)',
-      );
+    // 1. Danh sách → chi tiết. Trang chủ mở ở tab Khám phá; nội dung tab Giải đấu
+    // (ValueKey('tournaments'), home_screen.dart:805-809) chỉ dựng sau khi bấm nhãn nav "Giải đấu".
+    final navTournaments = find.descendant(
+      of: find.byType(FloatingBottomNav),
+      matching: find.text('Giải đấu'),
+    );
+    await pumpUntilFound(
+      tester,
+      navTournaments,
+      what: 'nhãn Giải đấu trên thanh điều hướng',
+    );
+    await tester.tap(navTournaments.first);
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('tournaments')),
+      what: 'tab Giải đấu trên trang chủ (sau khi bấm nhãn nav)',
+    );
+    await scrollToText(tester, tournamentName);
+    await tapCentered(tester, find.text(tournamentName));
+    await pumpUntilFound(
+      tester,
+      find.widgetWithText(FilledButton, 'Đăng ký'),
+      what:
+          'nút Đăng ký trên thanh đăng ký trang chi tiết giải (đăng ký đang mở)',
+    );
 
-      // 2. Đăng ký đơn trên app
-      await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
-      await tester.pump();
-      final submit = anyTextStartingWith([
-        'Gửi yêu cầu tham gia',
-        'Xác nhận đăng ký',
-      ]);
-      await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
-      await tickRankingConsent(tester);
-      await tapCentered(tester, submit);
-      await tester.pump();
-      await pumpUntilFound(
-        tester,
-        anyTextOf([
-          // Màn sau gửi đơn hiện "Trạng thái hồ sơ: Chờ BTC duyệt" (registerDetailsPendingApproval).
-          'Chờ BTC duyệt',
-          'Đang chờ Ban tổ chức duyệt',
-          'Bạn đã đăng ký giải đấu này',
-          'Đã đăng ký, chưa thanh toán',
-        ]),
-        what: 'trạng thái sau khi gửi đăng ký (chờ duyệt hoặc đã đăng ký)',
-      );
+    // 2. Đăng ký đơn trên app
+    await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
+    await tester.pump();
+    final submit = anyTextStartingWith([
+      'Gửi yêu cầu tham gia',
+      'Xác nhận đăng ký',
+    ]);
+    await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
+    await tickRankingConsent(tester);
+    await tapCentered(tester, submit);
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      anyTextOf([
+        // Màn sau gửi đơn hiện "Trạng thái hồ sơ: Chờ BTC duyệt" (registerDetailsPendingApproval).
+        'Chờ BTC duyệt',
+        'Đang chờ Ban tổ chức duyệt',
+        'Bạn đã đăng ký giải đấu này',
+        'Đã đăng ký, chưa thanh toán',
+      ]),
+      what: 'trạng thái sau khi gửi đăng ký (chờ duyệt hoặc đã đăng ký)',
+    );
 
-      // 3. BTC duyệt đơn bằng API (app không có màn duyệt đơn cho BTC)
-      final pending = (await api.listParticipants(
-        token: organizerToken,
-        tournamentId: tournamentId,
-        divisionId: divisionId,
-      )).where((p) => p['teamStatus'] == 'PENDING_APPROVAL').toList();
-      expect(
-        pending,
-        hasLength(1),
-        reason: 'Phải có đúng 1 đơn VĐV đang chờ duyệt',
-      );
-      await api.approveParticipant(
-        token: organizerToken,
-        tournamentId: tournamentId,
-        participantId: pending.single['id'] as String,
-      );
+    // 3. BTC duyệt đơn bằng API (app không có màn duyệt đơn cho BTC)
+    final pending = (await api.listParticipants(
+      token: organizerToken,
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+    )).where((p) => p['teamStatus'] == 'PENDING_APPROVAL').toList();
+    expect(
+      pending,
+      hasLength(1),
+      reason: 'Phải có đúng 1 đơn VĐV đang chờ duyệt',
+    );
+    await api.approveParticipant(
+      token: organizerToken,
+      tournamentId: tournamentId,
+      participantId: pending.single['id'] as String,
+    );
 
-      // 4. VĐV mở lại trang đăng ký: không còn trạng thái chờ duyệt
-      container.read(routerProvider).go('/register/$tournamentId');
-      await pumpUntilFound(
-        tester,
-        anyTextOf([
-          'Bạn đã đăng ký giải đấu này',
-          'Đã đăng ký, chưa thanh toán',
-          'Đã đăng ký và thanh toán',
-        ]),
-        what: 'trạng thái đã đăng ký sau khi BTC duyệt',
-      );
-      expect(find.text('Đang chờ Ban tổ chức duyệt'), findsNothing);
+    // 4. VĐV mở lại trang đăng ký: không còn trạng thái chờ duyệt
+    container.read(routerProvider).go('/register/$tournamentId');
+    await pumpUntilFound(
+      tester,
+      anyTextOf([
+        'Bạn đã đăng ký giải đấu này',
+        'Đã đăng ký, chưa thanh toán',
+        'Đã đăng ký và thanh toán',
+      ]),
+      what: 'trạng thái đã đăng ký sau khi BTC duyệt',
+    );
+    expect(find.text('Đang chờ Ban tổ chức duyệt'), findsNothing);
 
-      // 5. BTC tạo nhánh bằng API (đủ 4 VĐV, đều đã duyệt)
-      await api.generateBracket(
-        token: organizerToken,
-        tournamentId: tournamentId,
-        divisionId: divisionId,
-      );
+    // 5. BTC tạo nhánh bằng API (đủ 4 VĐV, đều đã duyệt)
+    await api.generateBracket(
+      token: organizerToken,
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+    );
 
-      // 6. Xem nhánh và lịch trên app
-      container.read(routerProvider).go('/intro/$tournamentId');
-      await pumpUntilFound(
-        tester,
-        find.text('Bảng đấu'),
-        what: 'tab Bảng đấu trên trang chi tiết',
-      );
-      await tapCentered(tester, find.text('Bảng đấu').first);
-      await pumpUntilFound(
-        tester,
-        find.textContaining('$tag VDV'),
-        what: 'tên VĐV trong bảng thi đấu',
-      );
-      await tapCentered(tester, find.text('Lịch thi đấu').first);
-      await pumpUntilFound(
-        tester,
-        find.textContaining('$tag VDV'),
-        what: 'trận có VĐV trong lịch thi đấu',
-      );
+    // 6. Xem nhánh và lịch trên app
+    container.read(routerProvider).go('/intro/$tournamentId');
+    await pumpUntilFound(
+      tester,
+      find.text('Bảng đấu'),
+      what: 'tab Bảng đấu trên trang chi tiết',
+    );
+    await tapCentered(tester, find.text('Bảng đấu').first);
+    await pumpUntilFound(
+      tester,
+      find.textContaining('$tag VDV'),
+      what: 'tên VĐV trong bảng thi đấu',
+    );
+    await tapCentered(tester, find.text('Lịch thi đấu').first);
+    await pumpUntilFound(
+      tester,
+      find.textContaining('$tag VDV'),
+      what: 'trận có VĐV trong lịch thi đấu',
+    );
 
-      // 7. Chấm hết các trận bằng API. VĐV không có quyền chấm trong app; chấm trong app thuộc kịch bản BTC (4.3).
-      final championName = await api.playOutSingleElimination(
-        token: organizerToken,
-        tournamentId: tournamentId,
-        divisionId: divisionId,
-      );
+    // 7. Chấm hết các trận bằng API. VĐV không có quyền chấm trong app; chấm trong app thuộc kịch bản BTC (4.3).
+    final championName = await api.playOutSingleElimination(
+      token: organizerToken,
+      tournamentId: tournamentId,
+      divisionId: divisionId,
+    );
 
-      // 8. Nhà vô địch hiển thị ở tab Kết quả
-      container.read(routerProvider).go('/intro/$tournamentId');
-      await pumpUntilFound(
-        tester,
-        find.text('Kết quả'),
-        what: 'tab Kết quả sau khi giải có kết quả',
-      );
-      await tapCentered(tester, find.text('Kết quả').first);
-      await pumpUntilFound(
-        tester,
-        find.text(championName),
-        what: 'tên nhà vô địch $championName ở tab Kết quả',
-      );
-    },
-  );
+    // 8. Nhà vô địch hiển thị ở tab Kết quả
+    container.read(routerProvider).go('/intro/$tournamentId');
+    await pumpUntilFound(
+      tester,
+      find.text('Kết quả'),
+      what: 'tab Kết quả sau khi giải có kết quả',
+    );
+    await tapCentered(tester, find.text('Kết quả').first);
+    await pumpUntilFound(
+      tester,
+      find.text(championName),
+      what: 'tên nhà vô địch $championName ở tab Kết quả',
+    );
+  });
 
   // Task 4.2 (phần đôi): VĐV đăng ký đôi ở chế độ tự ghép (SELF), mời đồng đội bằng email.
   // Ca này chỉ kiểm bước đăng ký và mời; đồng đội chưa chấp nhận nên đơn ở PENDING_PARTNER.
@@ -283,22 +283,27 @@ void main() {
       await tester.pump();
       final partnerField = find.widgetWithText(
         TextField,
-        'Nhập email hoặc SĐT đồng đội',
+        'Tìm đồng đội theo tên',
       );
       await pumpUntilFound(
         tester,
         partnerField,
-        what: 'ô nhập email hoặc SĐT đồng đội',
+        what: 'ô tìm đồng đội theo tên',
       );
-      await tester.enterText(partnerField, partnerEmail);
+      // Ô tìm đồng đội chỉ tìm theo tên (wizard mới); đồng đội là tài khoản email vừa tạo.
+      await tester.enterText(partnerField, partnerName);
       await tester.pump();
-      // Tìm kiếm có debounce 500 ms; kết quả là ListTile có tên đồng đội.
+      // Tìm kiếm có debounce 500 ms; ô nhập cũng chứa chuỗi này nên chỉ tính kết quả trong ListTile.
+      final partnerResult = find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text(partnerName),
+      );
       await pumpUntilFound(
         tester,
-        find.text(partnerName),
-        what: 'kết quả tìm đồng đội theo email vừa tạo',
+        partnerResult,
+        what: 'kết quả tìm đồng đội vừa tạo',
       );
-      await tapCentered(tester, find.text(partnerName));
+      await tapCentered(tester, partnerResult);
       await tester.pump();
       await tapCentered(tester, find.text('Tiếp theo'));
       await tester.pump();
@@ -361,7 +366,11 @@ Future<void> tickRankingConsent(WidgetTester tester) async {
     CheckboxListTile,
     'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
   );
-  await pumpUntilFound(tester, tile, what: 'ô đồng ý xếp hạng (giải có xếp hạng)');
+  await pumpUntilFound(
+    tester,
+    tile,
+    what: 'ô đồng ý xếp hạng (giải có xếp hạng)',
+  );
   await tapCentered(tester, tile);
   await tester.pump();
   expect(
