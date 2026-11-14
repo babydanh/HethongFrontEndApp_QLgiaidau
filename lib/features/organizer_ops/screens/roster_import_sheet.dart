@@ -136,8 +136,9 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   /// Nội dung đích: không có cột nội dung thì dùng nội dung đang mở; có tên mà
   /// không khớp (theo bộ từ, bất kể thứ tự — như web) thì không khớp giải.
   RosterDivisionTarget _targetFor(String? rawName) {
-    if (rawName == null)
+    if (rawName == null) {
       return RosterDivisionTarget.matched(widget.defaultDivision);
+    }
     final folded = foldName(rawName);
     for (final division in _divisionPool) {
       if (divisionLabelMatches(rawName, division.name)) {

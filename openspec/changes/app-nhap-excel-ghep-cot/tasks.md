@@ -101,7 +101,7 @@
   - Phụ thuộc: 4.2, 4.3, 4.4.
   - Cắt được: nếu người dùng chọn bỏ `Xóa cặp`/`+` (xem câu hỏi mở trong `design.md`) thì bỏ `_deleteRow`, `_pendingUndo`, `_addRow` và các test 14–19, 25; phần sửa trường vẫn đủ.
 
-- [ ] 4.6 Chuỗi danh sách và chi tiết (vi + en). Tiêu chí: `flutter gen-l10n` exit 0, `flutter analyze --no-pub lib/l10n lib/features/organizer_ops` exit 0, số key `rosterList` bằng nhau ở hai `.arb`.
+- [x] 4.6 Chuỗi danh sách và chi tiết (vi + en). Tiêu chí: `flutter gen-l10n` exit 0, `flutter analyze --no-pub lib/l10n lib/features/organizer_ops` exit 0, số key `rosterList` bằng nhau ở hai `.arb`.
   - Files: sửa `lib/l10n/app_vi.arb`, `app_en.arb`, sinh lại `app_localizations*.dart`.
   - Key (vi mặc định): `rosterListTitle` "Danh sách VĐV"; `rosterListPairs(count)` "{count} cặp"; `rosterListAdd` "Thêm VĐV"; `rosterListDetailTitle` "Chi tiết"; `rosterListPlayerName(n)` "Họ tên VĐV {n}"; `rosterListPlayerPhone(n)` "SĐT VĐV {n}"; `rosterListPlayerEmail(n)` "Email VĐV {n}"; `rosterListPaid` "Đã đóng phí"; `rosterListNotes` "Ghi chú"; `rosterListDelete` "Xóa cặp"; `rosterListDone` "Xong"; `rosterListDeleted` "Đã xóa cặp"; `rosterListUndo` "Hoàn tác"; `rosterListEmailInvalid` "Email chưa đúng"; `rosterListAccountAuto` "Tự liên kết"; `rosterListAccountNone` "Không liên kết"; `rosterListResetWarning` "Ghép lại sẽ bỏ các sửa tay trong danh sách. Tiếp tục?"; `rosterListResetConfirm` "Ghép lại"; `rosterListCancel` "Hủy"; `rosterListLinked` "Đã liên kết tài khoản" (nhãn trợ năng cho icon); `rosterListNoAccount` "Chưa có tài khoản" (nhãn trợ năng cho icon). Dùng lại key `rosterImport*` sẵn có cho mã trạng thái, ghi chú tài khoản, cảnh báo.
   - Chủ file chung: `app_vi.arb` / `app_en.arb` sau 2.1.

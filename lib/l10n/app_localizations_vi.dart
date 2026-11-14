@@ -20115,4 +20115,76 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get venueHintSameText => 'Tên sân và địa chỉ đang giống hệt nhau.';
+
+  @override
+  String get rosterListTitle => 'Danh sách VĐV';
+
+  @override
+  String rosterListPairs(int count) {
+    return '$count cặp';
+  }
+
+  @override
+  String get rosterListAdd => 'Thêm VĐV';
+
+  @override
+  String get rosterListDetailTitle => 'Chi tiết';
+
+  @override
+  String rosterListPlayerName(int n) {
+    return 'Họ tên VĐV $n';
+  }
+
+  @override
+  String rosterListPlayerPhone(int n) {
+    return 'SĐT VĐV $n';
+  }
+
+  @override
+  String rosterListPlayerEmail(int n) {
+    return 'Email VĐV $n';
+  }
+
+  @override
+  String get rosterListPaid => 'Đã đóng phí';
+
+  @override
+  String get rosterListNotes => 'Ghi chú';
+
+  @override
+  String get rosterListDelete => 'Xóa cặp';
+
+  @override
+  String get rosterListDone => 'Xong';
+
+  @override
+  String get rosterListDeleted => 'Đã xóa cặp';
+
+  @override
+  String get rosterListUndo => 'Hoàn tác';
+
+  @override
+  String get rosterListEmailInvalid => 'Email chưa đúng';
+
+  @override
+  String get rosterListAccountAuto => 'Tự liên kết';
+
+  @override
+  String get rosterListAccountNone => 'Không liên kết';
+
+  @override
+  String get rosterListResetWarning =>
+      'Ghép lại sẽ bỏ các sửa tay trong danh sách. Tiếp tục?';
+
+  @override
+  String get rosterListResetConfirm => 'Ghép lại';
+
+  @override
+  String get rosterListCancel => 'Hủy';
+
+  @override
+  String get rosterListLinked => 'Đã liên kết tài khoản';
+
+  @override
+  String get rosterListNoAccount => 'Chưa có tài khoản';
 }
