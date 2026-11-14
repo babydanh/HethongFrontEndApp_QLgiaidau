@@ -98,7 +98,24 @@ Bổ sung bởi change `app-e2e-sua-do-va-bo-sung` (xanh cục bộ, chạy lạ
 | Thẻ trận trực tiếp ở Khám phá | `test/features/explore/live_match_card_test.dart` | 8 |
 | Màn Trận đấu trực tiếp | `test/features/live/live_match_screen_test.dart` | 13 |
 
-Chưa phủ: tie-break 10 điểm cuối trận và No-Ad của tennis; luồng `launchUrl` thật khi tạo link thanh toán; danh sách CLB (không có màn riêng); nút Apple ngoài iOS.
+Vòng 3 (11 màn trước đó chưa có test nào nhắc tới, cộng tennis match tie-break và No-Ad):
+
+| Chức năng | File | Ca |
+|---|---|---|
+| Tìm kiếm cộng đồng | `test/features/community/community_search_screen_test.dart` | 29 (1 skip BUG-SEARCH-01) |
+| Giải đấu của CLB | `test/features/community/club_tournaments_screen_test.dart` | 32 (1 skip BUG-CLBTOUR-01) |
+| Tạo buổi giao lưu CLB | `test/features/community/club_match_session_create_screen_test.dart` | 37 |
+| Chi tiết buổi giao lưu CLB | `test/features/community/club_match_session_detail_page_test.dart` | 75 (3 skip BUG-SESSDETAIL-01..03) |
+| Tham gia đội bằng mã | `test/features/register/join_team_screen_test.dart` | 15 |
+| Màn chờ sau đăng nhập | `test/features/auth/login_loading_screen_test.dart` | 10 |
+| Thêm/sửa đội | `test/features/teams/add_team_screen_test.dart` | 21 |
+| Quét QR | `test/features/home/qr_scanner_screen_test.dart` | 21 (1 skip BUG-QR-01) |
+| Danh sách chat, tab AI, tab Hỗ trợ | `test/features/chat/chat_screen_test.dart` | 39 (1 skip BUG-CHAT-02) |
+| Hồ sơ người khác | `test/features/profile/user_profile_screen_test.dart` | 40 (1 skip BUG-PROFILE-01) |
+| Tạo giải nhanh công khai (cơ bản, môn/thể thức, bóng đá, bracket và số đội, vòng tròn, lịch, địa điểm, tỉnh/phường, lệ phí, gửi) | `test/features/tournament/create_quick_tournament_*_test.dart` (10 file) | 145 (1 skip BUG-QUICKCREATE-01) |
+| Tennis match tie-break 10 điểm và No-Ad | `test/match/tennis_match_tiebreak_noad_test.dart` | 29 |
+
+Chưa phủ: dialog Thêm nội dung và mô tả giải/upload ảnh của tạo giải nhanh, lỗi mạng/5xx lúc gửi tạo giải nhanh, `ClubStandaloneMatchDialog`, nút chia sẻ, `OfficialScorePage` từ thẻ trận CLB; luồng `launchUrl` thật khi tạo link thanh toán; danh sách CLB (không có màn riêng); nút Apple ngoài iOS.
 
 ## Kết quả lượt cloud trên nhánh `app-e2e-sua-do-va-bo-sung` (2026-11-14, sha `2fe1d964`)
 

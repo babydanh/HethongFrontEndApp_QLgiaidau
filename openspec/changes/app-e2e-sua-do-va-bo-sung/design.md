@@ -34,6 +34,21 @@ Tất cả 8 file đều là test lỗi thời (giao diện hoặc Backend đổ
 | BUG-CLUB-02 (đã biết từ change trước) | Trung bình | Màn Điều phối CLB không kiểm quyền người xem; widget test `club_management_screen_test.dart` giữ ca `skip: true` | `app_router.dart:668-673`, `club_management_screen.dart:31` |
 | NOTE-PICKLE-SYNC-01 (nghi, thấp) | Thấp | Khi trận chưa có `courtState` trên server và dữ liệu trận về sau lúc mở màn, `syncAutomatic` có thể không giữ `turnStart`, nên ô giao hiện sai ở điểm đầu | `lib/features/match/notifiers/pickleball_court_notifier.dart` |
 
+### Lỗi mới của vòng 3 (giữ expect, `skip: true` mã BUG)
+
+| ID | Mức | Mô tả | Vị trí |
+|---|---|---|---|
+| BUG-QUICKCREATE-01 | Trung bình | `ExpansionTile` "Cài đặt nâng cao" không dựng con khi thu gọn nên validator lệ phí không chạy; `_submit` vẫn `int.parse` và gửi `entryFee` âm | `create_public_quick_tournament_screen.dart:625, 1595, 2060` |
+| BUG-QR-01 | Trung bình | `validateToken` gọi `tokenCode.substring(0, 3)` ngoài `try`; mã quét ngắn hơn 3 ký tự ném `RangeError`, lớp "Đang xác thực" kẹt mãi | `lib/providers/auth_provider.dart:126` (gọi từ `qr_scanner_screen.dart:54`) |
+| BUG-SESSDETAIL-01 | Trung bình (debug) | `dispose()` gọi `ref.read(...)`: Riverpod 3 ném StateError ở debug mỗi lần đóng trang, `leaveClubMatchSession` không được gọi | `club_match_sessions_screen.dart:232` |
+| BUG-SESSDETAIL-02 | Trung bình (debug) | `controller.dispose()` ngay sau `await showDialog` khi dialog tạo VĐV ảo còn animation đóng | `club_match_sessions_screen.dart:380` |
+| BUG-SESSDETAIL-03 | Thấp-trung | Làm mới do socket dùng `addPostFrameCallback` không xin khung hình; màn đứng yên thì chậm một khung (chưa xác nhận trên thiết bị) | `club_match_sessions_screen.dart:222` |
+| BUG-CLBTOUR-01 | Thấp-trung | Bấm "Sau" lỗi thì im lặng, lỗi chỉ hiện khi danh sách trống | `club_tournaments_screen.dart:155` |
+| BUG-SEARCH-01 | Thấp | Chọn chip loại mà API trả mục khác loại thì màn trắng, không có "không tìm thấy" (`hasResults` đếm mọi loại) | `community_search_screen.dart:312` |
+| BUG-PROFILE-01 | Thấp-trung | Màn lỗi hồ sơ in nguyên `err.toString()` cho người dùng | `user_profile_screen.dart:69` |
+| BUG-CHAT-02 | Thấp | `RefreshIndicator` bọc ListView thiếu `AlwaysScrollableScrollPhysics`: danh sách ngắn không kéo để tải lại | `chat_screen.dart:344` |
+| NOTE-CHAT-ERR-01 | Thấp | `ChatScreen` nuốt lỗi tải phòng (`catch (_) {}`), lỗi API hiện giống danh sách rỗng, không có nút thử lại (test đang khoá hành vi này) | `chat_screen.dart` |
+
 ### Test mới
 
 - Giao bóng và đổi sân: `test/match/pickleball_serve_side_test.dart` (9), `test/match/tennis_serve_side_test.dart` (14), `test/match/badminton_serve_side_test.dart` (15). Logic khớp luật ở mọi ca, không có lỗi app. Chưa phủ tie-break 10 điểm cuối trận và No-Ad của tennis. Bóng bàn đã có `test/domain/rally_serve_rules_test.dart`.
