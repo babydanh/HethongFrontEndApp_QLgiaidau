@@ -357,7 +357,7 @@ Future<void> socialWait(WidgetTester tester, [Duration duration = const Duration
 }
 
 /// Đăng nhập bằng form của app như người dùng thật. Trả container để điều hướng và đọc state.
-Future<ProviderContainer> signInAs(
+Future<ProviderContainer> signInWithEmail(
   WidgetTester tester, {
   required String email,
   String password = kE2ePassword,

@@ -450,6 +450,323 @@ class BackendApi {
     );
   }
 
+  // ---- Vai phụ (trọng tài, đồng BTC, CLB, chat, thông báo, chuỗi giải). Token là của người GỌI. ----
+
+  /// BTC mời trọng tài theo email (`POST /tournaments/:id/referees`). Người nhận phải có tài khoản.
+  Future<void> addReferee({
+    required String token,
+    required String tournamentId,
+    required String email,
+  }) async {
+    await _send(
+      'POST',
+      '/tournaments/$tournamentId/referees',
+      token: token,
+      data: {'email': email},
+    );
+  }
+
+  /// Danh sách trọng tài của giải (mỗi dòng có `id` của lời mời và `status` INVITED|ACCEPTED|DECLINED).
+  Future<List<Map<String, dynamic>>> listReferees({
+    required String token,
+    required String tournamentId,
+  }) async {
+    final path = '/tournaments/$tournamentId/referees';
+    return _asList(path, await _send('GET', path, token: token));
+  }
+
+  /// Trọng tài được mời nhận hoặc từ chối (`PATCH .../referees/:refereeId/respond`, action ACCEPT|DECLINE).
+  Future<void> respondReferee({
+    required String token,
+    required String tournamentId,
+    required String refereeId,
+    required bool accept,
+  }) async {
+    await _send(
+      'PATCH',
+      '/tournaments/$tournamentId/referees/$refereeId/respond',
+      token: token,
+      data: {'action': accept ? 'ACCEPT' : 'DECLINE'},
+    );
+  }
+
+  /// BTC thêm đồng BTC hoặc nhân sự (`POST /tournaments/:id/staff`). [role] theo màn Quyền của app,
+  /// ví dụ CO_ORGANIZER.
+  Future<void> addStaff({
+    required String token,
+    required String tournamentId,
+    required String email,
+    required String role,
+  }) async {
+    await _send(
+      'POST',
+      '/tournaments/$tournamentId/staff',
+      token: token,
+      data: {'email': email, 'role': role},
+    );
+  }
+
+  Future<void> followTournament({
+    required String token,
+    required String tournamentId,
+  }) async {
+    await _send('POST', '/tournaments/$tournamentId/follow', token: token);
+  }
+
+  /// Id của danh mục môn theo slug (`GET /categories`), CLB cần UUID danh mục.
+  Future<String> categoryIdBySlug(String slug) async {
+    const path = '/categories';
+    final list = _asList(path, await _send('GET', path));
+    final found = list.where(
+      (c) => '${c['slug']}'.toLowerCase() == slug.toLowerCase(),
+    );
+    if (found.isEmpty) {
+      throw _error('GET', path, 200, 'không có danh mục $slug');
+    }
+    return found.first['id'] as String;
+  }
+
+  /// Tạo CLB (`POST /communities`). [joinMode] OPEN|APPROVAL. CLB mới ở trạng thái PENDING
+  /// cho tới khi ADMIN duyệt (`approveCommunityAsAdmin`). Trả id CLB.
+  Future<String> createCommunity({
+    required String token,
+    required String name,
+    String joinMode = 'APPROVAL',
+    String visibility = 'PUBLIC',
+    String sport = 'pickleball',
+  }) async {
+    const path = '/communities';
+    final body = await _send(
+      'POST',
+      path,
+      token: token,
+      data: {
+        'name': name,
+        'description': 'CLB do E2E tạo',
+        'categoryIds': [await categoryIdBySlug(sport)],
+        'joinMode': joinMode,
+        'visibility': visibility,
+        'joinQuestions': <Object>[],
+      },
+    );
+    final id = _asMap(path, body)['id'];
+    if (id is! String || id.isEmpty) {
+      throw _error('POST', path, 201, 'thiếu id CLB: ${_snippet(body)}');
+    }
+    return id;
+  }
+
+  /// ADMIN duyệt CLB (`PATCH /communities/:id/review`, status ACTIVE|REJECTED).
+  Future<void> approveCommunityAsAdmin(String communityId) async {
+    final adminToken = await login(kAdminEmail, kE2ePassword);
+    await _send(
+      'PATCH',
+      '/communities/$communityId/review',
+      token: adminToken,
+      data: {'status': 'ACTIVE'},
+    );
+  }
+
+  Future<void> joinCommunity({
+    required String token,
+    required String communityId,
+  }) async {
+    await _send(
+      'POST',
+      '/communities/$communityId/join',
+      token: token,
+      data: {'joinAnswers': <String, dynamic>{}},
+    );
+  }
+
+  /// Chủ CLB duyệt yêu cầu vào (`PATCH /communities/:id/join-requests/:userId`, action APPROVE|REJECT).
+  Future<void> reviewJoinRequest({
+    required String token,
+    required String communityId,
+    required String userId,
+    required bool approve,
+  }) async {
+    await _send(
+      'PATCH',
+      '/communities/$communityId/join-requests/$userId',
+      token: token,
+      data: {'action': approve ? 'APPROVE' : 'REJECT'},
+    );
+  }
+
+  Future<void> inviteCommunityMember({
+    required String token,
+    required String communityId,
+    required String userId,
+    String role = 'MEMBER',
+  }) async {
+    await _send(
+      'POST',
+      '/communities/$communityId/invite',
+      token: token,
+      data: {'userId': userId, 'role': role},
+    );
+  }
+
+  /// Người được mời nhận hoặc từ chối ([action] là `accept` hoặc `decline`).
+  Future<void> respondCommunityInvite({
+    required String token,
+    required String communityId,
+    required String action,
+  }) async {
+    await _send(
+      'POST',
+      '/communities/$communityId/invite/$action',
+      token: token,
+    );
+  }
+
+  /// Phòng chat 1-1 (`POST /chat/rooms` type DIRECT). Trả id phòng.
+  Future<String> createDirectRoom({
+    required String token,
+    required String otherUserId,
+  }) async {
+    const path = '/chat/rooms';
+    final body = await _send(
+      'POST',
+      path,
+      token: token,
+      data: {
+        'type': 'DIRECT',
+        'memberIds': [otherUserId],
+      },
+    );
+    final id = _asMap(path, body)['id'];
+    if (id is! String || id.isEmpty) {
+      throw _error('POST', path, 201, 'thiếu id phòng: ${_snippet(body)}');
+    }
+    return id;
+  }
+
+  /// Gửi tin vào phòng (`POST /chat/messages`). Trả id tin.
+  Future<String> sendChatMessage({
+    required String token,
+    required String roomId,
+    required String text,
+  }) async {
+    const path = '/chat/messages';
+    final body = await _send(
+      'POST',
+      path,
+      token: token,
+      data: {'roomId': roomId, 'messageText': text},
+    );
+    final id = _asMap(path, body)['id'];
+    if (id is! String || id.isEmpty) {
+      throw _error('POST', path, 201, 'thiếu id tin: ${_snippet(body)}');
+    }
+    return id;
+  }
+
+  Future<List<Map<String, dynamic>>> listChatRooms({required String token}) async {
+    const path = '/chat/rooms';
+    return _asList(path, await _send('GET', path, token: token));
+  }
+
+  /// Thông báo của người gọi (`GET /notifications`). [scope] player | management.
+  Future<List<Map<String, dynamic>>> listNotifications({
+    required String token,
+    String scope = 'player',
+  }) async {
+    const path = '/notifications';
+    final data = _unwrap(
+      await _send(
+        'GET',
+        path,
+        token: token,
+        query: {'limit': 50, 'scope': scope},
+      ),
+    );
+    final list = data is Map ? (data['items'] ?? data['data']) : data;
+    if (list is! List) return const [];
+    return list
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  /// Chuỗi giải (`POST /organizer/series`). Body theo `SeriesInput.toCreateJson`. Trả id chuỗi.
+  Future<String> createSeries({
+    required String token,
+    required String name,
+  }) async {
+    const path = '/organizer/series';
+    final slug = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    final body = await _send(
+      'POST',
+      path,
+      token: token,
+      data: {
+        'name': name,
+        'slug': slug,
+        'visibility': 'PUBLIC',
+        'rules': <String, dynamic>{},
+      },
+    );
+    final map = _asMap(path, body);
+    final id = map['id'] ?? (map['series'] is Map ? (map['series'] as Map)['id'] : null);
+    if (id is! String || id.isEmpty) {
+      throw _error('POST', path, 201, 'thiếu id chuỗi: ${_snippet(body)}');
+    }
+    return id;
+  }
+
+  /// [ĐOÁN, chưa có chỗ gọi trong app] Mời nhân sự chuỗi giải theo email. Nếu Backend trả 404 thì
+  /// chuỗi F ghi vào Phát hiện thay vì đoán tiếp.
+  Future<void> inviteSeriesStaff({
+    required String token,
+    required String seriesId,
+    required String email,
+  }) async {
+    await _send(
+      'POST',
+      '/organizer/series/$seriesId/invitations',
+      token: token,
+      data: {'email': email},
+    );
+  }
+
+  /// [ĐOÁN] Người nhận chấp nhận lời mời chuỗi giải.
+  Future<void> acceptSeriesInvitation({
+    required String token,
+    required String invitationId,
+  }) async {
+    await _send(
+      'POST',
+      '/organizer/series/invitations/$invitationId/accept',
+      token: token,
+    );
+  }
+
+  /// Mã HTTP của một lệnh gọi, KHÔNG ném lỗi khi 4xx/5xx (dùng cho ma trận quyền). Lỗi mạng vẫn ném.
+  Future<int> statusOf(
+    String method,
+    String path, {
+    String? token,
+    Object? data,
+    Map<String, dynamic>? query,
+  }) async {
+    try {
+      final response = await _dio.request<Object?>(
+        path,
+        data: data,
+        queryParameters: query,
+        options: Options(
+          method: method,
+          headers: token == null ? null : {'Authorization': 'Bearer $token'},
+        ),
+      );
+      return response.statusCode ?? 0;
+    } on DioException catch (e) {
+      throw _error(method, path, null, 'lỗi mạng: ${e.message}');
+    }
+  }
+
   Future<Object?> _send(
     String method,
     String path, {
