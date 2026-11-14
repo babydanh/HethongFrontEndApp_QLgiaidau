@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
@@ -27,8 +28,9 @@ import 'package:intl/intl.dart';
 
 /// Màn hình Điều phối CLB — dành cho OWNER/ADMIN/MODERATOR.
 ///
-/// Gồm: summary stats, duyệt đơn, mời theo role, lời mời đã gửi, thành viên bị cấm.
-class ClubManagementScreen extends ConsumerStatefulWidget {
+/// Quyền xem được xác định từ dữ liệu CLB thật (không tin extra của router);
+/// không đủ quyền hoặc không tải được CLB thì chặn (fail-closed), không gọi API.
+class ClubManagementScreen extends ConsumerWidget {
   final String clubId;
   final bool isOwner;
 
@@ -38,12 +40,55 @@ class ClubManagementScreen extends ConsumerStatefulWidget {
     required this.isOwner,
   });
 
+  static const _managerRoles = {'OWNER', 'ADMIN', 'MODERATOR'};
+
   @override
-  ConsumerState<ClubManagementScreen> createState() =>
+  Widget build(BuildContext context, WidgetRef ref) {
+    final club = ref.watch(communityDetailProvider(clubId));
+    if (club.isLoading) {
+      return Scaffold(appBar: AppBar(), body: const CommunityListSkeleton());
+    }
+    final data = club.asData?.value;
+    if (data == null) return const _NoPermissionView();
+    final canManage = _managerRoles.contains(data.myRole);
+    final isCreator =
+        data.ownerId != null &&
+        data.ownerId == ref.watch(userProfileProvider).asData?.value.id;
+    if (!canManage && !isCreator) return const _NoPermissionView();
+    return _ClubManagementContent(clubId: clubId, isOwner: isOwner);
+  }
+}
+
+class _NoPermissionView extends StatelessWidget {
+  const _NoPermissionView();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.club_managementTitle)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(l10n.errorParserForbidden, textAlign: TextAlign.center),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClubManagementContent extends ConsumerStatefulWidget {
+  final String clubId;
+  final bool isOwner;
+
+  const _ClubManagementContent({required this.clubId, required this.isOwner});
+
+  @override
+  ConsumerState<_ClubManagementContent> createState() =>
       _ClubManagementScreenState();
 }
 
-class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
+class _ClubManagementScreenState extends ConsumerState<_ClubManagementContent> {
   static const _log = AppLogger('ClubManagement');
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
   List<CommunityMemberModel> _allMembers = [];
@@ -789,8 +834,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                                   vertical: 1.5,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF6366F1)
-                                      .withValues(alpha: 0.15),
+                                  color: const Color(
+                                    0xFF6366F1,
+                                  ).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
@@ -878,17 +924,21 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isEnabled
-                                    ? const Color(0xFF10B981)
-                                          .withValues(alpha: 0.12)
-                                    : const Color(0xFFF59E0B)
-                                          .withValues(alpha: 0.12),
+                                    ? const Color(
+                                        0xFF10B981,
+                                      ).withValues(alpha: 0.12)
+                                    : const Color(
+                                        0xFFF59E0B,
+                                      ).withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: isEnabled
-                                      ? const Color(0xFF10B981)
-                                            .withValues(alpha: 0.3)
-                                      : const Color(0xFFF59E0B)
-                                            .withValues(alpha: 0.3),
+                                      ? const Color(
+                                          0xFF10B981,
+                                        ).withValues(alpha: 0.3)
+                                      : const Color(
+                                          0xFFF59E0B,
+                                        ).withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Row(
@@ -996,8 +1046,9 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                DateFormat('HH:mm - dd/MM/yyyy')
-                                    .format(nextRunAt),
+                                DateFormat(
+                                  'HH:mm - dd/MM/yyyy',
+                                ).format(nextRunAt),
                                 style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w700,

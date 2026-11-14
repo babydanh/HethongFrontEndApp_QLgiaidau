@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_ranking_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/community_tournament_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_social_repository.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_management_screen.dart';
@@ -29,9 +30,13 @@ class _FakeCommunityRepo extends Fake implements ICommunityRepository {
   List<CommunityMemberModel> joinRequests;
   Object? loadError;
   Object? reviewError;
+  Community? club = const Community(id: _clubId, name: 'CLB', myRole: 'OWNER');
   final List<(String, String, String)> reviews = [];
 
   _FakeCommunityRepo({this.members = const [], this.joinRequests = const []});
+
+  @override
+  Future<Community?> getCommunityById(String id) async => club;
 
   @override
   Future<List<CommunityMemberModel>> getMembers(
@@ -388,14 +393,34 @@ void main() {
   testWidgets(
     'BUG-CLUB-02 a regular member opening the management screen gets no approve controls',
     (tester) async {
-      await _pump(
-        tester,
-        _FakeCommunityRepo(joinRequests: [_requestA]),
-        _FakeSocialRepo(),
-      );
+      final repo = _FakeCommunityRepo(joinRequests: [_requestA])
+        ..club = const Community(id: _clubId, name: 'CLB', myRole: 'MEMBER');
+      await _pump(tester, repo, _FakeSocialRepo());
       expect(find.text('Duyệt'), findsNothing);
       expect(find.textContaining('Đơn xin gia nhập'), findsNothing);
+      expect(
+        find.text('Bạn không có quyền thực hiện hành động này.'),
+        findsOneWidget,
+      );
     },
-    skip: true,
   );
+
+  testWidgets('a club that fails to load denies access (fail-closed)', (
+    tester,
+  ) async {
+    final repo = _FakeCommunityRepo(joinRequests: [_requestA])..club = null;
+    await _pump(tester, repo, _FakeSocialRepo());
+    expect(find.text('Duyệt'), findsNothing);
+    expect(
+      find.text('Bạn không có quyền thực hiện hành động này.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a moderator keeps the management controls', (tester) async {
+    final repo = _FakeCommunityRepo(joinRequests: [_requestA])
+      ..club = const Community(id: _clubId, name: 'CLB', myRole: 'MODERATOR');
+    await _pump(tester, repo, _FakeSocialRepo());
+    expect(find.text('Duyệt'), findsOneWidget);
+  });
 }
