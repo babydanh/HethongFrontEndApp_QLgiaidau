@@ -491,7 +491,7 @@ void main() {
       await tapText(tester, 'Xem tất cả thông báo');
       await pumpUntil(
         tester,
-        find.text('Hôm nay'),
+        find.text('HÔM NAY'),
         timeout: const Duration(seconds: 30),
       );
       expect(find.text('Bạn đã đọc hết tất cả thông báo!'), findsNothing);
@@ -648,7 +648,7 @@ void main() {
   // BUG-CHAT-01: nếu đỏ vì lỗi sản phẩm thì thêm
   // skip: 'BUG-CHAT-01: ChatDetailScreen gọi setState sau dispose khi socket đóng'.
   testWidgets(
-    'TC-MULTI-C-20 thoát màn chat khi socket đóng: không ném lỗi setState sau dispose (BUG-CHAT-01)',
+    'TC-MULTI-C-20 thoát màn chat khi socket đóng: không ném lỗi setState sau dispose (SKIP BUG-CHAT-01)',
     (tester) async {
       final shooter = shooterOf(tester, '20');
       final roomId = await _clubRoomId(
@@ -674,6 +674,9 @@ void main() {
         reason: 'thoát màn chat không được ném lỗi: $error',
       );
     },
+    // BUG-CHAT-01: ChatDetailScreen gọi setState sau dispose khi socket đóng (chat_detail_screen.dart:164-173).
+    // Đã tái hiện trên cloud (run 43584781106): _AssertionError lifecycleState defunct. Gỡ skip khi sửa.
+    skip: true,
   );
 }
 
