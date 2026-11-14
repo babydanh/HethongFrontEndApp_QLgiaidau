@@ -813,7 +813,14 @@ Future<void> _approveClub(BackendApi api, String communityId) async {
 /// Rời màn về trang chủ, gỡ cây widget, huỷ container (giống `leaveSocialSession`) nhưng dung thứ
 /// lỗi BUG-CLUB-01 (xem [_drain]) để một lỗi sản phẩm không làm hỏng mọi ca sau.
 Future<void> _leave(WidgetTester tester, ProviderContainer container) async {
-  container.read(routerProvider).go('/home');
+  final router = container.read(routerProvider);
+  // Thoát bằng pop như nút back thật: go('/home') gỡ route CLB giữa lúc dựng và làm PopScope của
+  // ClubDetailScreen (club_detail_screen.dart:473-479) sửa provider trong build (BUG-CLUB-01).
+  if (router.canPop()) {
+    router.pop();
+    await socialWait(tester, const Duration(seconds: 2));
+  }
+  router.go('/home');
   await socialWait(tester, const Duration(seconds: 2));
   _drain(tester);
   await tester.pumpWidget(const SizedBox.shrink());
