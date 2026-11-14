@@ -32,3 +32,10 @@ Ca test đỏ vì lỗi sản phẩm SHALL giữ nguyên `expect`, được đá
 #### Scenario: Ca phát hiện lỗi
 - **WHEN** một ca hành trình đỏ vì app chặn sai quyền
 - **THEN** ca đó có `skip` ghi mã lỗi, và `design.md` có dòng mã lỗi kèm `path:line` và bước tái hiện
+
+### Requirement: Báo cáo Allure cho E2E App
+Mỗi lượt job `test-app-e2e` SHALL sinh báo cáo Allure (mỗi ca test một mục, có trạng thái, lỗi và ảnh chụp từng bước) và lưu vào kho private `babydanh/qlgd-e2e-archive` dưới project `qlgd-app-e2e`. Báo cáo và ảnh SHALL NOT nằm trong artifact công khai của repo orchestrator.
+
+#### Scenario: Xem Allure sau một lượt app-e2e
+- **WHEN** chạy `cloud-test-runner.py run --target app-e2e --specs <file>` và lượt chạy kết thúc
+- **THEN** `cloud-test-runner.py ds --project qlgd-app-e2e` có dòng của lượt đó, và `cloud-test-runner.py xem <run_id>` mở được báo cáo có ảnh `shot()` gắn trong từng ca
