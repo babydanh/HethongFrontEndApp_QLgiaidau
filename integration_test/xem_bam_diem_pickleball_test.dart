@@ -195,9 +195,9 @@ void main() {
     final shooter = BamDiemShooter(tester, binding);
     await _pumpCourt(tester, _state(lite: true), doubles: true);
 
-    // Lite scored by rally point has no serve turns, so no serve button.
-    expect(find.text('Change serve'), findsNothing);
-    expect(find.text('Switch server'), findsNothing);
+    // Lite still tracks the serve turn (server 1, after the opening), so the
+    // serve button is there; only the rule that locks the receiver is off.
+    expect(find.text('Switch server'), findsOneWidget);
     await _plus(tester, 1);
     await _plus(tester, 1);
     expect(find.text('2-0-1'), findsOneWidget);
