@@ -658,6 +658,16 @@ const List<String> _sensitiveHeaderWords = [
   'ma so thue',
 ];
 
+/// Header là cột số thứ tự (STT, Số TT, No., #).
+bool isRosterIndexHeader(String header) =>
+    _indexHeaders.contains(normalizeRosterHeader(header));
+
+/// Header là dữ liệu cá nhân không bao giờ giữ (ngày sinh, giấy tờ, địa chỉ).
+bool isSensitiveRosterHeader(String header) {
+  final key = normalizeRosterHeader(header);
+  return _sensitiveHeaderWords.any(key.contains);
+}
+
 /// Cột gợi ý đồng đội (`VĐV đăng ký đứng chung`, `đồng đội`, `partner`): manh mối ghép, không phải slot.
 const List<String> _partnerHintKeys = [
   'dang ky dung chung',
@@ -777,6 +787,7 @@ RosterGridSheet fillRosterMerges(RosterGridSheet sheet) {
     name: sheet.name,
     rows: rows,
     mergedRegions: sheet.mergedRegions,
+    horizontalMerges: sheet.horizontalMerges,
   );
 }
 
@@ -816,7 +827,7 @@ List<RosterParsedRow> parseRosterSheet(
   String headerOf(int column) =>
       column < headers.length && headers[column].trim().isNotEmpty
       ? headers[column].trim()
-      : '[${_columnLetter(column)}]';
+      : '[${rosterColumnLetter(column)}]';
   final width = sheet.rows.fold<int>(
     headers.length,
     (m, r) => r.length > m ? r.length : m,
@@ -824,16 +835,15 @@ List<RosterParsedRow> parseRosterSheet(
 
   final usedColumns = mapping.columns.values.toSet();
   final hintColumn = findPartnerHintColumn(headers, mapping);
-  final indexColumn = _firstWhereIndex(
-    headers,
-    (h) => _indexHeaders.contains(normalizeRosterHeader(h)),
-  );
+  final indexColumn = _firstWhereIndex(headers, isRosterIndexHeader);
   final notedColumns = <int>[];
   for (var c = 0; c < width; c++) {
     if (usedColumns.contains(c) || c == hintColumn) continue;
-    final key = normalizeRosterHeader(c < headers.length ? headers[c] : '');
-    if (key.isEmpty || _indexHeaders.contains(key)) continue;
-    if (_sensitiveHeaderWords.any(key.contains)) continue;
+    final header = c < headers.length ? headers[c] : '';
+    if (normalizeRosterHeader(header).isEmpty) continue;
+    if (isRosterIndexHeader(header) || isSensitiveRosterHeader(header)) {
+      continue;
+    }
     notedColumns.add(c);
   }
 
@@ -1010,7 +1020,7 @@ int? _firstWhereIndex(List<String> items, bool Function(String) test) {
 }
 
 /// `A` = 0, `Z` = 25, `AA` = 26: tên cột ở dạng chữ.
-String _columnLetter(int index) {
+String rosterColumnLetter(int index) {
   var letters = '';
   for (var value = index + 1; value > 0; value = (value - 1) ~/ 26) {
     letters = String.fromCharCode(65 + ((value - 1) % 26)) + letters;

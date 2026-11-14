@@ -29632,6 +29632,180 @@ abstract class AppLocalizations {
   /// **'Cần kiểm tra lại'**
   String get rosterImportStatusUnknown;
 
+  /// No description provided for @rosterMapOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cột'**
+  String get rosterMapOpen;
+
+  /// No description provided for @rosterMapTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cột'**
+  String get rosterMapTitle;
+
+  /// No description provided for @rosterMapHeaderRow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hàng tiêu đề'**
+  String get rosterMapHeaderRow;
+
+  /// No description provided for @rosterMapPairSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh đơn'**
+  String get rosterMapPairSingle;
+
+  /// No description provided for @rosterMapPairColumns.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi VĐV một cột'**
+  String get rosterMapPairColumns;
+
+  /// No description provided for @rosterMapPairSameCell.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hai VĐV một ô'**
+  String get rosterMapPairSameCell;
+
+  /// No description provided for @rosterMapPairConsecutiveRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'2 dòng liền nhau là 1 cặp'**
+  String get rosterMapPairConsecutiveRows;
+
+  /// No description provided for @rosterMapSeparator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ký tự ngăn'**
+  String get rosterMapSeparator;
+
+  /// No description provided for @rosterMapSlotPlayer1Name.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên'**
+  String get rosterMapSlotPlayer1Name;
+
+  /// No description provided for @rosterMapSlotPlayer1Phone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT'**
+  String get rosterMapSlotPlayer1Phone;
+
+  /// No description provided for @rosterMapSlotPlayer1Email.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get rosterMapSlotPlayer1Email;
+
+  /// No description provided for @rosterMapSlotPlayer2Name.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên VĐV 2'**
+  String get rosterMapSlotPlayer2Name;
+
+  /// No description provided for @rosterMapSlotPlayer2Phone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT VĐV 2'**
+  String get rosterMapSlotPlayer2Phone;
+
+  /// No description provided for @rosterMapSlotPlayer2Email.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email VĐV 2'**
+  String get rosterMapSlotPlayer2Email;
+
+  /// No description provided for @rosterMapSlotTeamName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội'**
+  String get rosterMapSlotTeamName;
+
+  /// No description provided for @rosterMapSlotPairCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã cặp'**
+  String get rosterMapSlotPairCode;
+
+  /// No description provided for @rosterMapSlotDivisionName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get rosterMapSlotDivisionName;
+
+  /// No description provided for @rosterMapSlotIsPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng phí'**
+  String get rosterMapSlotIsPaid;
+
+  /// No description provided for @rosterMapSlotElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO'**
+  String get rosterMapSlotElo;
+
+  /// No description provided for @rosterMapNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú'**
+  String get rosterMapNote;
+
+  /// No description provided for @rosterMapIndexLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'STT'**
+  String get rosterMapIndexLabel;
+
+  /// No description provided for @rosterMapLockedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu'**
+  String get rosterMapLockedLabel;
+
+  /// No description provided for @rosterMapRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} dòng'**
+  String rosterMapRows(int count);
+
+  /// No description provided for @rosterMapPickName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn cột Tên'**
+  String get rosterMapPickName;
+
+  /// No description provided for @rosterMapDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get rosterMapDone;
+
+  /// No description provided for @rosterMapHeaderShifted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiêu đề đang nằm trong ô gộp, các cột có thể bị lệch. Thử đổi hàng tiêu đề.'**
+  String get rosterMapHeaderShifted;
+
+  /// No description provided for @rosterMapColumnFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cột {letter}'**
+  String rosterMapColumnFallback(String letter);
+
+  /// No description provided for @rosterMapNoColumns.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sheet chưa có dòng nào để ghép.'**
+  String get rosterMapNoColumns;
+
+  /// No description provided for @rosterMapSkippedSheet.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} (chưa đọc được)'**
+  String rosterMapSkippedSheet(String name);
+
   /// No description provided for @rosterImportTemplateFailed.
   ///
   /// In vi, this message translates to:

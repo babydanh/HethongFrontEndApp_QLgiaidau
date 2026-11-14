@@ -2,6 +2,8 @@ import 'package:app_quanly_giaidau/core/services/roster_excel_reader.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'roster_fixture_workbook.dart';
+
 /// Header tiếng Việt đúng như file mẫu của web (12 cột).
 const _headersVi = <String>[
   'STT',
@@ -367,5 +369,50 @@ void main() {
         expect(row.isPaid, entry.value, reason: 'paid "${entry.key}"');
       }
     });
+  });
+
+  group('nhận diện cột khóa', () {
+    test('TC-ROSTERMAP-01 isRosterIndexHeader đúng cho cột số thứ tự', () {
+      for (final header in ['STT', 'Số TT', 'No.', '#']) {
+        expect(isRosterIndexHeader(header), isTrue, reason: header);
+      }
+      expect(isRosterIndexHeader('Họ và tên'), isFalse);
+    });
+
+    test(
+      'TC-ROSTERMAP-02 isSensitiveRosterHeader đúng cho dữ liệu cá nhân',
+      () {
+        for (final header in ['Ngày sinh', 'CCCD', 'Địa chỉ', 'Mã số thuế']) {
+          expect(isSensitiveRosterHeader(header), isTrue, reason: header);
+        }
+        expect(isSensitiveRosterHeader('Email'), isFalse);
+        expect(isSensitiveRosterHeader('Họ tên'), isFalse);
+      },
+    );
+  });
+
+  group('vùng gộp ngang', () {
+    test(
+      'TC-ROSTERMAP-03 đọc vùng gộp ngang riêng và fillRosterMerges giữ cả hai',
+      () async {
+        final sheets = await workbookFrom(
+          [
+            ['Banner'],
+            ['STT', 'Họ và tên'],
+            [1, fakeName(0)],
+            [null, fakeName(1)],
+          ],
+          merges: ['A1:I1', 'A3:A4'],
+        );
+        final sheet = sheets.single;
+
+        expect(sheet.mergedRegions, ['A3:A4']);
+        expect(sheet.horizontalMerges, ['A1:I1']);
+
+        final filled = fillRosterMerges(sheet);
+        expect(filled.mergedRegions, ['A3:A4']);
+        expect(filled.horizontalMerges, ['A1:I1']);
+      },
+    );
   });
 }
