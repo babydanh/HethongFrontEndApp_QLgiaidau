@@ -42,10 +42,7 @@ void main() {
         expect(reading.layoutChosen, isFalse);
 
         final inferred = assembleRosterRows(reading, (_) => true);
-        expect(inferred.map((r) => r.player2Name), [
-          fakeName(1),
-          fakeName(3),
-        ]);
+        expect(inferred.map((r) => r.player2Name), [fakeName(1), fakeName(3)]);
 
         final chosen = reading.copyWith(
           layout: RosterPairLayout.single,
@@ -71,38 +68,46 @@ void main() {
   });
 
   group('RosterMappingDraft', () {
-    test('TC-ROSTERMAP-05 liệt kê cột của file mẫu với loại, ô ghép và giá trị mẫu', () async {
-      final draft = await _sampleDraft();
+    test(
+      'TC-ROSTERMAP-05 liệt kê cột của file mẫu với loại, ô ghép và giá trị mẫu',
+      () async {
+        final draft = await _sampleDraft();
 
-      final columns = draft.columns;
+        final columns = draft.columns;
 
-      expect(columns, hasLength(9));
-      expect(columns[0].header, 'STT');
-      expect(columns[0].kind, RosterColumnKind.serial);
-      expect(columns[0].sample, '1');
-      expect(columns[1].slot, RosterSlot.player1Name);
-      expect(columns[1].sample, fakeName(0));
-      expect(columns[2].header, 'Đơn vị công tác');
-      expect(columns[2].slot, isNull);
-      expect(columns[2].kind, RosterColumnKind.normal);
-      expect(columns[7].header, 'Ngày sinh');
-      expect(columns[7].kind, RosterColumnKind.sensitive);
-    });
+        expect(columns, hasLength(9));
+        expect(columns[0].header, 'STT');
+        expect(columns[0].kind, RosterColumnKind.serial);
+        expect(columns[0].sample, '1');
+        expect(columns[1].slot, RosterSlot.player1Name);
+        expect(columns[1].sample, fakeName(0));
+        expect(columns[2].header, 'Đơn vị công tác');
+        expect(columns[2].slot, isNull);
+        expect(columns[2].kind, RosterColumnKind.normal);
+        expect(columns[7].header, 'Ngày sinh');
+        expect(columns[7].kind, RosterColumnKind.sensitive);
+      },
+    );
 
-    test('TC-ROSTERMAP-06 gán slot sang cột khác đưa cột cũ về ghi chú', () async {
-      final draft = await _sampleDraft();
+    test(
+      'TC-ROSTERMAP-06 gán slot sang cột khác đưa cột cũ về ghi chú',
+      () async {
+        final draft = await _sampleDraft();
 
-      final moved = draft.assign(2, RosterSlot.player1Name);
+        final moved = draft.assign(2, RosterSlot.player1Name);
 
-      expect(moved.columns[2].slot, RosterSlot.player1Name);
-      expect(moved.columns[1].slot, isNull);
-      final rows = _rowsOf(moved);
-      expect(rows.first.player1Name, 'Công ty X');
-      expect(
-        rows.any((r) => (r.notes ?? '').contains('Họ và tên VĐV: ${fakeName(0)}')),
-        isTrue,
-      );
-    });
+        expect(moved.columns[2].slot, RosterSlot.player1Name);
+        expect(moved.columns[1].slot, isNull);
+        final rows = _rowsOf(moved);
+        expect(rows.first.player1Name, 'Công ty X');
+        expect(
+          rows.any(
+            (r) => (r.notes ?? '').contains('Họ và tên VĐV: ${fakeName(0)}'),
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('TC-ROSTERMAP-07 gán null gỡ cột khỏi slot', () async {
       final draft = await _sampleDraft();
@@ -121,32 +126,38 @@ void main() {
       expect(draft.assign(7, RosterSlot.player1Email), same(draft));
     });
 
-    test('TC-ROSTERMAP-09 gán tên VĐV 2 khi đang đánh đơn thì chọn cách ghép hai cột', () async {
-      final draft = await _sampleDraft(doubles: _noDoubles);
-      expect(draft.effectiveLayout, RosterPairLayout.single);
+    test(
+      'TC-ROSTERMAP-09 gán tên VĐV 2 khi đang đánh đơn thì chọn cách ghép hai cột',
+      () async {
+        final draft = await _sampleDraft(doubles: _noDoubles);
+        expect(draft.effectiveLayout, RosterPairLayout.single);
 
-      final next = draft.assign(2, RosterSlot.player2Name);
+        final next = draft.assign(2, RosterSlot.player2Name);
 
-      expect(next.reading.layout, RosterPairLayout.columns);
-      expect(next.reading.layoutChosen, isTrue);
-    });
+        expect(next.reading.layout, RosterPairLayout.columns);
+        expect(next.reading.layoutChosen, isTrue);
+      },
+    );
 
-    test('TC-ROSTERMAP-10 đổi hàng tiêu đề dò lại cột và cảnh báo tiêu đề gộp ngang', () async {
-      final grid = await sampleUserLayoutGrid();
-      final detected = readSheetByRules(grid.single)!;
-      final onBanner = RosterMappingDraft.fromReading(
-        detected.copyWith(headerRowIndex: 0, firstDataRowIndex: 1),
-        isDoublesFor: _allDoubles,
-      );
-      expect(onBanner.headerMayBeShifted, isTrue);
+    test(
+      'TC-ROSTERMAP-10 đổi hàng tiêu đề dò lại cột và cảnh báo tiêu đề gộp ngang',
+      () async {
+        final grid = await sampleUserLayoutGrid();
+        final detected = readSheetByRules(grid.single)!;
+        final onBanner = RosterMappingDraft.fromReading(
+          detected.copyWith(headerRowIndex: 0, firstDataRowIndex: 1),
+          isDoublesFor: _allDoubles,
+        );
+        expect(onBanner.headerMayBeShifted, isTrue);
 
-      final fixed = onBanner.withHeaderRow(1);
+        final fixed = onBanner.withHeaderRow(1);
 
-      expect(fixed.reading.headerRowIndex, 1);
-      expect(fixed.reading.firstDataRowIndex, 2);
-      expect(fixed.reading.mapping.indexOf(RosterSlot.player1Name), 1);
-      expect(fixed.headerMayBeShifted, isFalse);
-    });
+        expect(fixed.reading.headerRowIndex, 1);
+        expect(fixed.reading.firstDataRowIndex, 2);
+        expect(fixed.reading.mapping.indexOf(RosterSlot.player1Name), 1);
+        expect(fixed.headerMayBeShifted, isFalse);
+      },
+    );
 
     test('TC-ROSTERMAP-11 hàng tiêu đề được kẹp vào khoảng hợp lệ', () async {
       final draft = await _sampleDraft();
@@ -156,32 +167,34 @@ void main() {
       expect(draft.withHeaderRow(999).reading.headerRowIndex, lastRow - 1);
     });
 
-    test('TC-ROSTERMAP-12 có nhận diện khi có đội, và ghép 2 dòng làm số dòng giảm một nửa', () async {
-      final grid = await workbookFrom([
-        ['STT', 'Ghi chú riêng'],
-        [1, 'a'],
-      ]);
-      final bare = RosterMappingDraft.forSkippedSheet(
-        grid.single,
-        isDoublesFor: _allDoubles,
-      );
-      expect(bare.hasIdentity, isFalse);
-      expect(bare.assign(1, RosterSlot.teamName).hasIdentity, isTrue);
+    test(
+      'TC-ROSTERMAP-12 có nhận diện khi có đội, và ghép 2 dòng làm số dòng giảm một nửa',
+      () async {
+        final grid = await workbookFrom([
+          ['STT', 'Ghi chú riêng'],
+          [1, 'a'],
+        ]);
+        final bare = RosterMappingDraft.forSkippedSheet(
+          grid.single,
+          isDoublesFor: _allDoubles,
+        );
+        expect(bare.hasIdentity, isFalse);
+        expect(bare.assign(1, RosterSlot.teamName).hasIdentity, isTrue);
 
-      final singles = await workbookFrom([
-        ['STT', 'Họ và tên', 'Số điện thoại'],
-        for (var i = 0; i < 4; i++) [i + 1, fakeName(i), fakePhone(i)],
-      ]);
-      final base = RosterMappingDraft.fromReading(
-        readSheetByRules(singles.single)!.copyWith(
-          layout: RosterPairLayout.single,
-          layoutChosen: true,
-        ),
-        isDoublesFor: _allDoubles,
-      );
-      expect(base.rowCount, 4);
-      expect(base.withLayout(RosterPairLayout.consecutiveRows).rowCount, 2);
-    });
+        final singles = await workbookFrom([
+          ['STT', 'Họ và tên', 'Số điện thoại'],
+          for (var i = 0; i < 4; i++) [i + 1, fakeName(i), fakePhone(i)],
+        ]);
+        final base = RosterMappingDraft.fromReading(
+          readSheetByRules(
+            singles.single,
+          )!.copyWith(layout: RosterPairLayout.single, layoutChosen: true),
+          isDoublesFor: _allDoubles,
+        );
+        expect(base.rowCount, 4);
+        expect(base.withLayout(RosterPairLayout.consecutiveRows).rowCount, 2);
+      },
+    );
 
     test('TC-ROSTERMAP-13 cột ngày sinh không bao giờ vào ghi chú', () async {
       var draft = await _sampleDraft();
@@ -195,65 +208,76 @@ void main() {
       }
     });
 
-    test('TC-ROSTERMAP-14 sheet bị bỏ qua chọn dòng đầu có từ hai ô làm tiêu đề', () {
-      const grid = RosterGridSheet(
-        name: 'S',
-        rows: [
-          ['Banner'],
-          ['a', 'b', 'c'],
-          ['1', '2', '3'],
-        ],
-      );
-      final draft = RosterMappingDraft.forSkippedSheet(
-        grid,
-        isDoublesFor: _allDoubles,
-      );
-      expect(draft.wasSkipped, isTrue);
-      expect(draft.reading.headerRowIndex, 1);
-      expect(draft.columns, hasLength(3));
+    test(
+      'TC-ROSTERMAP-14 sheet bị bỏ qua chọn dòng đầu có từ hai ô làm tiêu đề',
+      () {
+        const grid = RosterGridSheet(
+          name: 'S',
+          rows: [
+            ['Banner'],
+            ['a', 'b', 'c'],
+            ['1', '2', '3'],
+          ],
+        );
+        final draft = RosterMappingDraft.forSkippedSheet(
+          grid,
+          isDoublesFor: _allDoubles,
+        );
+        expect(draft.wasSkipped, isTrue);
+        expect(draft.reading.headerRowIndex, 1);
+        expect(draft.columns, hasLength(3));
 
-      const tiny = RosterGridSheet(
-        name: 'T',
-        rows: [
-          ['chỉ một dòng'],
-        ],
-      );
-      expect(
-        RosterMappingDraft.forSkippedSheet(tiny, isDoublesFor: _allDoubles)
-            .columns,
-        isEmpty,
-      );
-    });
+        const tiny = RosterGridSheet(
+          name: 'T',
+          rows: [
+            ['chỉ một dòng'],
+          ],
+        );
+        expect(
+          RosterMappingDraft.forSkippedSheet(
+            tiny,
+            isDoublesFor: _allDoubles,
+          ).columns,
+          isEmpty,
+        );
+      },
+    );
 
-    test('TC-ROSTERMAP-15 cột Địa chỉ email đã ghép Email thì không bị khóa', () async {
-      final grid = await workbookFrom([
-        ['STT', 'Họ và tên', 'Địa chỉ email'],
-        [1, fakeName(0), 'a@example.com'],
-      ]);
-      final draft = RosterMappingDraft.fromReading(
-        readSheetByRules(grid.single)!,
-        isDoublesFor: _allDoubles,
-      ).assign(2, RosterSlot.player1Email);
+    test(
+      'TC-ROSTERMAP-15 cột Địa chỉ email đã ghép Email thì không bị khóa',
+      () async {
+        final grid = await workbookFrom([
+          ['STT', 'Họ và tên', 'Địa chỉ email'],
+          [1, fakeName(0), 'a@example.com'],
+        ]);
+        final draft = RosterMappingDraft.fromReading(
+          readSheetByRules(grid.single)!,
+          isDoublesFor: _allDoubles,
+        ).assign(2, RosterSlot.player1Email);
 
-      expect(draft.columns[2].slot, RosterSlot.player1Email);
-      expect(draft.columns[2].kind, RosterColumnKind.normal);
-    });
+        expect(draft.columns[2].slot, RosterSlot.player1Email);
+        expect(draft.columns[2].kind, RosterColumnKind.normal);
+      },
+    );
 
-    test('TC-ROSTERMAP-16 hai VĐV một ô tách theo ký tự ngăn đã chọn', () async {
-      final grid = await workbookFrom([
-        ['STT', 'Họ và tên'],
-        [1, 'An & Bình'],
-        [2, 'Cường & Dũng'],
-      ]);
-      final draft = RosterMappingDraft.fromReading(
-        readSheetByRules(grid.single)!,
-        isDoublesFor: _allDoubles,
-      ).withLayout(RosterPairLayout.sameCell, separator: ' & ');
+    test(
+      'TC-ROSTERMAP-16 hai VĐV một ô tách theo ký tự ngăn đã chọn',
+      () async {
+        final grid = await workbookFrom([
+          ['STT', 'Họ và tên'],
+          [1, 'An & Bình'],
+          [2, 'Cường & Dũng'],
+        ]);
+        final draft = RosterMappingDraft.fromReading(
+          readSheetByRules(grid.single)!,
+          isDoublesFor: _allDoubles,
+        ).withLayout(RosterPairLayout.sameCell, separator: ' & ');
 
-      final rows = _rowsOf(draft);
+        final rows = _rowsOf(draft);
 
-      expect(rows.map((r) => r.player1Name), ['An', 'Cường']);
-      expect(rows.map((r) => r.player2Name), ['Bình', 'Dũng']);
-    });
+        expect(rows.map((r) => r.player1Name), ['An', 'Cường']);
+        expect(rows.map((r) => r.player2Name), ['Bình', 'Dũng']);
+      },
+    );
   });
 }
