@@ -306,11 +306,23 @@ void main() {
         count: 1,
         singles: true,
       );
+      final onBackend = await api.listParticipants(
+        token: orgToken(),
+        tournamentId: opsT.id,
+        divisionId: opsT.divisionId,
+      );
+      expect(
+        jsonEncode(onBackend),
+        contains('$newTag VDV 1'),
+        reason: 'Backend phải có VĐV vừa nhập trước khi kiểm màn /ops',
+      );
       await tapFinder(
         tester,
         find.byTooltip('Làm mới'),
         what: 'nút Làm mới của /ops',
       );
+      await socialWait(tester, const Duration(seconds: 3));
+      await _searchRoster(tester, '$newTag VDV 1');
       await pumpUntil(
         tester,
         _rosterRow('$newTag VDV 1'),
