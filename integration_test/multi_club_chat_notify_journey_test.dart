@@ -673,7 +673,7 @@ void main() {
   );
 }
 
-/// Về trang chủ rồi đẩy [route] lên trên (nút back có trang bên dưới để pop), chờ route đổi.
+/// Về trang chủ rồi đẩy [route] lên trên (nút back có trang bên dưới để pop).
 Future<void> _openRoute(
   WidgetTester tester,
   ProviderContainer container,
@@ -684,12 +684,8 @@ Future<void> _openRoute(
   router.go('/home');
   await socialWait(tester, const Duration(seconds: 1));
   router.push(route, extra: extra);
-  await pumpUntilCondition(
-    tester,
-    () => currentPath(tester) == Uri.parse(route).path,
-    what: 'route $route',
-    timeout: const Duration(seconds: 30),
-  );
+  // currentConfiguration không đổi theo push() nên không chờ theo path; người gọi chờ chữ của màn.
+  await socialWait(tester, const Duration(seconds: 2));
 }
 
 /// Mở chat phòng [roomId] như khi bấm nút chat CLB (`/chat/:id?...&type=CLUB`), chờ ô nhập hiện ra.
