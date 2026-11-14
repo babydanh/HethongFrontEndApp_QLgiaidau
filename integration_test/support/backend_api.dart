@@ -556,14 +556,14 @@ class BackendApi {
     return id;
   }
 
-  /// ADMIN duyệt CLB (`PATCH /communities/:id/review`, status ACTIVE|REJECTED).
+  /// ADMIN duyệt CLB (`PATCH /communities/:id/review`, status APPROVED|REJECTED).
   Future<void> approveCommunityAsAdmin(String communityId) async {
     final adminToken = await login(kAdminEmail, kE2ePassword);
     await _send(
       'PATCH',
       '/communities/$communityId/review',
       token: adminToken,
-      data: {'status': 'ACTIVE'},
+      data: {'status': 'APPROVED'},
     );
   }
 
