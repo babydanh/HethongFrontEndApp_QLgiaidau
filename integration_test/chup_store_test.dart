@@ -227,6 +227,9 @@ class _StoreShooter {
   _StoreShooter(this.tester, this.prefix) {
     tester.view.physicalSize = _storeSize;
     tester.view.devicePixelRatio = 3;
+    // Leave room for a status bar (44 logical px), painted in afterwards like the other store shots.
+    tester.view.padding = const FakeViewPadding(top: 132);
+    tester.view.viewPadding = const FakeViewPadding(top: 132);
     addTearDown(tester.view.reset);
   }
 
