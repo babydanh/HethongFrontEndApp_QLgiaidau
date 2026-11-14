@@ -1,5 +1,5 @@
 # Handoff: App nhập Excel — popup ghép cột + danh sách VĐV sửa được
-Cập nhật: 2026-11-14 10:00 · bởi: claude · nhánh: app-nhap-excel-ghep-cot · OpenSpec: app-nhap-excel-ghep-cot
+Cập nhật: 2026-11-14 · bởi: claude (cloud) · nhánh: cloud/danh3-app-nhap-excel-ghep-cot-113202 (từ app-nhap-excel-ghep-cot) · OpenSpec: app-nhap-excel-ghep-cot
 
 ## Mục tiêu
 **VIỆC CỦA BẠN CHỈ LÀ LẬP KẾ HOẠCH (OpenSpec), KHÔNG VIẾT CODE `lib/`/`test/`.** Viết đủ `proposal.md`, `design.md`, `specs/<capability>/spec.md`, `tasks.md` trong thư mục này, chạy `openspec validate app-nhap-excel-ghep-cot --strict` tới exit 0, commit hẹp, push nhánh, rồi DỪNG chờ người dùng nói "apply". Kế hoạch phải đủ kỹ để một agent khác code từng task không phải hỏi lại: mỗi task có `Files:` là đường dẫn thật đã kiểm trong repo (kèm dòng), `Giao:`/`Nhận:` chữ ký Dart chính xác, `Chủ file chung:`, `Phụ thuộc:`, `Tiêu chí:` = lệnh chạy được + mã thoát (xem skill `company` mục 3, mẫu task).
@@ -7,9 +7,10 @@ Cập nhật: 2026-11-14 10:00 · bởi: claude · nhánh: app-nhap-excel-ghep-c
 Màn Nhập Excel của App (`roster_import_sheet.dart`) hiện tự đoán cột bằng luật, người dùng không chỉnh được. Web có bước "Ghép cột" và bảng xem trước sửa được. Cần mang phần đó sang App, giao diện **ít chữ, kiểu mobile**, bản vẽ ở `mockup.html` cùng thư mục (mở bằng trình duyệt; dữ liệu trong đó là giả). Phân loại: Bounded (luồng đã có, không đổi API) nhưng người dùng đòi kế hoạch kỹ nên viết cả `design.md`.
 
 ## Trạng thái
-- Xong: khảo sát nguồn (dưới đây), mockup 5 khung đã được người dùng xem lặp lại, đã chọn bố cục.
-- Đang dở: chưa có file OpenSpec nào ngoài `.openspec.yaml`.
-- Tiếp theo: (1) đọc các file nguồn ở "Điều đã xác minh trong code" để KIỂM LẠI từng dòng tôi ghi, sai thì sửa theo code thật; (2) viết 4 artifact; (3) validate; (4) commit + push; (5) dừng.
+- Xong: khảo sát nguồn và kiểm lại từng dòng bàn giao (App, Web, Backend; sai lệch ghi ở `design.md` mục "Đã kiểm lại bản bàn giao"); đủ 4 artifact (`proposal.md`, `design.md`, `specs/app-roster-column-mapping`, `specs/app-roster-editable-list`, `tasks.md`); `openspec validate app-nhap-excel-ghep-cot --strict` exit 0; đã push nhánh.
+- KHÔNG viết code `lib/`/`test/`. Chưa chạy được Botkeep (503 lúc làm): ghi "chưa kiểm bằng Botkeep".
+- Tiếp theo: DỪNG chờ người dùng nói "apply". Khi apply: làm theo `tasks.md` tuần tự (đợt 1 = nhóm 1–3, đợt 2 = nhóm 4–5; hỏi người dùng làm cả hai hay chỉ đợt 1).
+- Phát hiện cần người dùng biết: (1) cờ `layoutChosen` vì `RosterPairLayout.single` đang vừa là "để luật suy" vừa là "đánh đơn"; (2) reader App bỏ vùng gộp ngang nên muốn cảnh báo tiêu đề gộp ô phải ghi thêm `horizontalMerges`; (3) Backend giới hạn `clientRowIndex` 0..499, `sourceRowIndex` ≥ 1 nên dòng thêm tay phải bỏ field nguồn; (4) khi email đổi phải đặt lại liên kết tài khoản, nếu không Backend trả 409.
 
 ## Điều đã xác minh trong code (nguồn: `origin/main` lúc bàn giao)
 **Web (tham chiếu hành vi, repo `HethongFrontEndWeb_QLgiaidau`, thư mục `src/app/organizer/tournaments/[id]/manage/components/roster-import/`):**
@@ -69,6 +70,7 @@ Người dùng nói: logic khớp email với tài khoản đã có trong Sporto
 - Bỏ: không có.
 
 ## Câu hỏi còn mở
-- Làm popup ghép cột + sửa trong danh sách cùng một đợt hay ghép cột trước? (kế hoạch tách task để cả hai cách đều được)
-- Nút `Xóa cặp` và `+ Thêm VĐV`: App hiện chưa có; có làm ở đợt này không? (nêu chi phí trong `design.md`)
-- Preview hiện chạy lúc nào, cần chạy lại sau mỗi lần sửa email không? (tuỳ bằng chứng trong code)
+- Làm popup ghép cột + sửa trong danh sách cùng một đợt hay ghép cột trước? (`tasks.md` tách nhóm 1–3 và 4–5 để cả hai cách đều được)
+- `Xóa cặp` và `+ Thêm VĐV`: giữ trong đợt 2 (task 4.5, cắt được) hay bỏ? Chi phí nêu ở `design.md` D8.
+- Không làm nút `Tiếp tục` ở khung 1 của mockup (đọc xong hiện danh sách luôn): xác nhận.
+- Backend: không có ý nào thiếu cho khớp email/tài khoản (bằng chứng ở `design.md` D7); không có mục nào cần đổi Backend.
