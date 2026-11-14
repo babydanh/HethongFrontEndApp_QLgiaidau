@@ -82,6 +82,15 @@ void main() {
       (tester) async {
         final fx = await _fixture();
         final body = {'status': 'ONGOING'};
+        // Trọng tài chỉ bắt đầu/chấm trận khi giải đã khai mạc (409 TOURNAMENT_NOT_STARTED nếu chưa).
+        final started = await fx.api.statusOf(
+          'POST',
+          '/tournaments/${fx.tid}/start',
+          token: fx.token('organizer'),
+        );
+        debugPrintSynchronously(
+          '[MATRIX H-04] BTC khai mạc giải -> HTTP $started',
+        );
         await _runMatrix(fx, 'H-04', [
           for (final r in _outsiders.where((r) => r != 'referee'))
             _Cell(
@@ -653,9 +662,6 @@ Future<_Fixture> _buildFixture() async {
       accept: true,
     );
   }
-  // Trọng tài chỉ bắt đầu/chấm trận khi giải đã khai mạc (409 TOURNAMENT_NOT_STARTED nếu chưa).
-  await api.startTournament(token: btc, tournamentId: t.tournamentId);
-
   // Giải 2: chưa duyệt, dùng cho ô ADMIN duyệt và ô xoá giải.
   final t2 = await api.createLiteTournament(
     token: btc,
