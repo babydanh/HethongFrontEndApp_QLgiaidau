@@ -107,7 +107,7 @@
   - Chủ file chung: `app_vi.arb` / `app_en.arb` sau 2.1.
   - Phụ thuộc: 2.1 đã merge.
 
-- [ ] 4.7 Kiểm hồi quy đợt 2 và dọn tài liệu. Tiêu chí: `flutter test --no-pub` trên đủ các file: `roster_pair_card_test.dart`, `roster_pair_detail_sheet_test.dart`, `roster_list_edit_test.dart`, `roster_import_sheet_test.dart`, `roster_mapping_flow_test.dart`, `roster_layout_ai_test.dart`, `roster_import_pairing_test.dart` (thư mục `test/features/organizer_ops/`) exit 0; không còn tham chiếu `_rowCard`/`_accountRow` (`grep -rn "_rowCard\|_accountRow" lib` rỗng); không file nào trong các file mới > 800 dòng (`wc -l`).
+- [x] 4.7 Kiểm hồi quy đợt 2 và dọn tài liệu. Tiêu chí: `flutter test --no-pub` trên đủ các file: `roster_pair_card_test.dart`, `roster_pair_detail_sheet_test.dart`, `roster_list_edit_test.dart`, `roster_import_sheet_test.dart`, `roster_mapping_flow_test.dart`, `roster_layout_ai_test.dart`, `roster_import_pairing_test.dart` (thư mục `test/features/organizer_ops/`) exit 0; không còn tham chiếu `_rowCard`/`_accountRow` (`grep -rn "_rowCard\|_accountRow" lib` rỗng); không file nào trong các file mới > 800 dòng (`wc -l`).
   - Files: không sửa code mới; sửa `openspec/changes/app-nhap-excel-ghep-cot/handoff.md`.
   - Phụ thuộc: 4.3, 4.4, 4.5.
 
