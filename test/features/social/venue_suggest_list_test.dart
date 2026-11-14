@@ -13,14 +13,17 @@ class _FakeRepo implements ISocialLocationRepository {
   final List<SocialPlace> results;
   final bool fail;
   final List<String> queries = [];
+  final List<bool> requirePins = [];
 
   @override
   Future<List<SocialPlace>> search(
     String query, {
     LatLng? bias,
     String? categoryId,
+    bool requirePin = true,
   }) async {
     queries.add(query);
+    requirePins.add(requirePin);
     if (fail) throw const LocationNetworkFailure();
     return results;
   }
@@ -99,6 +102,21 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.byIcon(Icons.verified), findsOneWidget);
       expect(find.byIcon(Icons.stadium_outlined), findsNWidgets(2));
+    });
+
+    // TC-VENUE-PIN-APP-03
+    testWidgets('asks for venues without a pin and lists them', (tester) async {
+      final repo = _FakeRepo(const [
+        SocialPlace(
+          name: 'Sân chưa ghim',
+          formattedAddress: '2 Đường Y, Hà Nội',
+          venueId: 'u',
+        ),
+      ]);
+      await tester.pumpWidget(_app(repo, 'san', (_) {}));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(repo.requirePins, [false]);
+      expect(find.text('Sân chưa ghim'), findsOneWidget);
     });
 
     testWidgets('searches again only for the latest query', (tester) async {

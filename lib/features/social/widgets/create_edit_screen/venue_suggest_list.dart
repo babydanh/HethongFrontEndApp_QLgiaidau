@@ -62,7 +62,10 @@ class _VenueSuggestListState extends ConsumerState<VenueSuggestList> {
     _timer = Timer(_debounce, () async {
       List<SocialPlace> found;
       try {
-        found = await ref.read(socialLocationRepositoryProvider).search(query);
+        // Tournaments only need name + region, so unpinned venues are fine here.
+        found = await ref
+            .read(socialLocationRepositoryProvider)
+            .search(query, requirePin: false);
       } catch (_) {
         found = const [];
       }

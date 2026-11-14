@@ -18,6 +18,7 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
     String query, {
     LatLng? bias,
     String? categoryId,
+    bool requirePin = true,
   }) async {
     final value = query.trim();
     if (value.length < 3) return const [];
@@ -32,6 +33,7 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
           'limit': 10,
           if (categoryId != null && categoryId.isNotEmpty)
             'categoryId': categoryId,
+          if (!requirePin) 'requireLocation': 'false',
         },
         options: Options(extra: {'noCache': true}),
         cancelToken: token,
@@ -43,9 +45,12 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
       final places = data
           .whereType<Map>()
           .map(_venue)
-          .where((venue) => venue.canApply && venue.hasPin)
+          .where((venue) => venue.canApply && (!requirePin || venue.hasPin))
           .toList();
-      if (bias != null) places.sort(_byDistanceVerifiedFirst(bias));
+      // The comparator reads coordinates, so only sort when every venue has a pin.
+      if (bias != null && places.every((venue) => venue.hasPin)) {
+        places.sort(_byDistanceVerifiedFirst(bias));
+      }
       return places;
     } on DioException catch (error) {
       if (CancelToken.isCancel(error)) return const [];

@@ -30,6 +30,7 @@ class _FakeLocationRepository implements ISocialLocationRepository {
     String query, {
     LatLng? bias,
     String? categoryId,
+    bool requirePin = true,
   }) async {
     searchCategoryIds.add(categoryId);
     return results;

@@ -6,6 +6,8 @@ abstract class ISocialLocationRepository {
     String query, {
     LatLng? bias,
     String? categoryId,
+    // false: also return venues that have no map pin (tournaments don't need one).
+    bool requirePin = true,
   });
   Future<SocialPlace> getVenueDetail(String venueId);
   Future<SocialPlace> getPlaceDetail(String placeId);

@@ -134,6 +134,54 @@ void main() {
     });
   });
 
+  group('search requirePin', () {
+    final mixed = {
+      'data': [
+        {
+          'venueId': 'pinned',
+          'name': 'Sân có ghim',
+          'formattedAddress': '1 Đường X, Hà Nội',
+          'latitude': 21.0,
+          'longitude': 105.8,
+        },
+        {
+          'venueId': 'unpinned',
+          'name': 'Sân chưa ghim',
+          'formattedAddress': '2 Đường Y, Hà Nội',
+          'latitude': null,
+          'longitude': null,
+        },
+      ],
+    };
+
+    // TC-VENUE-PIN-APP-01
+    test('mặc định giữ nguyên: chỉ giữ sân có ghim, không gửi requireLocation', () async {
+      final adapter = _Adapter((_) => _json(mixed));
+
+      final places = await _repository(adapter).search('san');
+
+      expect(places.map((p) => p.venueId), ['pinned']);
+      expect(
+        adapter.requested.single.queryParameters.containsKey('requireLocation'),
+        isFalse,
+      );
+    });
+
+    // TC-VENUE-PIN-APP-02
+    test('requirePin=false giữ cả sân chưa ghim và gửi requireLocation=false', () async {
+      final adapter = _Adapter((_) => _json(mixed));
+
+      final places = await _repository(adapter).search('san', requirePin: false);
+
+      expect(places.map((p) => p.venueId), ['pinned', 'unpinned']);
+      expect(places.last.hasPin, isFalse);
+      expect(
+        adapter.requested.single.queryParameters['requireLocation'],
+        'false',
+      );
+    });
+  });
+
   group('resolveInput', () {
     test('luôn ném lỗi vì backend đã bỏ link geocode', () async {
       final adapter = _Adapter((_) => _json({'data': null}));

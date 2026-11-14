@@ -39,6 +39,8 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
     LatLng? bias,
     // Photon không có danh mục môn: bỏ qua có chủ ý.
     String? categoryId,
+    // Photon results always carry coordinates: nothing to relax.
+    bool requirePin = true,
   }) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
