@@ -130,7 +130,7 @@ void main() {
     'TC-MULTI-B-01 VĐV đăng ký đơn trên app, đơn ở trạng thái chờ BTC duyệt',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-01');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       await snap.snap('da-dang-nhap');
 
       container.read(routerProvider).go('/intro/${singles.tournamentId}');
@@ -186,7 +186,7 @@ void main() {
         );
       }
 
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       container.read(routerProvider).go('/register/${singles.tournamentId}');
       await pumpUntil(
         tester,
@@ -210,7 +210,7 @@ void main() {
       final partner = actor('member');
       final teamName = '$tag Đội A';
 
-      final container = await signInAs(tester, player);
+      final container = await _signIn(tester, player);
       container.read(routerProvider).go('/intro/${doubles.tournamentId}');
       final registerButton = find.widgetWithText(FilledButton, 'Đăng ký');
       await pumpUntil(tester, registerButton);
@@ -283,7 +283,7 @@ void main() {
       );
       final partner = actor('member');
 
-      final container = await signInAs(tester, partner);
+      final container = await _signIn(tester, partner);
       final uri = Uri(
         path: '/join-team',
         queryParameters: {
@@ -316,7 +316,7 @@ void main() {
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-05');
       final code = inviteTournament.inviteCode;
-      final container = await signInAs(tester, actor('member'));
+      final container = await _signIn(tester, actor('member'));
       final router = container.read(routerProvider);
 
       router.go('/join/$code');
@@ -347,7 +347,7 @@ void main() {
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-06');
       final code = liteTournament.inviteCode;
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       final router = container.read(routerProvider);
 
       router.go('/lite-join/$code');
@@ -375,7 +375,7 @@ void main() {
     'TC-MULTI-B-07 màn đăng ký đội /register/:id/team mở được cho VĐV đã đăng nhập',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-07');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       container
           .read(routerProvider)
           .go('/register/${singles.tournamentId}/team?teamSize=7');
@@ -392,7 +392,7 @@ void main() {
     'TC-MULTI-B-08 VĐV theo dõi giải bằng nút đánh dấu, mở lại vẫn thấy đang theo dõi',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-08');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       final router = container.read(routerProvider);
       final route = '/intro/${inviteTournament.tournamentId}';
 
@@ -434,7 +434,7 @@ void main() {
       final participantId =
           Map<String, dynamic>.from(mine['participant'] as Map)['id'] as String;
 
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       final query = Uri(
         path: '/payment/checkout',
         queryParameters: {
@@ -464,7 +464,7 @@ void main() {
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-10');
       await ensurePlayerRegisteredInSingles();
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       container.read(routerProvider).go('/dashboard');
       await pumpUntil(tester, find.text('Tổng quan'));
       await snap.snap('dashboard-tong-quan');
@@ -487,7 +487,7 @@ void main() {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-11');
       final viewer = actor('viewer');
       final newName = '$tag Tên mới';
-      final container = await signInAs(tester, viewer);
+      final container = await _signIn(tester, viewer);
       container.read(routerProvider).go('/profile/edit');
       await pumpUntilCondition(
         tester,
@@ -520,7 +520,7 @@ void main() {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-12');
       final viewer = actor('viewer');
       const newPassword = 'Mk2NewE2E';
-      var container = await signInAs(tester, viewer);
+      var container = await _signIn(tester, viewer);
       container.read(routerProvider).go('/profile/change-password');
       await pumpUntil(tester, find.text('Mật khẩu hiện tại'));
       final fields = find.byType(TextField);
@@ -568,7 +568,7 @@ void main() {
     'TC-MULTI-B-13 bảng xếp hạng công khai tải được và đổi được bộ lọc Đơn/Đôi',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-13');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       container.read(routerProvider).go('/rankings');
       await pumpUntil(tester, find.text('Đơn'));
       await pumpUntil(
@@ -596,7 +596,7 @@ void main() {
     'TC-MULTI-B-14 phân quyền âm: VĐV mở /organizer/tournaments/:id/manage của giải người khác thì bị chặn',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-14');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       await snap.snap('vdv-da-dang-nhap');
       await _expectBlockedPatient(
         tester,
@@ -615,7 +615,7 @@ void main() {
       final route = '/intro/${singles.tournamentId}';
       final manageButton = find.byIcon(Icons.settings_suggest_rounded);
 
-      var container = await signInAs(tester, actor('player'));
+      var container = await _signIn(tester, actor('player'));
       container.read(routerProvider).go(route);
       await pumpUntil(tester, find.byIcon(Icons.share_outlined));
       await socialWait(tester, const Duration(seconds: 4));
@@ -627,7 +627,7 @@ void main() {
       await snap.snap('vdv-khong-co-nut-quan-ly');
       await leaveSocialSession(tester, container);
 
-      container = await signInAs(tester, actor('organizer'));
+      container = await _signIn(tester, actor('organizer'));
       container.read(routerProvider).go(route);
       await pumpUntil(
         tester,
@@ -643,7 +643,7 @@ void main() {
     'TC-MULTI-B-16 phân quyền âm: VĐV mở /admin/tournament/:id thì bị đưa về trang chủ',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-16');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       await _expectBlockedPatient(
         tester,
         container,
@@ -658,7 +658,7 @@ void main() {
     'TC-MULTI-B-17 phân quyền âm: VĐV mở màn vận hành /organizer/tournaments/:id/ops thì bị chặn',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-17');
-      final container = await signInAs(tester, actor('player'));
+      final container = await _signIn(tester, actor('player'));
       await _expectBlockedPatient(
         tester,
         container,
@@ -759,7 +759,7 @@ void main() {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-20');
       final pid = doublesParticipantId;
       expect(pid, isNotNull, reason: 'Cần ca TC-MULTI-B-03 tạo đơn đôi trước');
-      final container = await signInAs(tester, actor('viewer'));
+      final container = await _signIn(tester, actor('viewer'));
       final uri = Uri(
         path: '/join-team',
         queryParameters: {
@@ -782,6 +782,15 @@ void main() {
 }
 
 // ------------------------------------------------------------------ Helper
+
+/// Đăng nhập rồi chờ app ổn định ở trang chủ: màn chuyển sau đăng nhập có thể đè lệnh `go` đến sớm
+/// (lần chạy cloud 43557878374: mọi ca sau ca đầu vẫn kẹt ở /home).
+Future<ProviderContainer> _signIn(WidgetTester tester, E2eActor actor) async {
+  final container = await signInAs(tester, actor);
+  container.read(routerProvider).go('/home');
+  await socialWait(tester, const Duration(seconds: 3));
+  return container;
+}
 
 /// Giải nhanh tạo bằng helper riêng (cần mã mời và lệ phí, `BackendApi.createLiteTournament` không có).
 class _LiteInfo {
