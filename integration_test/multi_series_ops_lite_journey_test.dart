@@ -116,6 +116,10 @@ void main() {
         find.text(newName),
         timeout: const Duration(seconds: 45),
       );
+      // Danh sách làm mới sau khi lưu: tên mới có thể hiện trước khi dòng cũ biến mất, nên chờ theo điều kiện.
+      for (var i = 0; i < 40 && find.text(oldName).evaluate().isNotEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 250));
+      }
       expect(
         find.text(oldName),
         findsNothing,
