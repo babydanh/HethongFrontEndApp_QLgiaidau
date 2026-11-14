@@ -11,8 +11,8 @@ Khi đọc code để kiểm kê đã thấy vài chỗ nghi sai logic. Đáng c
 - **Hợp đồng chung (làm trước):**
   - Thêm `integration_test/support/actors.dart`: tạo bộ tài khoản riêng cho mỗi chuỗi test (tiền tố `E2E<timestamp>-<chuỗi>`), đổi vai trong giao diện (`signInAs`), kiểm màn bị chặn (`expectBlocked`).
   - Mở rộng `integration_test/support/backend_api.dart` với các hàm cho vai phụ: mời và nhận lời mời trọng tài, đồng BTC, CLB (tạo, xin vào, duyệt, mời), chat, thông báo, theo dõi giải, chuỗi giải.
-- **Thêm 6 file hành trình nhiều tài khoản:**
-  - Mỗi file có bộ tài khoản riêng, nên 6 file chạy song song trên 6 máy cloud không đụng dữ liệu nhau.
+- **Thêm 8 file hành trình nhiều tài khoản:**
+  - Mỗi file có bộ tài khoản riêng, nên 8 file chạy song song trên 8 máy cloud không đụng dữ liệu nhau.
   - Mã test `TC-MULTI-<chuỗi>-xx`, có `expect` chắc chắn và ảnh `shot()` ở mỗi bước.
   - Mỗi file có một nhóm ca "phân quyền âm": vai không đủ quyền thì không thấy nút, hoặc bị chặn ở route.
 
@@ -24,8 +24,12 @@ Khi đọc code để kiểm kê đã thấy vài chỗ nghi sai logic. Đáng c
 | D | `multi_social_cross_journey_test.dart` | Social: host thêm tài khoản thì người đó nhận thông báo; người chơi thấy trạng thái thanh toán; báo cáo; đánh lại số TC trùng |
 | E | `multi_admin_guest_journey_test.dart` | Admin duyệt giải và CLB trên giao diện, change-request, tranh chấp, xác minh; khách xem route công khai và bị chặn route riêng; đăng ký, quên mật khẩu |
 | F | `multi_series_ops_lite_journey_test.dart` | Chuỗi giải (tạo, mời nhân sự, nhận lời mời), màn `/ops`, màn Lite (ghép cặp, quản lý) |
+| G | `multi_discover_view_journey_test.dart` | Khám phá và xem: tìm, lọc giải; sân; bảng xếp hạng; hồ sơ VĐV và ELO; bracket nhiều thể thức; xem lại trận |
+| H | `multi_permission_matrix_test.dart` | Ma trận quyền qua API: mỗi vai (khách, VĐV, trọng tài, đồng BTC, BTC, admin) gọi từng endpoint nhạy cảm, kiểm đúng 2xx hay 401/403 |
 
 - **Kiểm "hợp lý":** test viết theo hành vi đúng. Test đỏ vì lỗi sản phẩm thì ghi vào mục "Phát hiện" của `design.md` (đường dẫn, bước tái hiện, ảnh). Change này không sửa code sản phẩm.
+- **Báo cáo Allure cho E2E App:** job `test-app-e2e` của `babydanh/agent-orchestrator` đổi sang `--reporter json`, đổi kết quả ra `allure-results` (mỗi ca một test, ảnh `[[SHOT]]` gắn làm attachment), sinh Allure và lưu vào kho private `babydanh/qlgd-e2e-archive` qua `scripts/e2e/allure_archive.py publish --project qlgd-app-e2e`. Không thêm `upload-artifact` công khai cho Allure hay ảnh.
+- **Bảng phủ chức năng:** `integration_test/COVERAGE.md` liệt kê chức năng → mã TC, chỗ nào còn trống.
 - **Cập nhật tài liệu chạy:** `integration_test/ORGANIZER_JOURNEYS.md` (bảng file, cách chạy song song).
 
 ## Out of scope
@@ -33,7 +37,7 @@ Khi đọc code để kiểm kê đã thấy vài chỗ nghi sai logic. Đáng c
 - Sửa lỗi sản phẩm tìm được: mỗi lỗi một change riêng, sau khi người dùng chọn.
 - Thanh toán qua cổng thật (PayOS) và đăng nhập Google: chỉ kiểm tới màn cổng hoặc nút, không đi qua bên thứ ba.
 - Chạy hai máy ảo cùng lúc trong một test. Realtime được kiểm bằng cách vai phụ hành động qua API, còn giao diện của vai chính phải tự cập nhật không cần tải lại.
-- Đổi workflow `test-runner.yml` của repo `babydanh/agent-orchestrator`. Nó vẫn chạy mỗi lượt một file, tối đa 75 phút.
+- Đổi cách job `test-app-e2e` chạy (vẫn 1 máy ảo, các file được chọn, tối đa 75 phút). Chỉ thêm bước sinh và lưu Allure.
 - Đưa mật khẩu E2E đang ghi cứng trong `backend_api.dart` ra `--dart-define`: cần sửa workflow nên làm change riêng.
 - Không thêm package. Không sửa 4 file `organizer_*_journey`.
 
@@ -47,5 +51,6 @@ Khi đọc code để kiểm kê đã thấy vài chỗ nghi sai logic. Đáng c
 
 ## Impact
 
-- Chỉ thêm hoặc sửa file dưới `integration_test/`.
-- Mỗi file chạy trên cloud bằng `cloud-test-runner.py run --target app-e2e`. Cả bộ khoảng 6 lượt × 30–60 phút, chạy song song được.
+- App: chỉ thêm hoặc sửa file dưới `integration_test/`.
+- Orchestrator (`babydanh/agent-orchestrator`, public): sửa job `test-app-e2e` trong `.github/workflows/test-runner.yml` và thêm script đổi JSON ra Allure dưới `scripts/e2e/`.
+- Mỗi file chạy trên cloud bằng `cloud-test-runner.py run --target app-e2e`. Cả bộ khoảng 8 lượt × 30–60 phút, chạy song song được.

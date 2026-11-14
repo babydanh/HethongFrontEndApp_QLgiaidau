@@ -32,6 +32,12 @@ Realtime trong cách A: vai phụ gọi API (ví dụ trọng tài cộng điể
    - Ghi lỗi vào mục "Phát hiện" bên dưới.
    - Gỡ `skip` khi lỗi được sửa.
 5. **Một file không quá 60 phút trên cloud.** Vượt thì tách thành `..._1`, `..._2`.
+6. **Allure cho E2E App.**
+   - Flutter không có adapter Allure chính thức. Job chạy `flutter test --reporter json` (vẫn ghi log chữ cho `cloud-test-runner.py summary`), rồi script Python `scripts/e2e/flutter_json_to_allure.py` (repo orchestrator, có unit test) đổi sự kiện `testStart`/`testDone`/`print`/`error` ra `allure-results/*-result.json`.
+   - Mỗi `[[SHOT name]]<base64>` trong `print` của ca đó thành attachment PNG; lỗi `expect` thành `statusDetails`. Nhãn `suite` = tên file, `story` = mã TC.
+   - Sinh báo cáo bằng `npx allure-commandline@2.46.1 generate` như job Web, lưu vào kho private bằng `allure_archive.py publish --project qlgd-app-e2e` (secret `GH_PAT`). Lưu kho lỗi không làm job đỏ (`continue-on-error`).
+   - Repo orchestrator public: không đưa Allure, ảnh hay log có base64 ảnh lên `upload-artifact`.
+7. **Ma trận quyền qua API (chuỗi H)** không cần giao diện, chạy nhanh, bổ sung cho ca `expectBlocked`. Ô nào lệch kỳ vọng là một BUG, ghi vào bảng Phát hiện.
 
 ## Phát hiện từ đọc code (cần test xác nhận)
 
