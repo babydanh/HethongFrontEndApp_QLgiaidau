@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_pair_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import 'roster_fixture_workbook.dart';
 import 'roster_list_fixture.dart';
 
 RosterCardStatus _status({
-  required row,
+  required RosterDraftRow row,
   RosterImportBatchPreviewRow? server,
   bool previewing = false,
   bool doubles = false,
@@ -99,7 +100,7 @@ void main() {
     }
 
     RosterPairCard card({
-      required row,
+      required RosterDraftRow row,
       RosterImportBatchPreviewRow? server,
       bool previewing = false,
       bool linked1 = false,
