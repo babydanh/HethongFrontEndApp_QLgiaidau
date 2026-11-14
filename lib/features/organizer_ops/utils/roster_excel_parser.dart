@@ -658,6 +658,16 @@ const List<String> _sensitiveHeaderWords = [
   'ma so thue',
 ];
 
+/// Header là cột số thứ tự (STT, Số TT, No., #).
+bool isRosterIndexHeader(String header) =>
+    _indexHeaders.contains(normalizeRosterHeader(header));
+
+/// Header là dữ liệu cá nhân không bao giờ giữ (ngày sinh, giấy tờ, địa chỉ).
+bool isSensitiveRosterHeader(String header) {
+  final key = normalizeRosterHeader(header);
+  return _sensitiveHeaderWords.any(key.contains);
+}
+
 /// Cột gợi ý đồng đội (`VĐV đăng ký đứng chung`, `đồng đội`, `partner`): manh mối ghép, không phải slot.
 const List<String> _partnerHintKeys = [
   'dang ky dung chung',
@@ -777,6 +787,7 @@ RosterGridSheet fillRosterMerges(RosterGridSheet sheet) {
     name: sheet.name,
     rows: rows,
     mergedRegions: sheet.mergedRegions,
+    horizontalMerges: sheet.horizontalMerges,
   );
 }
 
@@ -824,16 +835,15 @@ List<RosterParsedRow> parseRosterSheet(
 
   final usedColumns = mapping.columns.values.toSet();
   final hintColumn = findPartnerHintColumn(headers, mapping);
-  final indexColumn = _firstWhereIndex(
-    headers,
-    (h) => _indexHeaders.contains(normalizeRosterHeader(h)),
-  );
+  final indexColumn = _firstWhereIndex(headers, isRosterIndexHeader);
   final notedColumns = <int>[];
   for (var c = 0; c < width; c++) {
     if (usedColumns.contains(c) || c == hintColumn) continue;
-    final key = normalizeRosterHeader(c < headers.length ? headers[c] : '');
-    if (key.isEmpty || _indexHeaders.contains(key)) continue;
-    if (_sensitiveHeaderWords.any(key.contains)) continue;
+    final header = c < headers.length ? headers[c] : '';
+    if (normalizeRosterHeader(header).isEmpty) continue;
+    if (isRosterIndexHeader(header) || isSensitiveRosterHeader(header)) {
+      continue;
+    }
     notedColumns.add(c);
   }
 

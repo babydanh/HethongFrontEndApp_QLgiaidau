@@ -9,6 +9,7 @@ class RosterGridSheet {
     required this.name,
     required this.rows,
     this.mergedRegions = const [],
+    this.horizontalMerges = const [],
   });
 
   final String name;
@@ -17,6 +18,9 @@ class RosterGridSheet {
   /// Vùng ô gộp qua hai dòng trở lên ở dạng địa chỉ A1 (`A3:A4`). Giá trị chưa được điền xuống các ô
   /// dưới; gọi `fillRosterMerges` (roster_excel_parser.dart) để điền.
   final List<String> mergedRegions;
+
+  /// Vùng gộp một dòng nhiều cột (`A1:I1`). Chỉ dùng để cảnh báo tiêu đề lệch cột, không phải bằng chứng cặp.
+  final List<String> horizontalMerges;
 }
 
 /// Vùng ô theo chỉ số 0-based, cột A = 0.
@@ -95,12 +99,20 @@ RosterGridSheet _readSheet(String name, Sheet sheet) {
   }
   // Chỉ vùng gộp qua nhiều dòng: gộp một dòng là tiêu đề, không phải bằng chứng cặp.
   final merged = <String>[];
+  final horizontal = <String>[];
   for (final region in sheet.spannedItems) {
     final range = parseA1Range(region);
-    if (range == null || range.endRow <= range.startRow) continue;
-    if (range.startRow >= _maxGridRows) continue;
-    merged.add(region);
-    if (merged.length >= maxMergedRegions) break;
+    if (range == null || range.startRow >= _maxGridRows) continue;
+    if (range.endRow > range.startRow) {
+      if (merged.length < maxMergedRegions) merged.add(region);
+    } else if (range.endColumn > range.startColumn) {
+      if (horizontal.length < maxMergedRegions) horizontal.add(region);
+    }
   }
-  return RosterGridSheet(name: name, rows: rows, mergedRegions: merged);
+  return RosterGridSheet(
+    name: name,
+    rows: rows,
+    mergedRegions: merged,
+    horizontalMerges: horizontal,
+  );
 }
