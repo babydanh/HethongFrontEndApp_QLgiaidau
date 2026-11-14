@@ -18,11 +18,9 @@ import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_mapping_d
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_digest.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_widgets.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_pair_card.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_division_match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-
-/// Giá trị dropdown cho lựa chọn "để trống". UserId thật luôn khác rỗng.
-const String _unlinkedValue = '';
 
 /// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi.
 ///
@@ -711,26 +709,6 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     );
   }
 
-  void _setLink(RosterDraftRow row, int player, RosterPlayerLink link) {
-    _editRevision++;
-    setState(() {
-      if (player == 1) {
-        row.player1Link = link;
-      } else {
-        row.player2Link = link;
-      }
-    });
-    unawaited(_runPreview());
-  }
-
-  void _chooseAccount(RosterDraftRow row, int player, String? value) {
-    if (value == null) return;
-    final link = value == _unlinkedValue
-        ? const RosterPlayerLink.unlinked()
-        : RosterPlayerLink.linked(value);
-    _setLink(row, player, link);
-  }
-
   void _setAutoApprove(bool value) {
     setState(() => _autoApprove = value);
     unawaited(_runPreview());
@@ -1114,7 +1092,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     for (final group in _groups) {
       items.add(_groupHeader(context, group, preview));
       for (final row in group.rows) {
-        items.add(_rowCard(context, row, serverRows[row.index]));
+        items.add(_pairCard(row, serverRows[row.index]));
       }
     }
 
@@ -1327,226 +1305,31 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     );
   }
 
-  Widget _rowCard(
-    BuildContext context,
-    RosterDraftRow row,
-    RosterImportBatchPreviewRow? server,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final parsed = row.parsed;
-    final names = [
-      parsed.player1Name,
-      parsed.player2Name,
-    ].whereType<String>().join(' / ');
-    final emails = [
-      parsed.player1Email,
-      parsed.player2Email,
-    ].whereType<String>().join(', ');
-    final eligible = server != null && rosterIsRowEligible(server);
-    final codes = server != null ? server.status : row.localStatus;
+  Widget _pairCard(RosterDraftRow row, RosterImportBatchPreviewRow? server) {
     final candidates = _candidates[row.index];
-    final customError = server?.customResponseError;
-    return Container(
-      key: ValueKey('roster-row-${row.index}'),
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      names.isEmpty ? emails : names,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (emails.isNotEmpty)
-                      Text(
-                        emails,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    Text(
-                      l10n.rosterImportRowSource(
-                        parsed.sourceRowIndex,
-                        parsed.sheetName,
-                      ),
-                      style: TextStyle(color: colors.textMuted, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                eligible ? Icons.check_circle_rounded : Icons.block_rounded,
-                color: eligible ? colors.success : colors.textMuted,
-                size: 20,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                eligible
-                    ? l10n.rosterImportWillImport
-                    : l10n.rosterImportWillSkip,
-                style: TextStyle(
-                  color: eligible ? colors.success : colors.textMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          if (codes.isNotEmpty || customError != null) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final code in codes)
-                  rosterToneChip(
-                    rosterStatusLabel(l10n, code),
-                    _statusTone(context, code),
-                  ),
-                if (customError != null)
-                  rosterToneChip(
-                    l10n.rosterImportCustomResponseInvalid,
-                    colors.error,
-                  ),
-              ],
-            ),
-          ],
-          if (server != null) ...[
-            _accountRow(
-              context,
-              row,
-              1,
-              candidates?.player1 ?? const <RosterImportBatchCandidate>[],
-              parsed.player1Email,
-            ),
-            if (row.hasPlayer2)
-              _accountRow(
-                context,
-                row,
-                2,
-                candidates?.player2 ?? const <RosterImportBatchCandidate>[],
-                parsed.player2Email,
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Color _statusTone(BuildContext context, String code) {
-    final colors = context.colors;
-    if (code == 'FOUND') return colors.success;
-    if (rosterServerBlockingCodes.contains(code) ||
-        rosterLocalBlockingCodes.contains(code)) {
-      return colors.error;
-    }
-    return colors.warning;
-  }
-
-  Widget _accountRow(
-    BuildContext context,
-    RosterDraftRow row,
-    int player,
-    List<RosterImportBatchCandidate> candidates,
-    String? email,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    if (candidates.isEmpty) {
-      if (email == null) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Text(
-          l10n.rosterImportNoAccountMatch,
-          style: TextStyle(
-            color: colors.textMuted,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    }
-    final link = player == 1 ? row.player1Link : row.player2Link;
-    final effective = _effectiveLink(link, email, candidates);
-    final String? selected;
-    if (link.choice == RosterLinkChoice.unlinked) {
-      selected = _unlinkedValue;
-    } else if (effective != null &&
-        candidates.any((candidate) => candidate.userId == effective)) {
-      selected = effective;
-    } else {
-      selected = null;
-    }
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          Text(
-            l10n.rosterImportAccountLabel(player),
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: DropdownButton<String>(
-              key: ValueKey('roster-account-${row.index}-$player'),
-              isExpanded: true,
-              value: selected,
-              hint: Text(
-                l10n.rosterImportChooseAccount,
-                style: TextStyle(color: colors.textMuted, fontSize: 13),
-              ),
-              items: [
-                DropdownMenuItem<String>(
-                  value: _unlinkedValue,
-                  child: Text(
-                    l10n.rosterImportLeaveUnlinked,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                for (final candidate in candidates)
-                  DropdownMenuItem<String>(
-                    value: candidate.userId,
-                    child: Text(
-                      l10n.rosterImportCandidateLabel(
-                        candidate.fullName,
-                        candidate.email,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-              onChanged: (value) => _chooseAccount(row, player, value),
-            ),
-          ),
-        ],
-      ),
+    final parsed = row.parsed;
+    return RosterPairCard(
+      row: row,
+      server: server,
+      previewing: _previewing,
+      isDoublesDivision: row.target.isDoubles,
+      linked1:
+          _effectiveLink(
+            row.player1Link,
+            parsed.player1Email,
+            candidates?.player1,
+          ) !=
+          null,
+      linked2:
+          _effectiveLink(
+            row.player2Link,
+            parsed.player2Email,
+            candidates?.player2,
+          ) !=
+          null,
+      hasAccountCandidate1: candidates?.player1.isNotEmpty ?? false,
+      hasAccountCandidate2: candidates?.player2.isNotEmpty ?? false,
+      onTap: null,
     );
   }
 }
