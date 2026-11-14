@@ -1,5 +1,4 @@
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -479,18 +478,17 @@ void main() {
       await pumpUntil(tester, find.text('Tổng quan'));
       await snap.snap('dashboard-tong-quan');
       await tapText(tester, 'Quản lý');
-      // Tiêu đề nhóm viết hoa; chờ tab Quản lý thật sự hiện (tab Hoạt động cũng có tên giải).
-      await pumpUntil(tester, find.textContaining('GIẢI ĐẤU CỦA TÔI'));
-      final row = find.widgetWithText(LavishRow, singlesName);
-      await pumpUntil(tester, row);
+      // Tab Quản lý có ô lọc "Chủ giải N / Tham gia N" (tab Hoạt động cũng có tên giải nên chờ ô lọc).
+      await pumpUntil(tester, find.text('Chủ giải 0'));
+      await pumpUntil(tester, find.text(singlesName));
       expect(
-        find.descendant(of: row, matching: find.text('Đã đăng ký')),
+        find.textContaining('Tham gia •'),
         findsWidgets,
-        reason: 'Hàng giải của VĐV phải mang nhãn Đã đăng ký',
+        reason: 'Hàng giải của VĐV phải mang vai Tham gia',
       );
       expect(
-        find.descendant(of: row, matching: find.text('Chủ giải')),
-        findsNothing,
+        find.text('Chủ giải 0'),
+        findsOneWidget,
         reason: 'VĐV không phải chủ giải nào',
       );
       await snap.snap('dashboard-giai-cua-toi');
@@ -783,7 +781,7 @@ void main() {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-20');
       final pid = doublesParticipantId;
       expect(pid, isNotNull, reason: 'Cần ca TC-MULTI-B-03 tạo đơn đôi trước');
-      final container = await _signIn(tester, actor('viewer'));
+      final container = await _signIn(tester, actor('organizer'));
       final uri = Uri(
         path: '/join-team',
         queryParameters: {
