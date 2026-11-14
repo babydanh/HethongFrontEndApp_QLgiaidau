@@ -60,7 +60,7 @@
   - Chủ file chung: sở hữu `roster_import_sheet.dart` trong đợt 1. Đợt 2 chỉ bắt đầu sau khi task này merge (4.1 tách file).
   - Phụ thuộc: 1.4, 2.1, 2.2.
 
-- [ ] 3.2 Cổng đợt 1. Tiêu chí: `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/l10n` exit 0 và `flutter test --no-pub test/features/organizer_ops/roster_excel_parser_test.dart test/features/organizer_ops/roster_mapping_draft_test.dart test/features/organizer_ops/roster_column_mapping_sheet_test.dart test/features/organizer_ops/roster_mapping_flow_test.dart test/features/organizer_ops/roster_import_sheet_test.dart test/features/organizer_ops/roster_layout_ai_test.dart test/features/organizer_ops/roster_import_pairing_test.dart test/features/participants_roster_excel_test.dart` exit 0; CI nhánh (`ci.yml`) xanh sau khi push nhánh `cloud/...`; cập nhật `handoff.md` (mục Trạng thái: đợt 1 xong).
+- [x] 3.2 Cổng đợt 1. Tiêu chí: `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/l10n` exit 0 và `flutter test --no-pub test/features/organizer_ops/roster_excel_parser_test.dart test/features/organizer_ops/roster_mapping_draft_test.dart test/features/organizer_ops/roster_column_mapping_sheet_test.dart test/features/organizer_ops/roster_mapping_flow_test.dart test/features/organizer_ops/roster_import_sheet_test.dart test/features/organizer_ops/roster_layout_ai_test.dart test/features/organizer_ops/roster_import_pairing_test.dart test/features/participants_roster_excel_test.dart` exit 0; CI nhánh (`ci.yml`) xanh sau khi push nhánh `cloud/...`; cập nhật `handoff.md` (mục Trạng thái: đợt 1 xong).
   - Files: không sửa code; sửa `openspec/changes/app-nhap-excel-ghep-cot/handoff.md`.
   - Phụ thuộc: 3.1.
 

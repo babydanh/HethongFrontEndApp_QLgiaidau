@@ -8,8 +8,8 @@ Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-ghep-cot-dot1 (từ clo
 
 ## Trạng thái
 - Xong: kế hoạch OpenSpec đủ 4 artifact (PR #29). **Code ĐỢT 1 xong trên nhánh `cloud/danh1-app-ghep-cot-dot1-131443`**: task 1.1–1.4, 2.1, 2.2, 3.1 đã `[x]`, mỗi task một commit. Cổng cục bộ của 3.2 đạt: `flutter analyze --no-pub lib/features/organizer_ops lib/core/services lib/l10n` sạch và 8 file test của 3.2 xanh (109 test).
-- Còn lại của 3.2: CI nhánh (`ci.yml`) xanh sau push; chưa lên `main` (người dùng/phiên local gộp qua `merge-lane.py`).
-- KHÔNG làm: nhóm 4–5 (đợt 2). `tasks.md` còn 3.2 (đợi CI), 4.1–4.7, 5.1.
+- 3.2 xong: CI nhánh (`ci.yml`, run 43566411923) xanh sau push. Chưa lên `main` (người dùng/phiên local gộp qua `merge-lane.py`).
+- KHÔNG làm: nhóm 4–5 (đợt 2). `tasks.md` còn 4.1–4.7, 5.1.
 
 ### Chỗ lệch so với tasks.md/design.md (cần biết khi làm đợt 2)
 - `RosterColumnKind` là `{ normal, serial, sensitive }` (không phải `index`): `index` trùng thành viên có sẵn của `Enum`, không biên dịch được.
