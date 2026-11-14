@@ -34,7 +34,7 @@ Sau tách, file màn còn khoảng 1250 dòng (phần lớn là `_RosterImportSh
 `lib/features/organizer_ops/utils/roster_mapping_draft.dart` (thuần Dart, không Flutter) chứa `RosterMappingDraft` bất biến. Popup giữ `List<RosterMappingDraft>` trong state của nó (một phần tử cho mỗi khối đọc được và mỗi sheet bị bỏ qua), mọi thao tác trả bản mới. Popup trả về `RosterMappingResult?` qua `Navigator.pop`; `null` khi đóng không bấm `Xong`. Màn Nhập Excel không đổi `_readings` cho tới khi nhận kết quả khác `null`.
 
 ```dart
-enum RosterColumnKind { normal, index, sensitive }
+enum RosterColumnKind { normal, serial, sensitive } // `serial` thay `index` vì trùng Enum.index
 
 class RosterMappingColumn {
   const RosterMappingColumn({required this.index, required this.header,
