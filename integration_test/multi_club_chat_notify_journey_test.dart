@@ -270,11 +270,11 @@ void main() {
       await _openChat(tester, container, roomId, clubName, clubId);
       await pumpUntil(
         tester,
-        find.text(message),
+        _chatText(message),
         timeout: const Duration(seconds: 45),
       );
       await shooter.snap('thanh-vien-thay-tin-chu');
-      expect(find.text(message), findsWidgets);
+      expect(_chatText(message), findsWidgets);
       await _leave(tester, container);
     },
   );
@@ -299,11 +299,11 @@ void main() {
       await _openChat(tester, container, roomId, clubName, clubId);
       await pumpUntil(
         tester,
-        find.text(reply),
+        _chatText(reply),
         timeout: const Duration(seconds: 45),
       );
       await shooter.snap('chu-thay-tin-tra-loi');
-      expect(find.text(reply), findsWidgets);
+      expect(_chatText(reply), findsWidgets);
       await _leave(tester, container);
     },
   );
@@ -364,7 +364,7 @@ void main() {
         find.text(member.fullName),
         timeout: const Duration(seconds: 45),
       );
-      await pumpUntil(tester, find.text(hello));
+      await pumpUntil(tester, _chatText(hello));
       await shooter.snap('chu-thay-phong-1-1');
       await tester.tap(find.text(member.fullName).first);
       await tester.pump();
@@ -718,7 +718,7 @@ Future<void> _sendChat(WidgetTester tester, String text) async {
   await tapFinder(tester, find.byIcon(Icons.send_rounded), what: 'nút Gửi');
   await pumpUntil(
     tester,
-    find.text(text),
+    _chatText(text),
     timeout: const Duration(seconds: 30),
   );
 }
@@ -863,3 +863,6 @@ void _drain(WidgetTester tester) {
     debugPrint('BUG-SAN-PHAM đã biết: ${text.split('\n').first}');
   }
 }
+
+/// Chữ của tin nhắn trong khung chat: bong bóng chat vẽ bằng RichText nên `find.text` không thấy.
+Finder _chatText(String text) => find.textContaining(text, findRichText: true);
