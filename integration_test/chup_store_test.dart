@@ -1,20 +1,24 @@
+import 'dart:ui' as ui;
+
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'support/app_driver.dart';
 import 'support/backend_api.dart';
 import 'support/organizer_journey.dart';
+import 'support/shot.dart';
 import 'support/social_journey.dart';
 
 /// Store screenshots (App Store / Google Play): pickleball scoring desk and a
 /// social session, filled with readable fake names. Emulator + real Backend.
 /// Not a regression test: a missing step logs `CHUP-LOI` and the run goes on.
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final api = BackendApi();
   final stamp = DateTime.now().millisecondsSinceEpoch;
 
@@ -59,15 +63,20 @@ void main() {
     final matchId = match['id'] as String;
     await api.startMatch(token: token, matchId: matchId);
 
+    final shooter = _StoreShooter(tester, 'store-pb');
     final container = await signInAsOrganizer(tester);
-    final shooter = SocialShooter(tester, binding, 'store-pb');
     container
         .read(routerProvider)
         .go(
           '/organizer/tournaments/${created.tournamentId}/ops/match/$matchId',
         );
     await socialWait(tester, const Duration(seconds: 6));
-    await shooter.snap('ban-diem-dau');
+    await shooter.snap('xem-tran');
+    await step('mở bảng điểm', () async {
+      await tapFinder(tester, find.byTooltip('MỞ BẢNG'), what: 'nút MỞ BẢNG');
+      await socialWait(tester, const Duration(seconds: 3));
+      await shooter.snap('ban-diem-dau');
+    });
 
     // Rally a few points: "+" of the serving team scores, of the receiver is a side-out.
     for (final team in [1, 1, 2, 2, 1, 1, 1, 2, 1, 1]) {
@@ -85,8 +94,15 @@ void main() {
   });
 
   testWidgets('chụp buổi giao lưu social', (tester) async {
+    final shooter = _StoreShooter(tester, 'store-social');
     final social = SocialApi();
-    final hostToken = await social.login(kOrganizerEmail);
+    final hostEmail = 'store$stamp-host@example.com';
+    await api.registerAccount(
+      email: hostEmail,
+      password: kE2ePassword,
+      fullName: 'Nguyễn Hoàng Long',
+    );
+    final hostToken = await social.login(hostEmail);
     final session = await social.createSession(
       token: hostToken,
       title: 'Giao lưu Pickleball tối thứ Bảy',
@@ -127,8 +143,16 @@ void main() {
       );
     }
 
-    final container = await signInAs(tester, email: kOrganizerEmail);
-    final shooter = SocialShooter(tester, binding, 'store-social');
+    await step(
+      'host nhắn',
+      () => social.sendMessage(
+        hostToken,
+        session.id,
+        'Sân đã đặt xong, 19h bắt đầu nha!',
+      ),
+    );
+
+    final container = await signInAs(tester, email: hostEmail);
     await openSession(tester, container, session);
     await socialWait(tester, const Duration(seconds: 3));
     await shooter.snap('chi-tiet');
@@ -192,4 +216,38 @@ Future<void> _importTeams(
       ],
     },
   );
+}
+
+/// iPhone 6.9" store size (1320 x 2868 at 3x = 440 x 956 logical).
+const _storeSize = Size(1320, 2868);
+
+/// Renders the whole view (routes, sheets, overlays) off-screen at the store size,
+/// independent of the small CI emulator surface, and prints it like `shot()`.
+class _StoreShooter {
+  _StoreShooter(this.tester, this.prefix) {
+    tester.view.physicalSize = _storeSize;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+  }
+
+  final WidgetTester tester;
+  final String prefix;
+  int _count = 0;
+
+  Future<void> snap(String name) async {
+    await tester.pump();
+    final layer = tester.binding.renderViews.first.debugLayer! as OffsetLayer;
+    final image = await layer.toImage(Offset.zero & _storeSize);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    final bytes = data!.buffer.asUint8List();
+    _count++;
+    final shotName = '$prefix-${_count.toString().padLeft(2, '0')}-$name';
+    debugPrintSynchronously('[[SHOT-BEGIN $shotName ${bytes.length}]]');
+    final chunks = chunkBase64(bytes, size: 4000);
+    for (var i = 0; i < chunks.length; i++) {
+      debugPrintSynchronously('[[SHOT $shotName $i]] ${chunks[i]}');
+    }
+    debugPrintSynchronously('[[SHOT-END $shotName]]');
+  }
 }
