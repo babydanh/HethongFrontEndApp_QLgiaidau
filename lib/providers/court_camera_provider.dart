@@ -2,13 +2,20 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_camera_admin_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_court_camera_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_facebook_camera_live_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final courtCameraRepositoryProvider = Provider<ICourtCameraRepository>((ref) {
   return ApiCourtCameraRepository(ref.watch(dioClientProvider));
 });
+
+final facebookCameraLiveRepositoryProvider =
+    Provider<IFacebookCameraLiveRepository>((ref) {
+      return ApiFacebookCameraLiveRepository(ref.watch(dioClientProvider));
+    });
 
 /// Create / archive / move-court writes; kept out of the read-only camera
 /// contract above. Listing still goes through [tournamentCamerasProvider].

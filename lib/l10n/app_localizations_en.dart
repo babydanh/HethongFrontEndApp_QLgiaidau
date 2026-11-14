@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -18372,6 +18373,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraLiveSave => 'Save live camera';
+
+  @override
+  String get tournamentCameraFbTitle => 'Create a live on your Facebook page';
+
+  @override
+  String get tournamentCameraFbHint =>
+      'We set up a live on your page. Video goes straight from your device to Facebook.';
+
+  @override
+  String get tournamentCameraFbChecking => 'Checking the page connection...';
+
+  @override
+  String tournamentCameraFbPage(Object name) {
+    return 'Page: $name';
+  }
+
+  @override
+  String get tournamentCameraFbConnect => 'Connect page';
+
+  @override
+  String get tournamentCameraFbConnectHelp =>
+      'Facebook opens in your browser. After you grant access, come back to the app and tap Check again.';
+
+  @override
+  String get tournamentCameraFbRecheck => 'Check again';
+
+  @override
+  String get tournamentCameraFbCreate => 'Create live';
+
+  @override
+  String get tournamentCameraFbWorking => 'Working...';
+
+  @override
+  String get tournamentCameraFbNoCommunity =>
+      'This tournament has no club, so a page cannot be connected.';
+
+  @override
+  String get tournamentCameraFbHowTo =>
+      'Paste these 2 lines into your streaming app or OBS, then tap Start streaming.';
+
+  @override
+  String get tournamentCameraFbRtmpLabel => 'Server address (RTMP)';
+
+  @override
+  String get tournamentCameraFbKeyLabel => 'Stream key';
+
+  @override
+  String get tournamentCameraFbKeyWarning =>
+      'Keep the stream key private. The watch link is filled in above; the preview may stay blank until you start streaming.';
+
+  @override
+  String get tournamentCameraFbShowKey => 'Show stream key';
+
+  @override
+  String get tournamentCameraFbHideKey => 'Hide stream key';
+
+  @override
+  String tournamentCameraFbCopy(Object label) {
+    return 'Copy $label';
+  }
+
+  @override
+  String tournamentCameraFbCopied(Object label) {
+    return 'Copied $label';
+  }
+
+  @override
+  String get tournamentCameraFbErrorNotConnected =>
+      'No page connected yet. Tap \"Connect page\" and try again.';
+
+  @override
+  String get tournamentCameraFbErrorExpired =>
+      'The page connection expired. Tap \"Connect page\" to grant access again.';
+
+  @override
+  String get tournamentCameraFbErrorPermission =>
+      'The page has not allowed video publishing. Reconnect and grant all permissions.';
+
+  @override
+  String get tournamentCameraFbErrorNetwork =>
+      'The network is down or too slow. Check it and try again.';
+
+  @override
+  String get tournamentCameraFbErrorUnavailable =>
+      'Facebook is busy. Wait a few minutes and try again.';
+
+  @override
+  String get tournamentCameraFbErrorForbidden =>
+      'Only the tournament owner or an organizer can create a live.';
+
+  @override
+  String get tournamentCameraFbErrorGeneric =>
+      'Could not create the live. Please try again in a few minutes.';
+
+  @override
+  String get tournamentCameraFbErrorBrowser =>
+      'Could not open the browser. Connect the page on the Web, then tap Check again.';
 
   @override
   String get tournamentCameraNameLabel => 'Camera name';

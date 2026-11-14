@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -18298,6 +18299,103 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraLiveSave => 'Lưu camera live';
+
+  @override
+  String get tournamentCameraFbTitle => 'Tạo live trên fanpage Facebook';
+
+  @override
+  String get tournamentCameraFbHint =>
+      'Hệ thống tạo sẵn live trên fanpage của bạn. Video đi thẳng từ máy bạn lên Facebook.';
+
+  @override
+  String get tournamentCameraFbChecking => 'Đang kiểm tra kết nối fanpage...';
+
+  @override
+  String tournamentCameraFbPage(Object name) {
+    return 'Fanpage: $name';
+  }
+
+  @override
+  String get tournamentCameraFbConnect => 'Kết nối fanpage';
+
+  @override
+  String get tournamentCameraFbConnectHelp =>
+      'Facebook sẽ mở trong trình duyệt. Cấp quyền xong, quay lại app và bấm Kiểm tra lại.';
+
+  @override
+  String get tournamentCameraFbRecheck => 'Kiểm tra lại';
+
+  @override
+  String get tournamentCameraFbCreate => 'Tạo live';
+
+  @override
+  String get tournamentCameraFbWorking => 'Đang xử lý...';
+
+  @override
+  String get tournamentCameraFbNoCommunity =>
+      'Giải này chưa thuộc CLB nào nên chưa kết nối được fanpage.';
+
+  @override
+  String get tournamentCameraFbHowTo =>
+      'Dán 2 dòng này vào app livestream hoặc OBS rồi bấm Bắt đầu phát.';
+
+  @override
+  String get tournamentCameraFbRtmpLabel => 'Địa chỉ máy chủ (RTMP)';
+
+  @override
+  String get tournamentCameraFbKeyLabel => 'Khoá phát';
+
+  @override
+  String get tournamentCameraFbKeyWarning =>
+      'Giữ kín khoá phát, không gửi cho người lạ. Link xem đã tự điền ở trên; khung xem trước có thể trống đến khi bạn bắt đầu phát.';
+
+  @override
+  String get tournamentCameraFbShowKey => 'Hiện khoá phát';
+
+  @override
+  String get tournamentCameraFbHideKey => 'Ẩn khoá phát';
+
+  @override
+  String tournamentCameraFbCopy(Object label) {
+    return 'Sao chép $label';
+  }
+
+  @override
+  String tournamentCameraFbCopied(Object label) {
+    return 'Đã sao chép $label';
+  }
+
+  @override
+  String get tournamentCameraFbErrorNotConnected =>
+      'Chưa kết nối fanpage. Bấm \"Kết nối fanpage\" rồi thử lại.';
+
+  @override
+  String get tournamentCameraFbErrorExpired =>
+      'Kết nối fanpage đã hết hạn. Bấm \"Kết nối fanpage\" để cấp quyền lại.';
+
+  @override
+  String get tournamentCameraFbErrorPermission =>
+      'Fanpage chưa cấp quyền phát video. Hãy kết nối lại và chọn đủ quyền.';
+
+  @override
+  String get tournamentCameraFbErrorNetwork =>
+      'Mạng đang gián đoạn hoặc quá chậm. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get tournamentCameraFbErrorUnavailable =>
+      'Facebook đang bận. Chờ vài phút rồi thử lại.';
+
+  @override
+  String get tournamentCameraFbErrorForbidden =>
+      'Chỉ chủ giải hoặc người tổ chức mới tạo được live.';
+
+  @override
+  String get tournamentCameraFbErrorGeneric =>
+      'Chưa tạo được live. Hãy thử lại sau ít phút.';
+
+  @override
+  String get tournamentCameraFbErrorBrowser =>
+      'Không mở được trình duyệt. Hãy kết nối fanpage ở Web rồi bấm Kiểm tra lại.';
 
   @override
   String get tournamentCameraNameLabel => 'Tên camera';

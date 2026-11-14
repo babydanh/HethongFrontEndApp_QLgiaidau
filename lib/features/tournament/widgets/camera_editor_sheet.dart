@@ -1,10 +1,12 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
+import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
 import 'package:app_quanly_giaidau/features/match/utils/live_embed.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_embed_player.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_add_help.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +59,13 @@ class CameraEditorSheet extends StatefulWidget {
     required this.onSubmit,
     this.camera,
     this.previewBuilder = _defaultPreview,
+    this.facebookLiveTournamentId,
+    this.facebookLiveRepository,
   });
+
+  /// Cả hai có mới hiện "Tạo live trên fanpage Facebook" (chỉ khi tạo camera mới).
+  final String? facebookLiveTournamentId;
+  final IFacebookCameraLiveRepository? facebookLiveRepository;
 
   final List<TournamentCourtRef> courts;
   final LivePreviewBuilder previewBuilder;
@@ -72,6 +80,8 @@ class CameraEditorSheet extends StatefulWidget {
     required CameraEditorSubmit onSubmit,
     TournamentCameraModel? camera,
     LivePreviewBuilder previewBuilder = _defaultPreview,
+    String? facebookLiveTournamentId,
+    IFacebookCameraLiveRepository? facebookLiveRepository,
   }) => showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -82,6 +92,8 @@ class CameraEditorSheet extends StatefulWidget {
       onSubmit: onSubmit,
       camera: camera,
       previewBuilder: previewBuilder,
+      facebookLiveTournamentId: facebookLiveTournamentId,
+      facebookLiveRepository: facebookLiveRepository,
     ),
   );
 
@@ -172,9 +184,21 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
     final embed = _embed;
     final hasValue = _linkController.text.trim().isNotEmpty;
     final error = hasValue ? embed.error : null;
+    final facebookTournamentId = widget.facebookLiveTournamentId;
+    final facebookRepository = widget.facebookLiveRepository;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (facebookTournamentId != null && facebookRepository != null) ...[
+          FacebookLivePanel(
+            tournamentId: facebookTournamentId,
+            repository: facebookRepository,
+            enabled: !_busy,
+            onCreated: (watchUrl) =>
+                setState(() => _linkController.text = watchUrl),
+          ),
+          const SizedBox(height: 12),
+        ],
         TextField(
           key: const ValueKey('camera-live-link'),
           controller: _linkController,
