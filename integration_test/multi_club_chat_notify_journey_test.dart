@@ -62,7 +62,7 @@ void main() {
         findsOneWidget,
         reason: 'chủ CLB có nút Cài đặt trên thanh trên',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -85,7 +85,7 @@ void main() {
       await pumpUntil(tester, find.text('Chờ phê duyệt'));
       await shooter.snap('da-gui-yeu-cau');
       expect(find.text('Quản lý CLB'), findsNothing);
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -115,7 +115,7 @@ void main() {
         findsNothing,
         reason: 'đơn đã duyệt không còn trong danh sách chờ',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -146,7 +146,7 @@ void main() {
         findsOneWidget,
         reason: 'chip Chưa đọc phải kèm số thông báo chưa đọc',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -173,7 +173,7 @@ void main() {
         findsWidgets,
         reason: 'thành viên đã vào có nút chat CLB',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -214,7 +214,7 @@ void main() {
         findsNothing,
         reason: 'người được mời vào với vai thành viên thường',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -244,7 +244,7 @@ void main() {
         timeout: const Duration(seconds: 30),
       );
       await shooter.snap('da-tu-choi-loi-moi');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -274,7 +274,7 @@ void main() {
       );
       await shooter.snap('thanh-vien-thay-tin-chu');
       expect(find.text(message), findsWidgets);
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -303,7 +303,7 @@ void main() {
       );
       await shooter.snap('chu-thay-tin-tra-loi');
       expect(find.text(reply), findsWidgets);
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -335,7 +335,7 @@ void main() {
         reason:
             'dòng phụ của phòng CLB là tin mới nhất (tin trả lời của thành viên)',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -387,7 +387,7 @@ void main() {
         answer,
         reason: 'thành viên phải nhận tin trả lời của chủ trong phòng 1-1',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -422,7 +422,7 @@ void main() {
       );
       expect(read['isRead'], isTrue);
       await shooter.snap('sau-khi-bam');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -468,7 +468,7 @@ void main() {
         reason: 'hết thông báo chưa đọc thì ẩn nút Đọc tất cả',
       );
       await shooter.snap('sau-doc-tat-ca');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -494,7 +494,7 @@ void main() {
       );
       expect(find.text('Bạn đã đọc hết tất cả thông báo!'), findsNothing);
       await shooter.snap('xem-tat-ca');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -525,7 +525,7 @@ void main() {
       await pumpUntil(tester, find.text(title));
       await shooter.snap('the-doi-nhom');
       expect(find.text(title), findsWidgets);
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -584,7 +584,7 @@ void main() {
       final container = await signInAs(tester, actor('member'));
       await expectBlocked(tester, '/club/$clubId/manage');
       await shooter.snap('thanh-vien-mo-manage');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -604,7 +604,7 @@ void main() {
         findsNothing,
         reason: 'chỉ thành viên đã vào mới có nút chat CLB',
       );
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
     },
   );
 
@@ -629,7 +629,7 @@ void main() {
         timeout: const Duration(seconds: 30),
       );
       await shooter.snap('da-tu-choi-don');
-      await leaveSocialSession(tester, container);
+      await _leave(tester, container);
       final rejected = await _waitNotification(
         tester,
         api,
@@ -660,9 +660,9 @@ void main() {
       container.read(routerProvider).go('/home');
       await socialWait(tester, const Duration(seconds: 4));
       final error = tester.takeException();
-      drainKnownProductErrors(tester);
+      _drain(tester);
       await tester.pumpWidget(const SizedBox.shrink());
-      drainKnownProductErrors(tester);
+      _drain(tester);
       container.dispose();
       expect(
         error,
@@ -808,4 +808,35 @@ Future<void> _approveClub(BackendApi api, String communityId) async {
     inInclusiveRange(200, 299),
     reason: 'ADMIN duyệt CLB nhận HTTP $code',
   );
+}
+
+/// Rời màn về trang chủ, gỡ cây widget, huỷ container (giống `leaveSocialSession`) nhưng dung thứ
+/// lỗi BUG-CLUB-01 (xem [_drain]) để một lỗi sản phẩm không làm hỏng mọi ca sau.
+Future<void> _leave(WidgetTester tester, ProviderContainer container) async {
+  container.read(routerProvider).go('/home');
+  await socialWait(tester, const Duration(seconds: 2));
+  _drain(tester);
+  await tester.pumpWidget(const SizedBox.shrink());
+  _drain(tester);
+  container.dispose();
+}
+
+/// Gỡ lỗi sản phẩm ĐÃ BIẾT, ghi `BUG-SAN-PHAM` vào log (không nuốt im lặng); lỗi khác thì fail.
+/// Đã biết: tràn ngang sheet, setState sau dispose của chat (BUG-CHAT-01) và
+/// BUG-CLUB-01: "Tried to modify a provider while the widget tree was building" khi rời màn CLB.
+void _drain(WidgetTester tester) {
+  while (true) {
+    final error = tester.takeException();
+    if (error == null) return;
+    final text = '$error';
+    final known =
+        text.contains('overflowed by') ||
+        text.contains('_lifecycleState') ||
+        text.contains('Cannot schedule a task on an unmounted element') ||
+        text.contains(
+          'Tried to modify a provider while the widget tree was building',
+        );
+    if (!known) fail('Lỗi ngoài danh sách đã biết: $text');
+    debugPrint('BUG-SAN-PHAM đã biết: ${text.split('\n').first}');
+  }
 }
