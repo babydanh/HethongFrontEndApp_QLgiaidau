@@ -31,6 +31,51 @@ gh run view <run_id> -R babydanh/agent-orchestrator --log
 `specs` chỉ nhận ký tự `[A-Za-z0-9_./ -]`. Đọc kết quả: bước đỏ trước bước "Chạy integration_test" là hạ tầng; dòng
 `N failed` trong log là test. Ảnh chụp chỉ có trong log (`[[SHOT ...]]`, base64) vì runner không giữ artifact.
 
+## Hành trình nhiều tài khoản (TC-MULTI-*)
+
+Tám file chạy với nhiều vai trong cùng một lượt: vai chính thao tác trên giao diện, vai phụ qua API, `signInAs` đổi tài khoản
+trên giao diện. Mỗi file tự tạo bộ tài khoản riêng (`createActors`, tiền tố `E2E<timestamp>-<chuỗi>`), nên các file chạy song song được.
+Bảng chức năng → TC xem `COVERAGE.md`; bảng lỗi sản phẩm xem `openspec/changes/app-e2e-nhieu-tai-khoan/design.md` (mục "Phát hiện").
+
+| File | TC | Nội dung |
+|---|---|---|
+| `multi_referee_live_journey_test.dart` | A-01..A-20 | Trọng tài, đồng BTC, người xem live, phân quyền âm trận |
+| `multi_player_journey_test.dart` | B-01..B-20 | VĐV: đăng ký, mã mời, hồ sơ, đổi mật khẩu, phân quyền âm |
+| `multi_club_chat_notify_journey_test.dart` | C-01..C-20 | CLB, chat, thông báo |
+| `multi_social_cross_journey_test.dart` | D-01..D-12 | Social chéo tài khoản |
+| `multi_admin_guest_journey_test.dart` | E-01..E-20 | Admin, khách, đăng ký/đăng nhập |
+| `multi_series_ops_lite_journey_test.dart` | F-01..F-15 | Chuỗi giải, `/ops`, Lite |
+| `multi_discover_view_journey_test.dart` | G-01..G-15 | Tìm, lọc, xem công khai |
+| `multi_permission_matrix_test.dart` | H-01..H-19 | Ma trận vai × lệnh API, phân quyền âm |
+
+Helper dùng chung: `support/actors.dart` (`createActors`, `signInAs`, `expectBlocked`, `pumpUntil`, `appContainer`, `currentPath`) và các hàm
+vai phụ cuối class `BackendApi` (`addReferee`, `respondReferee`, `addStaff`, `followTournament`, `createCommunity`, `joinCommunity`,
+`reviewJoinRequest`, `inviteCommunityMember`, `createDirectRoom`, `sendChatMessage`, `listNotifications`, `createSeries`, `statusOf`...).
+Hàm [ĐOÁN] (`inviteSeriesStaff`, `acceptSeriesInvitation`) chưa có màn hay route xác nhận. Cần hàm riêng thì viết helper private
+trong file test, không sửa `support/`.
+
+### Chạy song song
+
+Tám lượt dispatch cùng lúc, mỗi lượt một file (không trùng dữ liệu vì tiền tố riêng):
+
+```bash
+for f in integration_test/multi_*.dart; do
+  python3 ~/bin/cloud-test-runner.py run --target app-e2e --app-ref <nhánh đã push> --specs $f --no-wait
+done
+```
+
+Mỗi file chạy 12 đến 17 phút trên cloud (giới hạn 60 phút một file; vượt thì tách `_1`, `_2`). Đọc kết quả bằng `wait <run_id>` rồi `summary <run_id>`.
+
+### Quy ước bỏ qua ca đỏ vì lỗi sản phẩm
+
+`testWidgets(skip:)` chỉ nhận `bool`: ca đỏ vì app hoặc Backend dùng `skip: true`, mã `BUG-...` ghi trong tên ca và chú thích cạnh `skip`,
+`expect` giữ nguyên để gỡ `skip` khi lỗi được sửa. Không bọc `if (finder.evaluate().isNotEmpty)` để xanh giả.
+
+### Bug sản phẩm mới tìm thấy
+
+Danh sách đầy đủ (mức, vị trí, ca tái hiện) ở `design.md`. Nghiêm trọng nhất: người ngoài giải đổi được trạng thái và chấm điểm trận
+qua API (BUG-PERM-03, BUG-PERM-04); màn Quản lý/Vận hành giải và màn Điều phối CLB mở được cho người không có quyền (BUG-PERM-01, BUG-CLUB-02).
+
 ## Bug sản phẩm đã biết (test không sửa code sản phẩm)
 
 Test ghi rõ lý do ở chỗ bỏ qua; không có ca nào "xanh giả" bằng cách bọc `if (finder.evaluate().isNotEmpty)`.
