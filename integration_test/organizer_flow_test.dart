@@ -39,14 +39,23 @@ void main() {
       final organizerToken = await api.login(kOrganizerEmail, kE2ePassword);
 
       // 1. Tạo giải nhanh trên app: tên, thời gian bắt đầu (mặc định của picker), một nội dung đơn.
-      container.read(routerProvider).go('/tournaments/create');
-      await pumpUntilFound(
-        tester,
-        find.byType(TextFormField),
-        what: 'form Tạo giải nhanh (ô tên giải)',
-      );
-      await tester.enterText(find.byType(TextFormField).first, tournamentName);
-      await tester.pump();
+      // Router còn chuyển trang sau đăng nhập (về trang chủ): chờ form bằng tiêu đề "Tạo giải nhanh"
+      // (form đăng nhập cũng có TextFormField), vào lại /tournaments/create nếu bị đổi, thử tối đa 3 lần.
+      final nameField = find.byType(TextFormField);
+      var typed = false;
+      for (var attempt = 0; attempt < 3 && !typed; attempt++) {
+        await pumpUntilCondition(tester, () {
+          if (find.text('Tạo giải nhanh').evaluate().isEmpty) {
+            container.read(routerProvider).go('/tournaments/create');
+          }
+          return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
+              nameField.evaluate().isNotEmpty;
+        }, what: 'form Tạo giải nhanh (ô tên giải)');
+        await tester.enterText(nameField.first, tournamentName);
+        await tester.pump(const Duration(milliseconds: 500));
+        typed = find.text(tournamentName).evaluate().isNotEmpty;
+      }
+      expect(typed, isTrue, reason: 'Ô tên giải phải chứa "$tournamentName" sau tối đa 3 lần thử');
 
       await scrollToText(tester, 'Thêm nội dung');
       await tester.tap(find.text('Thêm nội dung').first);
@@ -64,12 +73,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       await scrollToText(tester, 'Thời gian bắt đầu *');
-      await tester.tap(find.text('Thời gian bắt đầu *'));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
-      await tester.tap(find.text('OK').first);
-      await tester.pump(const Duration(seconds: 1));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn giờ (OK)');
-      await tester.tap(find.text('OK').first);
+      // Ô bắt đầu mở SocialDateTimePickerSheet (sheet cuộn), mặc định hợp lệ; bấm 'Xác nhận'.
+      await tapCentered(
+        tester,
+        find.byKey(const ValueKey('quick-schedule-start')),
+      );
+      await pumpUntilFound(
+        tester,
+        find.text('Chọn ngày và giờ'),
+        what: 'sheet chọn ngày giờ bắt đầu',
+      );
+      await tester.tap(find.text('Xác nhận'));
       await tester.pump(const Duration(seconds: 1));
 
       // Nút gửi nằm ở thanh dưới (bottomNavigationBar, create_public_quick_tournament_screen.dart:1037-1070),
@@ -172,7 +186,11 @@ void main() {
         find.byKey(const ValueKey('add-athlete-direct-email')),
         '$tag-guest@example.com',
       );
-      await tester.tap(find.byKey(const ValueKey('add-athlete-direct-submit')));
+      // Nút gửi nằm dưới các ô nhập trong sheet cuộn (ngoài màn): đưa vào giữa rồi mới bấm.
+      await tapCentered(
+        tester,
+        find.byKey(const ValueKey('add-athlete-direct-submit')),
+      );
       await tester.pump();
 
       var participants = <Map<String, dynamic>>[];
