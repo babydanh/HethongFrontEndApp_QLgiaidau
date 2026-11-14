@@ -12,7 +12,9 @@ import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_column_mapping_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_mapping_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_digest.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -192,7 +194,18 @@ class _DraftRow {
 }
 
 /// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi.
-enum _LayoutStatus { idle, rules, loading, done, unavailable, error, empty }
+///
+/// `edited`: người dùng đã chỉnh cột ở popup Ghép cột, không còn là kết quả của luật hay AI.
+enum _LayoutStatus {
+  idle,
+  rules,
+  loading,
+  done,
+  unavailable,
+  error,
+  empty,
+  edited,
+}
 
 class _DraftGroup {
   _DraftGroup(this.target);
@@ -598,6 +611,68 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     });
   }
 
+  /// Chưa đọc ra được người nào hoặc có sheet bị bỏ qua: gợi ý người dùng mở popup Ghép cột.
+  bool get _mappingNeedsAttention =>
+      _skippedSheets.isNotEmpty ||
+      _rows.isEmpty ||
+      !_readings.any(
+        (reading) =>
+            reading.mapping.indexOf(RosterSlot.player1Name) != null ||
+            reading.mapping.indexOf(RosterSlot.teamName) != null,
+      );
+
+  /// Mở popup Ghép cột trên các khối đang dùng và các sheet bị bỏ qua; `Xong` mới đổi dữ liệu của màn.
+  Future<void> _openMapping() async {
+    final drafts = [
+      for (final reading in _readings)
+        RosterMappingDraft.fromReading(
+          reading,
+          isDoublesFor: _isDoublesForLabel,
+        ),
+      for (final name in _skippedSheets)
+        for (final sheet in _grid)
+          if (sheet.name == name)
+            RosterMappingDraft.forSkippedSheet(
+              sheet,
+              isDoublesFor: _isDoublesForLabel,
+            ),
+    ];
+    if (drafts.isEmpty) return;
+    final result = await showRosterColumnMappingSheet(context, drafts: drafts);
+    if (result == null || !mounted) return;
+    _applyMapping(result);
+  }
+
+  /// Áp kết quả popup: dựng lại dòng từ các khối đã sửa. Không gọi `_installParsed` vì nó quên nội dung
+  /// vừa tạo; liên kết tài khoản của dòng cũ mất vì chỉ số dòng không còn nghĩa.
+  void _applyMapping(RosterMappingResult result) {
+    _layoutRequest++;
+    _editRevision++;
+    _previewGeneration++;
+    final parsed = _assembleWorkbook(result.readings, result.skippedSheets);
+    final unmatched = parsed.groups
+        .where((group) => group.target.divisionId == null)
+        .toList(growable: false);
+    setState(() {
+      _readings = result.readings;
+      _skippedSheets = parsed.skippedSheets;
+      _layoutStatus = _LayoutStatus.edited;
+      _rows = parsed.rows;
+      _groups = parsed.groups;
+      _preview = null;
+      _previewPlan = null;
+      _previewError = null;
+      _previewing = false;
+      _candidates.clear();
+      _pendingDivisionConfirm = unmatched.isNotEmpty;
+      _createChoice = {
+        for (final group in unmatched) _foldName(group.target.label),
+      };
+      _createError = null;
+    });
+    if (!_pendingDivisionConfirm) unawaited(_runPreview());
+  }
+
   /// Hỏi AI về bố cục khi luật không đủ tin. AI tắt (`aiAvailable: false`), hết lượt (429), lỗi (503) hay
   /// không tìm thấy bảng thì giữ kết quả luật và báo trạng thái. Câu trả lời đến sau khi người dùng đã sửa
   /// dữ liệu hoặc mở file khác bị bỏ. Một câu trả lời không có khối nào được hỏi lại một lần.
@@ -915,6 +990,32 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     });
   }
 
+  /// Nút mở popup Ghép cột: nổi bật khi chưa đọc ra người nào hoặc có sheet bị bỏ qua.
+  Widget _mappingButton(AppLocalizations l10n, bool busy) {
+    final onPressed = busy || _layoutStatus == _LayoutStatus.loading
+        ? null
+        : _openMapping;
+    const icon = Icon(Icons.view_column_rounded);
+    final label = Text(l10n.rosterMapOpen);
+    const key = ValueKey('roster-import-open-mapping');
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: _mappingNeedsAttention
+          ? FilledButton.icon(
+              key: key,
+              onPressed: onPressed,
+              icon: icon,
+              label: label,
+            )
+          : OutlinedButton.icon(
+              key: key,
+              onPressed: onPressed,
+              icon: icon,
+              label: label,
+            ),
+    );
+  }
+
   void _setLink(_DraftRow row, int player, _PlayerLink link) {
     _editRevision++;
     setState(() {
@@ -1141,6 +1242,10 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           ),
         ],
       ),
+      if (_fileName != null) ...[
+        const SizedBox(height: 8),
+        _mappingButton(l10n, busy),
+      ],
       const SizedBox(height: 8),
       if (_fileName == null && !_reading)
         Text(
