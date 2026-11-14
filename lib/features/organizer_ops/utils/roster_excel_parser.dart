@@ -785,6 +785,7 @@ RosterGridSheet fillRosterMerges(RosterGridSheet sheet) {
     name: sheet.name,
     rows: rows,
     mergedRegions: sheet.mergedRegions,
+    horizontalMerges: sheet.horizontalMerges,
   );
 }
 

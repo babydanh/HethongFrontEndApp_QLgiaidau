@@ -2,6 +2,8 @@ import 'package:app_quanly_giaidau/core/services/roster_excel_reader.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'roster_fixture_workbook.dart';
+
 /// Header tiếng Việt đúng như file mẫu của web (12 cột).
 const _headersVi = <String>[
   'STT',
@@ -384,5 +386,25 @@ void main() {
       expect(isSensitiveRosterHeader('Email'), isFalse);
       expect(isSensitiveRosterHeader('Họ tên'), isFalse);
     });
+  });
+
+  test('TC-ROSTERMAP-03 vùng gộp ngang tách khỏi vùng gộp dọc và được giữ qua fillRosterMerges', () async {
+    final sheets = await workbookFrom(
+      [
+        ['Banner giải đấu'],
+        ['STT', 'Họ và tên'],
+        ['1', 'A'],
+        ['', 'B'],
+      ],
+      merges: ['A1:I1', 'A3:A4'],
+    );
+
+    final sheet = sheets.single;
+    expect(sheet.mergedRegions, ['A3:A4']);
+    expect(sheet.horizontalMerges, ['A1:I1']);
+
+    final filled = fillRosterMerges(sheet);
+    expect(filled.mergedRegions, ['A3:A4']);
+    expect(filled.horizontalMerges, ['A1:I1']);
   });
 }
