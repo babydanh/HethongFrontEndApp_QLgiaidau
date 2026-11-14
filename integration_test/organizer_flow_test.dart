@@ -64,12 +64,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       await scrollToText(tester, 'Thời gian bắt đầu *');
-      await tester.tap(find.text('Thời gian bắt đầu *'));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
-      await tester.tap(find.text('OK').first);
-      await tester.pump(const Duration(seconds: 1));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn giờ (OK)');
-      await tester.tap(find.text('OK').first);
+      // Ô bắt đầu mở SocialDateTimePickerSheet (sheet cuộn), mặc định hợp lệ; bấm 'Xác nhận'.
+      await tapCentered(
+        tester,
+        find.byKey(const ValueKey('quick-schedule-start')),
+      );
+      await pumpUntilFound(
+        tester,
+        find.text('Chọn ngày và giờ'),
+        what: 'sheet chọn ngày giờ bắt đầu',
+      );
+      await tester.tap(find.text('Xác nhận'));
       await tester.pump(const Duration(seconds: 1));
 
       // Nút gửi nằm ở thanh dưới (bottomNavigationBar, create_public_quick_tournament_screen.dart:1037-1070),
