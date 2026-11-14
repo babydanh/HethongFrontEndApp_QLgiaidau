@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -415,7 +417,7 @@ void main() {
         final shooter = SocialShooter(tester, binding, 'TC-MULTI-H-17');
         await signInAs(tester, fx.actor('player'));
         await shooter.snap('vdv-da-dang-nhap');
-        await expectBlocked(tester, '/organizer/tournaments/${fx.tid}/ops');
+        await _expectOpsBlocked(tester, fx.tid);
         await shooter.snap('man-ops-bi-chan');
       },
     );
@@ -443,7 +445,7 @@ void main() {
         final fx = await _fixture();
         final shooter = SocialShooter(tester, binding, 'TC-MULTI-H-19');
         await signInAs(tester, fx.actor('viewer'));
-        await expectBlocked(tester, '/organizer/tournaments/${fx.tid}/ops');
+        await _expectOpsBlocked(tester, fx.tid);
         await shooter.snap('man-ops-bi-chan');
       },
     );
@@ -515,7 +517,10 @@ Future<void> _runMatrix(_Fixture fx, String name, List<_Cell> cells) async {
         '[MATRIX $name] ${ok ? 'OK  ' : 'LỆCH'} ${cell.label} -> HTTP $code '
         '(kỳ vọng ${cell.want.name}${cell.strict ? ' 2xx' : ''})';
     debugPrintSynchronously(line);
-    if (!ok) mismatches.add(line);
+    if (!ok) {
+      mismatches.add(line);
+      debugPrintSynchronously(await _diagnose(fx, cell));
+    }
   }
   expect(
     mismatches,
@@ -693,5 +698,60 @@ Future<_Fixture> _buildFixture() async {
       round1[1]['participant2Id'] as String,
     ],
     communityId: communityId,
+  );
+}
+
+/// Với ô lệch: gọi lại bằng Dio riêng để in thông điệp lỗi của Backend (chỉ phục vụ chẩn đoán).
+Future<String> _diagnose(_Fixture fx, _Cell cell) async {
+  final dio = Dio(
+    BaseOptions(baseUrl: kE2eApiBaseUrl, validateStatus: (_) => true),
+  );
+  final token = cell.role == 'guest' ? null : fx.token(cell.role);
+  final res = await dio.request<Object?>(
+    cell.path,
+    data: cell.data,
+    options: Options(
+      method: cell.method,
+      headers: token == null ? null : {'Authorization': 'Bearer $token'},
+    ),
+  );
+  final body = '${res.data}';
+  final staff = await dio.get<Object?>(
+    '/tournaments/${fx.tid}/staff',
+    options: Options(
+      headers: {'Authorization': 'Bearer ${fx.token('organizer')}'},
+    ),
+  );
+  final staffText = '${staff.data}';
+  return '[MATRIX-DIAG] ${cell.label} -> ${res.statusCode} '
+      '${body.substring(0, body.length > 240 ? 240 : body.length)} '
+      '| staff: ${staffText.substring(0, staffText.length > 400 ? 400 : staffText.length)}';
+}
+
+/// Mở màn vận hành giải bằng vai không có quyền; chờ tới 25 giây cho màn tải xong rồi mới khẳng
+/// định bị chặn (về /login, /home hoặc có chữ báo không có quyền). Màn tải chậm ở lần mở đầu.
+Future<void> _expectOpsBlocked(WidgetTester tester, String tournamentId) async {
+  final route = '/organizer/tournaments/$tournamentId/ops';
+  appContainer(tester).read(routerProvider).go(route);
+  final message = find.byWidgetPredicate(
+    (w) =>
+        w is Text &&
+        RegExp(
+          r'không có quyền|không đủ quyền|cần đăng nhập',
+          caseSensitive: false,
+        ).hasMatch(w.data ?? ''),
+    description: 'Text báo thiếu quyền',
+  );
+  final deadline = DateTime.now().add(const Duration(seconds: 25));
+  while (DateTime.now().isBefore(deadline)) {
+    await tester.pump(const Duration(milliseconds: 250));
+    final path = currentPath(tester);
+    if (path == '/login' || path == '/home' || message.evaluate().isNotEmpty) {
+      return;
+    }
+  }
+  fail(
+    'Mở $route phải bị chặn nhưng sau 25s vẫn ở "${currentPath(tester)}" '
+    'và không có chữ báo thiếu quyền',
   );
 }
