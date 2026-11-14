@@ -6,12 +6,10 @@ Cập nhật: 2026-11-14 11:28 · bởi: claude · nhánh: app-e2e-nhieu-tai-kho
 Người dùng đã duyệt plan và nói làm A-Z (coi như đã "apply"): làm hết `tasks.md` từ 0.1 tới 3.3. Kết quả: 8 file `integration_test/multi_*` chạy xanh trên cloud (trừ ca `skip: 'BUG-...'`), E2E App có báo cáo Allure lưu ở kho private, danh sách lỗi sản phẩm ghi ở `design.md`. Chi tiết: `proposal.md`, `design.md`, `tasks.md` cùng thư mục.
 
 ## Trạng thái
-- Xong: plan OpenSpec (proposal, design, spec, tasks) đã `openspec validate --strict`.
-- Đang dở: chưa viết code nào.
-- Tiếp theo:
-  1. Nhóm 0 (Allure, repo `babydanh/agent-orchestrator`) và nhóm 1 (hợp đồng chung, repo App) độc lập, làm song song được.
-  2. Sau 1.2: 8 chuỗi 2.1–2.8 chạy song song (subagent, mỗi chuỗi một worktree con từ nhánh này).
-  3. Nhóm 3: gộp, cập nhật tài liệu, chạy lại 8 file trên cloud.
+- Xong: plan OpenSpec; nhóm 1 (hợp đồng chung `actors.dart`, hàm vai phụ trong `backend_api.dart`, `signInAs` Social đổi tên `signInWithEmail`), analyze sạch, đã push nhánh `cloud/danh3-app-e2e-nhieu-tai-khoan-112843`.
+- Đang chạy (subagent, 2026-11-14): nhóm 0 (Allure, worktree `/data/home/wt/orch-app-allure`, nhánh `cloud/danh3-app-allure`); 8 chuỗi A–H, mỗi chuỗi một worktree `/data/home/wt/app-multi-<a..h>`, nhánh `cloud/danh3-multi-<a..h>`.
+- Tiếp theo: khi các agent xong, làm nhóm 3: gộp 8 nhánh (`git merge --no-ff`), tổng hợp phát hiện vào `design.md`, cập nhật `ORGANIZER_JOURNEYS.md`, tạo `COVERAGE.md`, chạy lại 8 file trên nhánh gộp, tạo PR (App) và PR orchestrator.
+- Lưu ý: endpoint `inviteSeriesStaff`/`acceptSeriesInvitation` trong `backend_api.dart` là [ĐOÁN] (App không gọi chúng); `organizer` dùng chung `admin1`, `admin` dùng `e2eadmin`.
 
 ## Đã thử
 | Cách | Kết quả | Vì sao / bằng chứng |
