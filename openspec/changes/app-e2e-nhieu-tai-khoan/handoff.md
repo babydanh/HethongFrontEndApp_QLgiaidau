@@ -6,10 +6,10 @@ Cập nhật: 2026-11-14 11:28 · bởi: claude · nhánh: app-e2e-nhieu-tai-kho
 Người dùng đã duyệt plan và nói làm A-Z (coi như đã "apply"): làm hết `tasks.md` từ 0.1 tới 3.3. Kết quả: 8 file `integration_test/multi_*` chạy xanh trên cloud (trừ ca `skip: 'BUG-...'`), E2E App có báo cáo Allure lưu ở kho private, danh sách lỗi sản phẩm ghi ở `design.md`. Chi tiết: `proposal.md`, `design.md`, `tasks.md` cùng thư mục.
 
 ## Trạng thái
-- Xong: plan OpenSpec; nhóm 1 (hợp đồng chung `actors.dart`, hàm vai phụ trong `backend_api.dart`, `signInAs` Social đổi tên `signInWithEmail`), analyze sạch, đã push nhánh `cloud/danh3-app-e2e-nhieu-tai-khoan-112843`.
-- Đang chạy (subagent, 2026-11-14): nhóm 0 (Allure, worktree `/data/home/wt/orch-app-allure`, nhánh `cloud/danh3-app-allure`); 8 chuỗi A–H, mỗi chuỗi một worktree `/data/home/wt/app-multi-<a..h>`, nhánh `cloud/danh3-multi-<a..h>`.
-- Tiếp theo: khi các agent xong, làm nhóm 3: gộp 8 nhánh (`git merge --no-ff`), tổng hợp phát hiện vào `design.md`, cập nhật `ORGANIZER_JOURNEYS.md`, tạo `COVERAGE.md`, chạy lại 8 file trên nhánh gộp, tạo PR (App) và PR orchestrator.
-- Lưu ý: endpoint `inviteSeriesStaff`/`acceptSeriesInvitation` trong `backend_api.dart` là [ĐOÁN] (App không gọi chúng); `organizer` dùng chung `admin1`, `admin` dùng `e2eadmin`.
+- Xong (2026-11-14): nhóm 0 (Allure, nhánh `cloud/danh3-app-allure`, PR orchestrator #70, chưa gộp); nhóm 1 (hợp đồng); nhóm 2 (8 chuỗi A–H, đã gộp vào nhánh chính của change); nhóm 3 (`design.md` mục Phát hiện, `ORGANIZER_JOURNEYS.md`, `COVERAGE.md`; `openspec validate --strict` pass).
+- Lượt cloud cuối trên nhánh đã gộp: cả 8 file không có ca đỏ ngoài ca `skip` (số liệu ở `integration_test/COVERAGE.md`). F-02 đỏ lần đầu do chờ chưa đủ, đã sửa và chạy lại xanh.
+- Chưa làm / cần người quyết: gộp PR App và PR orchestrator #70 vào `main`; sau khi #70 gộp thì chạy lại một lượt app-e2e để xem báo cáo Allure (chưa kiểm ảnh trong kho private vì token máy cloud không xem được `babydanh/qlgd-e2e-archive`; `cloud-test-runner.py` chưa có `ds`/`xem` cho `qlgd-app-e2e`).
+- Lưu ý: `inviteSeriesStaff`/`acceptSeriesInvitation` là [ĐOÁN] (BUG-F-01: API trả 500); tài khoản mới chưa xác minh email nên ma trận H không kiểm được ô "qua" của đồng BTC; quy tắc repo cấm trailer Co-Authored-By nhưng một số commit đã có (đã push, không viết lại lịch sử).
 
 ## Đã thử
 | Cách | Kết quả | Vì sao / bằng chứng |

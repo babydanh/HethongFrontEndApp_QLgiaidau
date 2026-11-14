@@ -57,3 +57,18 @@ Bốn file `organizer_*_journey_test.dart`, xem bảng trong `ORGANIZER_JOURNEYS
 - Màn Xếp hạng/ELO có dữ liệu thật: seed chưa có VĐV có ELO.
 - Mời nhân sự chuỗi giải qua giao diện: app chưa có màn, API trả 500 (BUG-F-01).
 - Ca "nhẹ" chỉ kiểm màn mở được: B-07, B-09, B-13.
+
+## Kết quả lượt cloud (nhánh đã gộp, 2026-11-14)
+
+Mỗi file một lượt `app-e2e` riêng, chạy song song. Không có ca đỏ ngoài các ca `skip` vì lỗi sản phẩm.
+
+| File | Xanh | Bỏ qua | Run |
+|---|---|---|---|
+| `multi_referee_live_journey_test.dart` | 17 | 5 | 43587778603 |
+| `multi_player_journey_test.dart` | 17 | 3 | 43587769964 |
+| `multi_club_chat_notify_journey_test.dart` | 18 | 2 | 43587742294 |
+| `multi_social_cross_journey_test.dart` | 9 | 3 | 43587795293 |
+| `multi_admin_guest_journey_test.dart` | 12 | 8 | 43587734015 |
+| `multi_series_ops_lite_journey_test.dart` | 12 | 3 | 43589174093 (lần đầu F-02 đỏ do chờ chưa đủ, đã sửa) |
+| `multi_discover_view_journey_test.dart` | 13 | 2 | 43587751665 |
+| `multi_permission_matrix_test.dart` | 17 | 2 | 43587760726 |
