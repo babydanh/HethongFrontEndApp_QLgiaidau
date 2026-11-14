@@ -32980,32 +32980,14 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCameraFbHint.
   ///
   /// In vi, this message translates to:
-  /// **'Hệ thống tạo sẵn live trên fanpage của bạn. Video đi thẳng từ máy bạn lên Facebook.'**
+  /// **'Hệ thống tạo sẵn live trên fanpage chung của hệ thống, bạn không cần liên kết gì thêm. Video đi thẳng từ máy bạn lên Facebook.'**
   String get tournamentCameraFbHint;
 
   /// No description provided for @tournamentCameraFbChecking.
   ///
   /// In vi, this message translates to:
-  /// **'Đang kiểm tra kết nối fanpage...'**
+  /// **'Đang kiểm tra fanpage...'**
   String get tournamentCameraFbChecking;
-
-  /// No description provided for @tournamentCameraFbPage.
-  ///
-  /// In vi, this message translates to:
-  /// **'Fanpage: {name}'**
-  String tournamentCameraFbPage(Object name);
-
-  /// No description provided for @tournamentCameraFbConnect.
-  ///
-  /// In vi, this message translates to:
-  /// **'Kết nối fanpage'**
-  String get tournamentCameraFbConnect;
-
-  /// No description provided for @tournamentCameraFbConnectHelp.
-  ///
-  /// In vi, this message translates to:
-  /// **'Facebook sẽ mở trong trình duyệt. Cấp quyền xong, quay lại app và bấm Kiểm tra lại.'**
-  String get tournamentCameraFbConnectHelp;
 
   /// No description provided for @tournamentCameraFbRecheck.
   ///
@@ -33024,12 +33006,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đang xử lý...'**
   String get tournamentCameraFbWorking;
-
-  /// No description provided for @tournamentCameraFbNoCommunity.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giải này chưa thuộc CLB nào nên chưa kết nối được fanpage.'**
-  String get tournamentCameraFbNoCommunity;
 
   /// No description provided for @tournamentCameraFbHowTo.
   ///
@@ -33082,19 +33058,19 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCameraFbErrorNotConnected.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa kết nối fanpage. Bấm \"Kết nối fanpage\" rồi thử lại.'**
+  /// **'Hệ thống chưa cấu hình fanpage Facebook. Hãy liên hệ quản trị viên.'**
   String get tournamentCameraFbErrorNotConnected;
 
   /// No description provided for @tournamentCameraFbErrorExpired.
   ///
   /// In vi, this message translates to:
-  /// **'Kết nối fanpage đã hết hạn. Bấm \"Kết nối fanpage\" để cấp quyền lại.'**
+  /// **'Quyền của fanpage hệ thống đã hết hạn. Hãy liên hệ quản trị viên để cấp lại.'**
   String get tournamentCameraFbErrorExpired;
 
   /// No description provided for @tournamentCameraFbErrorPermission.
   ///
   /// In vi, this message translates to:
-  /// **'Fanpage chưa cấp quyền phát video. Hãy kết nối lại và chọn đủ quyền.'**
+  /// **'Fanpage hệ thống chưa có quyền phát video. Hãy liên hệ quản trị viên.'**
   String get tournamentCameraFbErrorPermission;
 
   /// No description provided for @tournamentCameraFbErrorNetwork.
@@ -33120,12 +33096,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa tạo được live. Hãy thử lại sau ít phút.'**
   String get tournamentCameraFbErrorGeneric;
-
-  /// No description provided for @tournamentCameraFbErrorBrowser.
-  ///
-  /// In vi, this message translates to:
-  /// **'Không mở được trình duyệt. Hãy kết nối fanpage ở Web rồi bấm Kiểm tra lại.'**
-  String get tournamentCameraFbErrorBrowser;
 
   /// No description provided for @tournamentCameraNameLabel.
   ///

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -18305,22 +18304,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraFbHint =>
-      'Hệ thống tạo sẵn live trên fanpage của bạn. Video đi thẳng từ máy bạn lên Facebook.';
+      'Hệ thống tạo sẵn live trên fanpage chung của hệ thống, bạn không cần liên kết gì thêm. Video đi thẳng từ máy bạn lên Facebook.';
 
   @override
-  String get tournamentCameraFbChecking => 'Đang kiểm tra kết nối fanpage...';
-
-  @override
-  String tournamentCameraFbPage(Object name) {
-    return 'Fanpage: $name';
-  }
-
-  @override
-  String get tournamentCameraFbConnect => 'Kết nối fanpage';
-
-  @override
-  String get tournamentCameraFbConnectHelp =>
-      'Facebook sẽ mở trong trình duyệt. Cấp quyền xong, quay lại app và bấm Kiểm tra lại.';
+  String get tournamentCameraFbChecking => 'Đang kiểm tra fanpage...';
 
   @override
   String get tournamentCameraFbRecheck => 'Kiểm tra lại';
@@ -18330,10 +18317,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraFbWorking => 'Đang xử lý...';
-
-  @override
-  String get tournamentCameraFbNoCommunity =>
-      'Giải này chưa thuộc CLB nào nên chưa kết nối được fanpage.';
 
   @override
   String get tournamentCameraFbHowTo =>
@@ -18367,15 +18350,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraFbErrorNotConnected =>
-      'Chưa kết nối fanpage. Bấm \"Kết nối fanpage\" rồi thử lại.';
+      'Hệ thống chưa cấu hình fanpage Facebook. Hãy liên hệ quản trị viên.';
 
   @override
   String get tournamentCameraFbErrorExpired =>
-      'Kết nối fanpage đã hết hạn. Bấm \"Kết nối fanpage\" để cấp quyền lại.';
+      'Quyền của fanpage hệ thống đã hết hạn. Hãy liên hệ quản trị viên để cấp lại.';
 
   @override
   String get tournamentCameraFbErrorPermission =>
-      'Fanpage chưa cấp quyền phát video. Hãy kết nối lại và chọn đủ quyền.';
+      'Fanpage hệ thống chưa có quyền phát video. Hãy liên hệ quản trị viên.';
 
   @override
   String get tournamentCameraFbErrorNetwork =>
@@ -18392,10 +18375,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentCameraFbErrorGeneric =>
       'Chưa tạo được live. Hãy thử lại sau ít phút.';
-
-  @override
-  String get tournamentCameraFbErrorBrowser =>
-      'Không mở được trình duyệt. Hãy kết nối fanpage ở Web rồi bấm Kiểm tra lại.';
 
   @override
   String get tournamentCameraNameLabel => 'Tên camera';

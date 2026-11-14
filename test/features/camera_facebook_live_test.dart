@@ -44,10 +44,6 @@ class _FakeRepo implements IFacebookCameraLiveRepository {
     if (error != null) return Future.error(error);
     return gate?.future ?? Future.value(_live);
   }
-
-  @override
-  Future<Uri> getConnectUrl(String communityId) async =>
-      Uri.parse('https://www.facebook.com/dialog/oauth?x=1');
 }
 
 DioException _dioError(int? status, [Object? data]) => DioException(

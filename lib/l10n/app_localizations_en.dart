@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -18379,22 +18378,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraFbHint =>
-      'We set up a live on your page. Video goes straight from your device to Facebook.';
+      'We set up a live on the system\'s shared Facebook page, so you do not need to link anything. Video goes straight from your device to Facebook.';
 
   @override
-  String get tournamentCameraFbChecking => 'Checking the page connection...';
-
-  @override
-  String tournamentCameraFbPage(Object name) {
-    return 'Page: $name';
-  }
-
-  @override
-  String get tournamentCameraFbConnect => 'Connect page';
-
-  @override
-  String get tournamentCameraFbConnectHelp =>
-      'Facebook opens in your browser. After you grant access, come back to the app and tap Check again.';
+  String get tournamentCameraFbChecking => 'Checking the page...';
 
   @override
   String get tournamentCameraFbRecheck => 'Check again';
@@ -18404,10 +18391,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraFbWorking => 'Working...';
-
-  @override
-  String get tournamentCameraFbNoCommunity =>
-      'This tournament has no club, so a page cannot be connected.';
 
   @override
   String get tournamentCameraFbHowTo =>
@@ -18441,15 +18424,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraFbErrorNotConnected =>
-      'No page connected yet. Tap \"Connect page\" and try again.';
+      'The system Facebook page is not set up yet. Please contact an administrator.';
 
   @override
   String get tournamentCameraFbErrorExpired =>
-      'The page connection expired. Tap \"Connect page\" to grant access again.';
+      'The system page\'s access has expired. Please contact an administrator to renew it.';
 
   @override
   String get tournamentCameraFbErrorPermission =>
-      'The page has not allowed video publishing. Reconnect and grant all permissions.';
+      'The system page has no video permission. Please contact an administrator.';
 
   @override
   String get tournamentCameraFbErrorNetwork =>
@@ -18466,10 +18449,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentCameraFbErrorGeneric =>
       'Could not create the live. Please try again in a few minutes.';
-
-  @override
-  String get tournamentCameraFbErrorBrowser =>
-      'Could not open the browser. Connect the page on the Web, then tap Check again.';
 
   @override
   String get tournamentCameraNameLabel => 'Camera name';
