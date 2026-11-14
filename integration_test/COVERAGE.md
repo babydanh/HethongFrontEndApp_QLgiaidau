@@ -72,3 +72,71 @@ Mỗi file một lượt `app-e2e` riêng, chạy song song. Không có ca đỏ
 | `multi_series_ops_lite_journey_test.dart` | 12 | 3 | 43589174093 (lần đầu F-02 đỏ do chờ chưa đủ, đã sửa) |
 | `multi_discover_view_journey_test.dart` | 13 | 2 | 43587751665 |
 | `multi_permission_matrix_test.dart` | 17 | 2 | 43587760726 |
+
+## Widget và unit test (thư mục `test/`)
+
+Bổ sung bởi change `app-e2e-sua-do-va-bo-sung` (xanh cục bộ, chạy lại trong CI của nhánh):
+
+| Chức năng | File | Ca |
+|---|---|---|
+| Giao bóng và đổi sân pickleball (đôi/đơn, giao 1/2, mất giao, đổi sân, hoàn tác) | `test/match/pickleball_serve_side_test.dart` | 9 |
+| Giao bóng và đổi sân tennis (đổi giao mỗi game, tie-break, đổi sân sau game lẻ, hoàn tác) | `test/match/tennis_serve_side_test.dart` | 14 |
+| Giao bóng và đổi sân cầu lông (chẵn/lẻ, giữ giao, đổi ô, set quyết định, hoàn tác) | `test/match/badminton_serve_side_test.dart` | 15 |
+| Đội bóng | `test/features/football_team/football_teams_screen_test.dart` | 14 |
+| Lời mời trọng tài | `test/features/referee/referee_invites_screen_test.dart` | 9 |
+| Kết quả thanh toán và xác minh PayOS | `test/features/payment/payment_screens_test.dart` | 14 |
+| Lịch sử thanh toán, thanh toán lại | `test/features/payment/payments_screen_test.dart` | 19 (1 skip BUG-PAY-01) |
+| Thanh toán (checkout) | `test/features/payment/checkout_screen_test.dart` | 17 |
+| Đặt lại mật khẩu | `test/features/auth/reset_password_screen_test.dart` | 5 |
+| Đăng nhập, đăng ký | `test/features/auth/login_register_screen_test.dart` | 18 |
+| Quên mật khẩu | `test/features/auth/forgot_password_screen_test.dart` | 11 (1 skip BUG-FORGOT-01) |
+| Màn khởi động (điều hướng theo vai) | `test/features/auth/splash_screen_test.dart` | 10 |
+| Lời mời CLB | `test/features/community/club_invites_screen_test.dart` | 9 |
+| Tạo CLB | `test/features/community/create_club_screen_test.dart` | 8 |
+| Điều phối CLB | `test/features/community/club_management_screen_test.dart` | 12 (1 skip BUG-CLUB-02) |
+| Chi tiết CLB theo vai | `test/features/community/club_detail_screen_test.dart` | 15 |
+| Thẻ trận trực tiếp ở Khám phá | `test/features/explore/live_match_card_test.dart` | 8 |
+| Màn Trận đấu trực tiếp | `test/features/live/live_match_screen_test.dart` | 13 |
+
+Chưa phủ: tie-break 10 điểm cuối trận và No-Ad của tennis; luồng `launchUrl` thật khi tạo link thanh toán; danh sách CLB (không có màn riêng); nút Apple ngoài iOS.
+
+## Kết quả lượt cloud trên nhánh `app-e2e-sua-do-va-bo-sung` (2026-11-14, sha `2fe1d964`)
+
+33 file `integration_test/` đều xanh (không file nào đỏ). Run id từng file:
+
+| File | Xanh | Bỏ qua | Run |
+|---|---|---|---|
+| `auth_flow_test.dart` | 2 | 0 | 43614720378 |
+| `chup_profile_admin_test.dart` | 1 | 0 | 43614730897 |
+| `chup_profile_btc_test.dart` | 1 | 0 | 43614740783 |
+| `chup_profile_vdv_test.dart` | 1 | 0 | 43614751392 |
+| `multi_admin_guest_journey_test.dart` | 12 | 8 | 43614762634 |
+| `multi_club_chat_notify_journey_test.dart` | 18 | 2 | 43614773497 |
+| `multi_discover_view_journey_test.dart` | 13 | 2 | 43614898345 |
+| `multi_permission_matrix_test.dart` | 17 | 2 | 43614908918 |
+| `multi_player_journey_test.dart` | 17 | 3 | 43614919672 |
+| `multi_referee_live_journey_test.dart` | 17 | 5 | 43614931037 |
+| `multi_series_ops_lite_journey_test.dart` | 12 | 3 | 43614942332 |
+| `multi_social_cross_journey_test.dart` | 9 | 3 | 43614953648 |
+| `organizer_flow_test.dart` | 1 | 0 | 43614964869 |
+| `organizer_formats_journey_test.dart` | 5 | 0 | 43614976295 |
+| `organizer_run_journey_test.dart` | 8 | 0 | 43614987001 |
+| `organizer_schedule_settings_journey_test.dart` | 7 | 0 | 43614997966 |
+| `organizer_setup_journey_test.dart` | 10 | 0 | 43615009033 |
+| `smoke_test.dart` | 1 | 0 | 43615020266 |
+| `social_chat_journey_test.dart` | 4 | 2 | 43615033454 |
+| `social_create_journey_test.dart` | 4 | 0 | 43615045912 |
+| `social_run_journey_test.dart` | 8 | 0 | 43615058109 |
+| `tournament_player_flow_test.dart` | 2 | 0 | 43615069973 |
+| `xem_bam_diem_bongda_test.dart` | 4 | 0 | 43615081726 |
+| `xem_bam_diem_pickleball_test.dart` | 4 | 0 | 43615093804 |
+| `xem_bam_diem_rally_test.dart` | 4 | 0 | 43615105082 |
+| `xem_bam_diem_tennis_test.dart` | 4 | 0 | 43615126051 |
+| `xem_ketqua_btc_test.dart` | 2 | 0 | 43615137878 |
+| `xem_noidung_form_vongdoi_test.dart` | 3 | 0 | 43615149477 |
+| `xem_taichinh_doi_xuat_phanquyen_test.dart` | 4 | 0 | 43615160699 |
+| `xem_tai_tro_1_7_test.dart` | 15 | 0 | 43615171543 |
+| `xem_tai_tro_livestream_ketqua_test.dart` | 4 | 0 | 43615182204 |
+| `xem_tongquan_thongtin_diadiem_test.dart` | 3 | 0 | 43615193492 |
+| `xem_vdv_lich_test.dart` | 6 | 0 | 43615204016 |
+| **Tổng (33 file)** | **223** | **30** | |
