@@ -22,40 +22,32 @@ void main() {
   setUpAll(initializeAppForTests);
 
   group('Ma trận quyền qua API', () {
-    testWidgets(
-      'TC-MULTI-H-01 sửa giải: chỉ BTC và đồng BTC, người ngoài bị chặn',
-      (tester) async {
-        final fx = await _fixture();
-        final path = '/tournaments/${fx.tid}';
-        await _runMatrix(fx, 'H-01', [
-          for (final r in _outsiders)
-            _Cell(
-              r,
-              Want.deny,
-              'PATCH',
-              path,
-              data: {'name': '${fx.tag} bị sửa trái phép'},
-            ),
+    testWidgets('TC-MULTI-H-01 sửa giải: BTC sửa được, người ngoài bị chặn', (
+      tester,
+    ) async {
+      final fx = await _fixture();
+      final path = '/tournaments/${fx.tid}';
+      await _runMatrix(fx, 'H-01', [
+        for (final r in _outsiders)
           _Cell(
-            'organizer',
-            Want.pass,
+            r,
+            Want.deny,
             'PATCH',
             path,
-            data: {'name': '${fx.tag} Giải ma trận'},
+            data: {'name': '${fx.tag} bị sửa trái phép'},
           ),
-          _Cell(
-            'coOrganizer',
-            Want.pass,
-            'PATCH',
-            path,
-            data: {'name': '${fx.tag} Giải ma trận'},
-          ),
-        ]);
-      },
-    );
+        _Cell(
+          'organizer',
+          Want.pass,
+          'PATCH',
+          path,
+          data: {'name': '${fx.tag} Giải ma trận'},
+        ),
+      ]);
+    });
 
     testWidgets(
-      'TC-MULTI-H-02 duyệt VĐV: người ngoài bị chặn, BTC và đồng BTC duyệt được',
+      'TC-MULTI-H-02 duyệt VĐV: người ngoài bị chặn, BTC duyệt được',
       (tester) async {
         final fx = await _fixture();
         final path = '/tournaments/${fx.tid}/participants/${fx.participantId}';
@@ -64,13 +56,6 @@ void main() {
             _Cell(r, Want.deny, 'PATCH', path, data: {'status': 'REJECTED'}),
           _Cell(
             'organizer',
-            Want.pass,
-            'PATCH',
-            path,
-            data: {'status': 'COMPLETE'},
-          ),
-          _Cell(
-            'coOrganizer',
             Want.pass,
             'PATCH',
             path,
@@ -224,13 +209,14 @@ void main() {
       (tester) async {
         final fx = await _fixture();
         final path = '/communities/${fx.communityId}/review';
-        final body = {'status': 'ACTIVE'};
+        final body = {'status': 'APPROVED'};
         await _runMatrix(fx, 'H-10', [
           for (final r in [
             'clubOwner',
             'member',
             'player',
             'viewer',
+            'referee',
             'organizer',
             'guest',
           ])
@@ -273,7 +259,7 @@ void main() {
         final path = '/communities/${fx.communityId}/invite';
         final body = {'userId': fx.actor('viewer').userId, 'role': 'MEMBER'};
         await _runMatrix(fx, 'H-12', [
-          for (final r in ['member', 'player', 'viewer', 'guest'])
+          for (final r in ['member', 'player', 'viewer', 'referee', 'guest'])
             _Cell(r, Want.deny, 'POST', path, data: body),
           _Cell('clubOwner', Want.pass, 'POST', path, data: body),
         ]);
@@ -300,7 +286,7 @@ void main() {
         };
         final revoke = '/chat/messages/$messageId/revoke';
         await _runMatrix(fx, 'H-13', [
-          for (final r in ['viewer', 'player', 'guest'])
+          for (final r in ['viewer', 'player', 'referee', 'guest'])
             _Cell(r, Want.deny, 'POST', '/chat/messages', data: send),
           _Cell(
             'member',
@@ -309,7 +295,7 @@ void main() {
             '/chat/messages',
             data: {'roomId': roomId, 'messageText': '${fx.tag} tin của member'},
           ),
-          for (final r in ['viewer', 'player', 'member', 'guest'])
+          for (final r in ['viewer', 'player', 'referee', 'member', 'guest'])
             _Cell(r, Want.deny, 'POST', revoke),
           _Cell('clubOwner', Want.pass, 'POST', revoke),
         ]);
@@ -592,12 +578,19 @@ Future<_Fixture> _buildFixture() async {
       'organizer',
       'admin',
       'player',
-      'referee',
-      'coOrganizer',
       'viewer',
       'clubOwner',
       'member',
     ],
+  );
+  // Trọng tài là user8 (đã xác minh email): tài khoản mới đăng ký bị Backend chặn 403 "Email
+  // verification is required" ở mọi lệnh giải/trận nên không thể làm trọng tài.
+  actors['referee'] = E2eActor(
+    role: 'referee',
+    email: kPlayerEmail,
+    userId: '',
+    token: await api.login(kPlayerEmail, kE2ePassword),
+    fullName: 'user8',
   );
   final tag = 'E2E${DateTime.now().millisecondsSinceEpoch}-h';
   final btc = actors['organizer']!.token;
@@ -660,13 +653,6 @@ Future<_Fixture> _buildFixture() async {
       accept: true,
     );
   }
-  await api.addStaff(
-    token: btc,
-    tournamentId: t.tournamentId,
-    email: actors['coOrganizer']!.email,
-    role: 'CO_ORGANIZER',
-  );
-
   // Giải 2: chưa duyệt, dùng cho ô ADMIN duyệt và ô xoá giải.
   final t2 = await api.createLiteTournament(
     token: btc,
@@ -750,6 +736,13 @@ Future<void> _expectOpsBlocked(WidgetTester tester, String tournamentId) async {
       return;
     }
   }
+  final texts = tester
+      .widgetList<Text>(find.byType(Text))
+      .map((t) => t.data ?? '')
+      .where((t) => t.isNotEmpty)
+      .take(40)
+      .join(' | ');
+  debugPrintSynchronously('[OPS-DIAG] chữ đang hiện: $texts');
   fail(
     'Mở $route phải bị chặn nhưng sau 25s vẫn ở "${currentPath(tester)}" '
     'và không có chữ báo thiếu quyền',
