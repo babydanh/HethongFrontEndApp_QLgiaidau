@@ -406,7 +406,7 @@ void main() {
 
   group('Phân quyền âm trên giao diện', () {
     testWidgets(
-      'TC-MULTI-H-17 VĐV mở màn vận hành giải của BTC: bị chặn hoặc báo không có quyền',
+      'TC-MULTI-H-17 [skip BUG-PERM-01] VĐV mở màn vận hành giải của BTC: bị chặn hoặc báo không có quyền',
       (tester) async {
         final fx = await _fixture();
         final shooter = SocialShooter(tester, binding, 'TC-MULTI-H-17');
@@ -415,8 +415,9 @@ void main() {
         await _expectOpsBlocked(tester, fx.tid);
         await shooter.snap('man-ops-bi-chan');
       },
-      skip:
-          'BUG-PERM-01: màn /organizer/tournaments/:id/ops mở được cho tài khoản không quản lý, 4 API đều 403 nhưng không có chữ báo thiếu quyền (opsNoPermission không được dùng)',
+      // BUG-PERM-01: màn ops mở được cho tài khoản không quản lý, 4 API đều 403 nhưng
+      // không có chữ báo thiếu quyền (opsNoPermission không được dùng).
+      skip: true,
     );
 
     testWidgets('TC-MULTI-H-18 VĐV mở /admin: không ở lại màn quản trị', (
@@ -437,7 +438,7 @@ void main() {
     });
 
     testWidgets(
-      'TC-MULTI-H-19 người dùng thường mở màn vận hành giải: bị chặn',
+      'TC-MULTI-H-19 [skip BUG-PERM-01] người dùng thường mở màn vận hành giải: bị chặn',
       (tester) async {
         final fx = await _fixture();
         final shooter = SocialShooter(tester, binding, 'TC-MULTI-H-19');
@@ -445,8 +446,9 @@ void main() {
         await _expectOpsBlocked(tester, fx.tid);
         await shooter.snap('man-ops-bi-chan');
       },
-      skip:
-          'BUG-PERM-01: màn /organizer/tournaments/:id/ops mở được cho tài khoản không quản lý, 4 API đều 403 nhưng không có chữ báo thiếu quyền (opsNoPermission không được dùng)',
+      // BUG-PERM-01: màn ops mở được cho tài khoản không quản lý, 4 API đều 403 nhưng
+      // không có chữ báo thiếu quyền (opsNoPermission không được dùng).
+      skip: true,
     );
   });
 }
