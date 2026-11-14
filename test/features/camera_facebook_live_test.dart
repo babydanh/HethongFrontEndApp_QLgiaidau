@@ -77,7 +77,6 @@ Future<void> _pumpPanel(
   WidgetTester tester,
   _FakeRepo repo, {
   ValueChanged<String>? onCreated,
-  ExternalLauncher? launcher,
   double width = 320,
 }) async {
   await tester.pumpWidget(
@@ -86,7 +85,6 @@ Future<void> _pumpPanel(
         tournamentId: 't1',
         repository: repo,
         onCreated: onCreated ?? (_) {},
-        launcher: launcher ?? (_) async => true,
       ),
       width: width,
     ),
@@ -97,6 +95,7 @@ Future<void> _pumpPanel(
 final _create = find.byKey(const ValueKey('fb-live-create'));
 final _connect = find.byKey(const ValueKey('fb-live-connect'));
 final _error = find.byKey(const ValueKey('fb-live-error'));
+final _notConfigured = find.byKey(const ValueKey('fb-live-not-configured'));
 
 void main() {
   test('TC-CAMFB-APP-01 parse response and never prints the key', () {
@@ -146,50 +145,40 @@ void main() {
     expect(map(StateError('x')), FacebookLiveError.generic);
   });
 
-  testWidgets('TC-CAMFB-APP-03 not connected: Connect opens browser, recheck', (
-    tester,
-  ) async {
-    final repo = _FakeRepo(connected: false);
-    final opened = <Uri>[];
-    await _pumpPanel(
-      tester,
-      repo,
-      launcher: (uri) async {
-        opened.add(uri);
-        return true;
-      },
-    );
+  testWidgets('TC-FBPAGE-APP-01 shared page not configured: no Connect or Create, '
+      'tells the user to contact an administrator', (tester) async {
+    await _pumpPanel(tester, _FakeRepo(connected: false));
+    expect(_connect, findsNothing);
     expect(_create, findsNothing);
-    expect(_connect, findsOneWidget);
-    await tester.tap(_connect);
-    await tester.pumpAndSettle();
-    expect(opened.single.host, 'www.facebook.com');
-    expect(find.byKey(const ValueKey('fb-live-recheck')), findsOneWidget);
-    repo.connected = true;
-    await tester.tap(find.byKey(const ValueKey('fb-live-recheck')));
-    await tester.pumpAndSettle();
-    expect(_create, findsOneWidget);
-    expect(find.text('Page: CLB Pickle'), findsOneWidget);
+    expect(_notConfigured, findsOneWidget);
+    expect(find.textContaining('contact an administrator'), findsOneWidget);
   });
 
-  testWidgets('TC-CAMFB-APP-04 browser cannot open shows a fix hint', (
+  testWidgets('TC-FBPAGE-APP-02 tournament without a club can still create a live', (
     tester,
   ) async {
+    final filled = <String>[];
     await _pumpPanel(
       tester,
-      _FakeRepo(connected: false),
-      launcher: (_) async => false,
+      _FakeRepo(hasCommunity: false),
+      onCreated: filled.add,
     );
-    await tester.tap(_connect);
+    expect(tester.widget<FilledButton>(_create).onPressed, isNotNull);
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+    expect(filled, [_live.watchUrl]);
+  });
+
+  testWidgets('TC-FBPAGE-APP-03 expired token tells the user to contact an '
+      'administrator, never to press Connect page', (tester) async {
+    final repo = _FakeRepo()
+      ..createError = _dioError(400, {'code': 'FACEBOOK_CONNECTION_EXPIRED'});
+    await _pumpPanel(tester, repo);
+    await tester.tap(_create);
     await tester.pumpAndSettle();
     expect(_error, findsOneWidget);
-    expect(find.textContaining('Connect the page on the Web'), findsOneWidget);
-  });
-
-  testWidgets('TC-CAMFB-APP-05 no community disables Connect', (tester) async {
-    await _pumpPanel(tester, _FakeRepo(connected: false, hasCommunity: false));
-    expect(tester.widget<FilledButton>(_connect).onPressed, isNull);
-    expect(find.textContaining('no club'), findsOneWidget);
+    expect(find.textContaining('contact an administrator'), findsOneWidget);
+    expect(find.textContaining('Connect page'), findsNothing);
   });
 
   testWidgets('TC-CAMFB-APP-06 double tap calls create once, shows spinner', (
