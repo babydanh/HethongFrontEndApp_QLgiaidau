@@ -568,8 +568,9 @@ void main() {
       await _backendUntil(
         tester,
         () => raw.list('/tournaments/${seeded.tournamentId}/referees'),
-        (list) => list.any((r) => '${r['status']}'.toUpperCase() == 'INVITED'),
-        what: 'Backend có lời mời trọng tài ở trạng thái INVITED',
+        // Backend hiện tạo trọng tài ACCEPTED ngay (BUG-REF-01 ở app-e2e-nhieu-tai-khoan), không có INVITED.
+        (list) => list.any((r) => const ['INVITED', 'ACCEPTED'].contains('${r['status']}'.toUpperCase())),
+        what: 'Backend có trọng tài vừa mời (INVITED hoặc ACCEPTED)',
       );
       _clearSnackBars(tester);
       await shooter.snap('75-da-moi-trong-tai');
@@ -588,14 +589,14 @@ void main() {
       await expectKey(tester, 'permissions-row-sheet-action', step: 'sheet thao tác trên dòng trọng tài');
       await shooter.snap('75-sheet-thu-hoi');
       await tapKey(tester, 'permissions-row-sheet-action');
-      await pumpUntilFound(tester, find.byType(AlertDialog), what: 'hộp xác nhận Thu hồi');
-      // Tiêu đề hộp cũng là "Thu hồi": bấm đúng nút xác nhận (FilledButton).
+      await pumpUntilFound(tester, find.byType(AlertDialog), what: 'hộp xác nhận Thu hồi/Gỡ');
+      // Trọng tài ACCEPTED thì app hiện thao tác Gỡ (INVITED mới là Thu hồi); bấm đúng nút xác nhận (FilledButton).
       await _tap(tester, find.descendant(of: find.byType(AlertDialog), matching: find.byType(FilledButton)).last);
       await _backendUntil(
         tester,
         () => raw.list('/tournaments/${seeded.tournamentId}/referees'),
-        (list) => !list.any((r) => '${r['status']}'.toUpperCase() == 'INVITED'),
-        what: 'Backend đã thu hồi lời mời trọng tài',
+        (list) => !list.any((r) => const ['INVITED', 'ACCEPTED'].contains('${r['status']}'.toUpperCase())),
+        what: 'Backend đã thu hồi/gỡ trọng tài vừa mời',
       );
       await shooter.snap('75-da-thu-hoi');
       _clearSnackBars(tester);

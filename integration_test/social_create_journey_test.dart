@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/explore_new_tournaments
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -82,6 +83,13 @@ void main() {
         timeout: const Duration(seconds: 60),
       );
       await shooter.snap('tao-thanh-cong');
+      // Thông báo nổi phủ giữa màn và nuốt cú chạm vào thẻ ở Khám phá: chờ nó tắt rồi mới mở Khám phá.
+      await pumpUntilCondition(
+        tester,
+        () => find.text('Tạo Social "$title" thành công!').evaluate().isEmpty,
+        what: 'thông báo tạo buổi thành công tự tắt',
+        timeout: const Duration(seconds: 30),
+      );
       // Buổi mới hiện ở Khám phá đúng ngày đã chọn; bấm thẻ để mở chi tiết với quyền host.
       await openSessionFromExplore(tester, title);
       await shooter.snap('chi-tiet-sau-tao');
@@ -167,14 +175,11 @@ void main() {
       final tag = socialTag('SC3');
       final shooter = SocialShooter(tester, binding, 'TC-SOCIAL-APP-03');
 
-      // Dựng một sân có ghim bằng API (buổi khác của host) để tìm lại trong thư viện sân.
+      // Dựng một sân có ghim và gắn môn bằng API. Tìm sân trong form lọc theo môn đang chọn (venue_sports),
+      // còn sân tạo kèm buổi (newVenue) không gắn môn nên không tìm lại được: phải tạo sân qua POST /venues.
       final hostToken = await api.login(kOrganizerEmail);
-      final seed = await api.createSession(
-        token: hostToken,
-        title: '$tag Buổi dựng sân',
-        deferred: false,
-      );
-      final venueName = '${seed.raw['venueName'] ?? 'Sân E2E ${seed.title}'}';
+      final venueName = 'Sân E2E $tag Buổi dựng sân';
+      await _seedPinnedVenue(hostToken, name: venueName, sportSlug: await _formDefaultSportSlug());
 
       await signInWithEmail(tester, email: kOrganizerEmail);
       await openCreateSocialForm(tester);
@@ -271,4 +276,52 @@ void main() {
       await shooter.snap('the-giai');
     },
   );
+}
+
+Dio _venueDio() => Dio(
+  BaseOptions(
+    baseUrl: kE2eApiBaseUrl,
+    connectTimeout: const Duration(seconds: 20),
+    receiveTimeout: const Duration(seconds: 60),
+    contentType: Headers.jsonContentType,
+    validateStatus: (_) => true,
+  ),
+);
+
+/// Môn form tạo kèo chọn sẵn: danh mục đang bật đầu tiên (giống `_resolveSport` của màn tạo kèo).
+Future<String> _formDefaultSportSlug() async {
+  final response = await _venueDio().get<dynamic>('/categories');
+  final body = response.data is Map ? (response.data as Map)['data'] : response.data;
+  for (final item in body is List ? body : const []) {
+    if (item is Map && item['isActive'] == true && '${item['slug'] ?? ''}'.isNotEmpty) {
+      return '${item['slug']}';
+    }
+  }
+  fail('GET /categories không có môn đang bật (HTTP ${response.statusCode})');
+}
+
+/// Tạo sân có toạ độ, gắn với môn [sportSlug] bằng `POST /venues` (categoryIds) để tìm được theo môn.
+Future<void> _seedPinnedVenue(String token, {required String name, required String sportSlug}) async {
+  final dio = _venueDio();
+  final categories = await dio.get<dynamic>('/categories');
+  final list = categories.data is Map ? (categories.data as Map)['data'] : categories.data;
+  final categoryId = [
+    for (final item in list is List ? list : const [])
+      if (item is Map && item['slug'] == sportSlug) '${item['id']}',
+  ].firstOrNull;
+  expect(categoryId, isNotNull, reason: 'môn "$sportSlug" phải có id trong /categories');
+  final jitter = (DateTime.now().millisecondsSinceEpoch % 100000) / 1000000.0;
+  final response = await dio.post<dynamic>(
+    '/venues',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+    data: {
+      'name': name,
+      'locationAddress': '1 Đường E2E, Quận 1, TP.HCM',
+      'latitude': 10.70 + jitter,
+      'longitude': 106.60 + jitter,
+      'categoryIds': [categoryId],
+    },
+  );
+  final code = response.statusCode ?? 0;
+  expect(code >= 200 && code < 300, isTrue, reason: 'POST /venues phải 2xx, nhận $code: ${response.data}');
 }

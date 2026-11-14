@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -311,11 +312,27 @@ void main() {
       await openSession(tester, container, session);
       await shooter.snap('chi-tiet-co-nguoi-tham-gia');
       expect(find.text('Host'), findsWidgets);
-      expect(countText(initialsOf(hostName)), 1, reason: 'avatar chữ của host chỉ ở thẻ host');
+      // Avatar chữ của người có tài khoản dùng RankAvatar: chỉ MỘT chữ cái đầu của tên (không còn hai chữ như initialsOf).
+      // Đếm theo từng SocialAvatar để hai người trùng chữ cái đầu không làm sai kết quả.
+      final hostAvatar = find.byWidgetPredicate((w) => w is SocialAvatar && w.isHost);
+      expect(hostAvatar, findsOneWidget, reason: 'đúng một avatar host (thẻ host)');
       expect(
-        countText(initialsOf('${player['fullName']}')),
-        1,
-        reason: 'người chơi có đúng một avatar ở hàng người tham gia',
+        find.descendant(of: hostAvatar, matching: find.text(_firstLetter(hostName))),
+        findsOneWidget,
+        reason: 'avatar chữ của host chỉ ở thẻ host',
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is SocialAvatar && !w.isHost && w.name == hostName),
+        findsNothing,
+        reason: 'hàng người tham gia không lặp lại avatar của host',
+      );
+      final playerName = '${player['fullName']}';
+      final playerAvatar = find.byWidgetPredicate((w) => w is SocialAvatar && !w.isHost && w.name == playerName);
+      expect(playerAvatar, findsOneWidget, reason: 'người chơi có đúng một avatar ở hàng người tham gia');
+      expect(
+        find.descendant(of: playerAvatar, matching: find.text(_firstLetter(playerName))),
+        findsOneWidget,
+        reason: 'avatar chữ của người chơi hiện chữ cái đầu của tên',
       );
       await leaveSocialSession(tester, container);
     },
@@ -472,3 +489,6 @@ void main() {
     },
   );
 }
+
+/// Chữ trên avatar chữ của người có tài khoản (RankAvatar): chữ cái đầu của tên, viết hoa.
+String _firstLetter(String name) => name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();

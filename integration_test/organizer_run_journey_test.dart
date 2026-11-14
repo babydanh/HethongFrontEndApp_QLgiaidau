@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.d
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -730,6 +731,9 @@ void main() {
 
       // TC-QLGD-APP-37: hết trận thì sheet cho xác nhận; Backend không tự COMPLETED.
       expect(await status(token, run), AppConstants.statusInProgress);
+      // Chấm điểm bằng API không bắn socket tới app nên danh sách trận trong app còn cũ
+      // (trận LIVE cuối chưa xong). Buộc app tải lại như khi nhận sự kiện socket, rồi mở sheet.
+      container.invalidate(matchesProvider(run.tournamentId));
       await _openEndSheet(tester);
       await _expectText(tester, 'Trận đã hoàn tất: 3/3', step: 'TC-QLGD-APP-37');
       await expectKey(tester, 'lifecycle-end-podium-1', step: 'TC-QLGD-APP-37');
