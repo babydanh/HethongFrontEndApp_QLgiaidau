@@ -270,6 +270,68 @@ void main() {
     });
   });
 
+  group('sửa dòng (copyWith và rosterLocalErrors)', () {
+    test(
+      'TC-ROSTERLIST-02 xóa trống email VĐV 1 thì email null và báo MISSING_EMAIL',
+      () {
+        final row = _parseOne(
+          _dataRow(name: 'Nguyễn Văn A', email: 'a@example.com'),
+        );
+
+        final edited = row.copyWith(clearPlayer1Email: true);
+
+        expect(edited.player1Email, isNull);
+        expect(
+          rosterLocalErrors(
+            name: edited.player1Name,
+            email: edited.player1Email,
+            player2Email: edited.player2Email,
+          ),
+          contains('MISSING_EMAIL'),
+        );
+      },
+    );
+
+    test('xóa trống tên và SĐT VĐV 1 thì hai trường thành null', () {
+      final row = _parseOne(
+        _dataRow(name: 'Nguyễn Văn A', phone: '0901234567'),
+      );
+
+      final edited = row.copyWith(
+        clearPlayer1Name: true,
+        clearPlayer1Phone: true,
+      );
+
+      expect(edited.player1Name, isNull);
+      expect(edited.player1Phone, isNull);
+    });
+
+    test('TC-ROSTERLIST-03 không tên và không email thì báo MISSING_NAME', () {
+      expect(
+        rosterLocalErrors(name: null, email: null, player2Email: null),
+        contains('MISSING_NAME'),
+      );
+    });
+
+    test(
+      'TC-ROSTERLIST-03 email a@b hoặc email VĐV 2 sai thì báo INVALID_EMAIL',
+      () {
+        expect(
+          rosterLocalErrors(name: 'A', email: 'a@b', player2Email: null),
+          contains('INVALID_EMAIL'),
+        );
+        expect(
+          rosterLocalErrors(
+            name: 'A',
+            email: 'a@example.com',
+            player2Email: 'sai-dinh-dang',
+          ),
+          contains('INVALID_EMAIL'),
+        );
+      },
+    );
+  });
+
   group('divisionName', () {
     test('đọc đúng nội dung thi của từng dòng và để trống khi ô trống', () {
       final sheet = _sheet([

@@ -112,8 +112,11 @@ class RosterParsedRow {
     String? teamName,
     bool clearTeamName = false,
     String? player1Name,
+    bool clearPlayer1Name = false,
     String? player1Email,
+    bool clearPlayer1Email = false,
     String? player1Phone,
+    bool clearPlayer1Phone = false,
     String? player2Name,
     bool clearPlayer2Name = false,
     String? player2Email,
@@ -136,9 +139,13 @@ class RosterParsedRow {
       localErrors: localErrors ?? this.localErrors,
       divisionName: divisionName,
       teamName: clearTeamName ? null : (teamName ?? this.teamName),
-      player1Name: player1Name ?? this.player1Name,
-      player1Email: player1Email ?? this.player1Email,
-      player1Phone: player1Phone ?? this.player1Phone,
+      player1Name: clearPlayer1Name ? null : (player1Name ?? this.player1Name),
+      player1Email: clearPlayer1Email
+          ? null
+          : (player1Email ?? this.player1Email),
+      player1Phone: clearPlayer1Phone
+          ? null
+          : (player1Phone ?? this.player1Phone),
       player2Name: clearPlayer2Name ? null : (player2Name ?? this.player2Name),
       player2Email: clearPlayer2Email
           ? null
@@ -595,7 +602,7 @@ bool parseRosterPaid(String text, {bool fallback = false}) {
 }
 
 /// Lỗi cục bộ của một dòng, cùng quy tắc với `revalidateLocally` của web.
-List<String> _localErrors({
+List<String> rosterLocalErrors({
   required String? name,
   required String? email,
   required String? player2Email,
@@ -1000,7 +1007,7 @@ List<RosterParsedRow> parseRosterSheet(
         pairCode: code.isNotEmpty && !singles ? code : null,
         singles: singles,
         partnerHint: hint.isEmpty ? null : hint,
-        localErrors: _localErrors(
+        localErrors: rosterLocalErrors(
           name: player1Name,
           email: player1Email,
           player2Email: player2Email,
