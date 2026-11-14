@@ -265,6 +265,7 @@ void main() {
       await shooter.snap('chu-mo-chat-clb');
       await _sendChat(tester, message);
       await shooter.snap('chu-da-gui');
+      await _closeChat(tester, container);
 
       container = await signInAs(tester, actor('member'));
       await _openChat(tester, container, roomId, clubName, clubId);
@@ -294,6 +295,7 @@ void main() {
       await _openChat(tester, container, roomId, clubName, clubId);
       await _sendChat(tester, reply);
       await shooter.snap('thanh-vien-da-gui');
+      await _closeChat(tester, container);
 
       container = await signInAs(tester, actor('clubOwner'));
       await _openChat(tester, container, roomId, clubName, clubId);
@@ -870,3 +872,20 @@ void _drain(WidgetTester tester) {
 
 /// Chữ của tin nhắn trong khung chat: bong bóng chat vẽ bằng RichText nên `find.text` không thấy.
 Finder _chatText(String text) => find.textContaining(text, findRichText: true);
+
+/// Đóng màn chat bằng pop (như nút back) và gỡ lỗi socket đã biết ngay tại đây (BUG-CHAT-01), để lần
+/// dựng lại app khi đổi tài khoản không phải gỡ chat đang mở.
+Future<void> _closeChat(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  final router = container.read(routerProvider);
+  expect(
+    router.canPop(),
+    isTrue,
+    reason: 'chat được push lên trên trang chủ nên phải pop được',
+  );
+  router.pop();
+  await socialWait(tester, const Duration(seconds: 3));
+  _drain(tester);
+}
