@@ -22,6 +22,7 @@ class RosterReading {
     this.divisionLabel = '',
     this.singlesFromRow = 0,
     this.titleLabels = const {},
+    this.layoutChosen = false,
   });
 
   final RosterGridSheet grid;
@@ -39,6 +40,33 @@ class RosterReading {
   final String divisionLabel;
   final int singlesFromRow;
   final Set<String> titleLabels;
+
+  /// Người dùng đã chọn cách ghép trong popup: `single` khi đó nghĩa là đánh đơn thật, không để luật suy.
+  final bool layoutChosen;
+
+  RosterReading copyWith({
+    int? headerRowIndex,
+    int? firstDataRowIndex,
+    int? lastRowIndex,
+    RosterColumnMapping? mapping,
+    RosterPairLayout? layout,
+    String? separator,
+    bool? layoutChosen,
+    bool? fromAi,
+  }) => RosterReading(
+    grid: grid,
+    headerRowIndex: headerRowIndex ?? this.headerRowIndex,
+    firstDataRowIndex: firstDataRowIndex ?? this.firstDataRowIndex,
+    lastRowIndex: lastRowIndex ?? this.lastRowIndex,
+    mapping: mapping ?? this.mapping,
+    fromAi: fromAi ?? this.fromAi,
+    layout: layout ?? this.layout,
+    separator: separator ?? this.separator,
+    divisionLabel: divisionLabel,
+    singlesFromRow: singlesFromRow,
+    titleLabels: titleLabels,
+    layoutChosen: layoutChosen ?? this.layoutChosen,
+  );
 
   String get sheetName => grid.name;
 
@@ -103,7 +131,7 @@ List<RosterParsedRow> assembleRosterRows(
 
   // Cách ghép AI đã chọn thì giữ; `single` để luật quyết định (hai cột, hai tên một ô, hoặc không ghép).
   var layout = reading.layout;
-  if (layout == RosterPairLayout.single) {
+  if (layout == RosterPairLayout.single && !reading.layoutChosen) {
     final resolved = resolvePairLayout(
       reading.dataRows,
       mapping,
