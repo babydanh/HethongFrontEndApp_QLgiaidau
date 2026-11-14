@@ -59,7 +59,12 @@ void main() {
       final name = '$tag Chuoi tao UI';
       final container = await signInAs(tester, actor('organizer'));
 
-      container.read(routerProvider).go('/organizer/series');
+      await _goUntil(
+        tester,
+        container,
+        '/organizer/series',
+        find.byKey(const ValueKey('series-add')),
+      );
       await tapKey(tester, 'series-add', step: 'nút + của Chuỗi giải của tôi');
       await pumpUntil(tester, find.byKey(const ValueKey('series-form-name')));
       await shooter.snap('form-tao-chuoi');
@@ -93,11 +98,11 @@ void main() {
       final id = await api.createSeries(token: orgToken(), name: oldName);
       final container = await signInAs(tester, actor('organizer'));
 
-      container.read(routerProvider).go('/organizer/series');
-      await pumpUntil(
+      await _goUntil(
         tester,
+        container,
+        '/organizer/series',
         find.text(oldName),
-        timeout: const Duration(seconds: 45),
       );
       await tapKey(tester, 'series-edit-$id');
       await pumpUntil(tester, find.byKey(const ValueKey('series-form-name')));
@@ -137,12 +142,7 @@ void main() {
       final id = await api.createSeries(token: orgToken(), name: name);
       final container = await signInAs(tester, actor('organizer'));
 
-      container.read(routerProvider).go('/organizer/series');
-      await pumpUntil(
-        tester,
-        find.text(name),
-        timeout: const Duration(seconds: 45),
-      );
+      await _goUntil(tester, container, '/organizer/series', find.text(name));
       await tapKey(tester, 'series-delete-$id');
       await pumpUntil(
         tester,
@@ -177,12 +177,7 @@ void main() {
       final id = await api.createSeries(token: orgToken(), name: name);
       final container = await signInAs(tester, actor('organizer'));
 
-      container.read(routerProvider).go('/organizer/series');
-      await pumpUntil(
-        tester,
-        find.text(name),
-        timeout: const Duration(seconds: 45),
-      );
+      await _goUntil(tester, container, '/organizer/series', find.text(name));
       await tapKey(tester, 'series-row-$id');
       await pumpUntil(
         tester,
@@ -358,11 +353,13 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-F-10');
       final container = await signInAs(tester, actor('player'));
 
-      container
-          .read(routerProvider)
-          .go('/organizer/tournaments/${opsT.id}/ops');
       final tab = find.widgetWithText(ChoiceChip, 'Danh sách tham gia');
-      await pumpUntil(tester, tab, timeout: const Duration(seconds: 45));
+      await _goUntil(
+        tester,
+        container,
+        '/organizer/tournaments/${opsT.id}/ops',
+        tab,
+      );
       await tapCentered(tester, tab);
       await socialWait(tester, const Duration(seconds: 5));
       await shooter.snap('vdv-o-ops-roster');
@@ -383,12 +380,7 @@ void main() {
       const tooltip = 'Quản lý chuỗi giải của tôi';
 
       var container = await signInAs(tester, actor('organizer'));
-      container.read(routerProvider).go('/series');
-      await pumpUntil(
-        tester,
-        find.byTooltip(tooltip),
-        timeout: const Duration(seconds: 45),
-      );
+      await _goUntil(tester, container, '/series', find.byTooltip(tooltip));
       await shooter.snap('btc-thay-nut-quan-ly-chuoi');
       await leaveSocialSession(tester, container);
 
@@ -490,9 +482,8 @@ void main() {
       );
       final container = await signInAs(tester, player);
 
-      container.read(routerProvider).go('/lite-join/$code');
       final joinButton = find.widgetWithText(ElevatedButton, 'Tham gia giải');
-      await pumpUntil(tester, joinButton, timeout: const Duration(seconds: 45));
+      await _goUntil(tester, container, '/lite-join/$code', joinButton);
       await shooter.snap('man-tham-gia-bang-ma');
       await tester.tap(joinButton);
       await tester.pump();
@@ -525,11 +516,11 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-F-15');
       final container = await signInAs(tester, actor('organizer'));
 
-      container.read(routerProvider).go('/lite-pairing/${pairT.id}');
-      await pumpUntil(
+      await _goUntil(
         tester,
+        container,
+        '/lite-pairing/${pairT.id}',
         find.text('Chờ ghép cặp (4)'),
-        timeout: const Duration(seconds: 45),
       );
       await shooter.snap('4-vdv-cho-ghep');
       await tapText(tester, 'Ngẫu nhiên');
@@ -643,9 +634,13 @@ Future<void> _openOpsRoster(
   ProviderContainer container,
   String tournamentId,
 ) async {
-  container.read(routerProvider).go('/organizer/tournaments/$tournamentId/ops');
   final tab = find.widgetWithText(ChoiceChip, 'Danh sách tham gia');
-  await pumpUntil(tester, tab, timeout: const Duration(seconds: 45));
+  await _goUntil(
+    tester,
+    container,
+    '/organizer/tournaments/$tournamentId/ops',
+    tab,
+  );
   await tapCentered(tester, tab);
   await pumpUntil(
     tester,
@@ -658,6 +653,30 @@ Finder _seriesNameField() => find.descendant(
   of: find.byKey(const ValueKey('series-form-name')),
   matching: find.byType(EditableText),
 );
+
+/// Đi tới [route] rồi chờ [finder]. Sau đăng nhập router còn có thể chuyển về /home và ghi đè `go` của test
+/// (lần chạy cloud đầu: app đứng ở trang chủ), nên vào lại route khi đang ở nơi khác.
+Future<void> _goUntil(
+  WidgetTester tester,
+  ProviderContainer container,
+  String route,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 60),
+}) async {
+  final targetPath = Uri.parse(route).path;
+  await pumpUntilCondition(
+    tester,
+    () {
+      if (finder.evaluate().isNotEmpty) return true;
+      if (currentPath(tester) != targetPath) {
+        container.read(routerProvider).go(route);
+      }
+      return false;
+    },
+    what: 'màn $route (${finder.toString()})',
+    timeout: timeout,
+  );
+}
 
 /// Gõ [query] vào ô tìm của tab Danh sách tham gia: danh sách dựng lười nên chỉ dòng đầu hiện sẵn.
 Future<void> _searchRoster(WidgetTester tester, String query) async {
