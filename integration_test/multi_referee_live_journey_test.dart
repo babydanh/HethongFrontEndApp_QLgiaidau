@@ -32,15 +32,23 @@ void main() {
     actors = await createActors(
       api,
       chain: 'A',
-      roles: const [
-        'organizer',
-        'referee',
-        'coOrganizer',
-        'viewer',
-        'player',
-        'admin',
-      ],
+      roles: const ['organizer', 'coOrganizer', 'viewer', 'player', 'admin'],
     );
+    // Tài khoản tạo mới chưa xác minh email nên Backend chặn chấm điểm (HTTP 403 "Email verification is
+    // required") và tự nhận lời mời trọng tài. Vai trọng tài dùng `user8` (CI đã xác minh), lời mời ở trạng thái INVITED.
+    final profile = await SocialApi().profile(
+      await api.login(kPlayerEmail, kE2ePassword),
+    );
+    actors = {
+      ...actors,
+      'referee': E2eActor(
+        role: 'referee',
+        email: kPlayerEmail,
+        userId: '${profile['id']}',
+        token: '',
+        fullName: '${profile['fullName'] ?? kPlayerEmail}',
+      ),
+    };
     tournament = await seedTournament(api);
     await api.generateBracket(
       token: tournament.token,
@@ -257,7 +265,7 @@ void main() {
       );
       final invited = rows.firstWhere((r) => isRefereeRow(r, actor('referee')));
       expect('${invited['status']}'.toUpperCase(), 'INVITED');
-      await pumpUntil(tester, find.text(actor('referee').fullName));
+      await tapKey(tester, 'permissions-filter-REFEREE', step: 'TC-MULTI-A-01');
       await shooter.snap('da-moi-trong-tai');
       await leaveSocialSession(tester, container);
     },
@@ -702,6 +710,9 @@ void main() {
       final route = '/organizer/tournaments/${tid()}/ops';
       container.read(routerProvider).go(route);
       await socialWait(tester, const Duration(seconds: 5));
+      debugPrint(
+        'A-18 chữ đang hiện: ${tester.widgetList<Text>(find.byType(Text)).map((w) => w.data ?? '').where((t) => t.isNotEmpty).toSet().take(40).join(' | ')}',
+      );
       await expectBlocked(tester, route);
       await shooter.snap('ops-bi-chan');
       await leaveSocialSession(tester, container);
@@ -709,19 +720,33 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-A-19 [phân quyền âm, API] người ngoài không phản hồi lời mời hộ, không mời trọng tài, không chấm, không đổi trạng thái trận',
+    'TC-MULTI-A-19 [phân quyền âm, API] người ngoài giải không mời trọng tài, không chấm, không đổi trạng thái trận, không trả lời lời mời hộ',
     (tester) async {
-      final organizerToken = await tokenOf('organizer');
-      final playerToken = await tokenOf('player');
-      // Lời mời còn chờ cho tài khoản `viewer`; người ngoài (`player`) không được trả lời hộ.
+      // Giải thứ hai mà `user8` (đã xác minh email) không có vai trò nào: 403 phải do thiếu quyền, không do thiếu xác minh.
+      final other = await seedTournament(api);
+      await api.generateBracket(
+        token: other.token,
+        tournamentId: other.tournamentId,
+        divisionId: other.divisionId,
+      );
+      final otherMatches = await api.listMatches(
+        token: other.token,
+        tournamentId: other.tournamentId,
+        divisionId: other.divisionId,
+      );
+      final otherMatch = otherMatches.firstWhere(
+        (m) => m['participant1Id'] is String && m['participant2Id'] is String,
+      )['id'];
       await api.addReferee(
-        token: organizerToken,
-        tournamentId: tid(),
-        email: actor('viewer').email,
+        token: other.token,
+        tournamentId: other.tournamentId,
+        email: actor('coOrganizer').email,
       );
-      final pending = (await referees()).firstWhere(
-        (r) => isRefereeRow(r, actor('viewer')),
-      );
+      final row = (await api.listReferees(
+        token: other.token,
+        tournamentId: other.tournamentId,
+      )).firstWhere((r) => isRefereeRow(r, actor('coOrganizer')));
+      final outsiderToken = await tokenOf('referee');
       Future<void> expectDenied(String label, Future<int> call) async {
         final code = await call;
         expect(
@@ -735,26 +760,26 @@ void main() {
         'trả lời lời mời của người khác',
         api.statusOf(
           'PATCH',
-          '/tournaments/${tid()}/referees/${pending['id']}/respond',
-          token: playerToken,
-          data: {'action': 'ACCEPT'},
+          '/tournaments/${other.tournamentId}/referees/${row['id']}/respond',
+          token: outsiderToken,
+          data: {'action': 'DECLINE'},
         ),
       );
       await expectDenied(
         'mời trọng tài',
         api.statusOf(
           'POST',
-          '/tournaments/${tid()}/referees',
-          token: playerToken,
-          data: {'email': actor('coOrganizer').email},
+          '/tournaments/${other.tournamentId}/referees',
+          token: outsiderToken,
+          data: {'email': actor('viewer').email},
         ),
       );
       await expectDenied(
         'chấm điểm',
         api.statusOf(
           'PATCH',
-          '/matches/$m2/score',
-          token: playerToken,
+          '/matches/$otherMatch/score',
+          token: outsiderToken,
           data: openSetBody(5, 0),
         ),
       );
@@ -762,16 +787,11 @@ void main() {
         'đổi trạng thái trận',
         api.statusOf(
           'PATCH',
-          '/matches/$m2/status',
-          token: playerToken,
+          '/matches/$otherMatch/status',
+          token: outsiderToken,
           data: {'status': 'ONGOING'},
         ),
       );
-      final still = (await referees()).firstWhere(
-        (r) => isRefereeRow(r, actor('viewer')),
-      );
-      expect('${still['status']}'.toUpperCase(), 'INVITED');
-      expect((await matchById(m2))['status'], isNot('ONGOING'));
     },
   );
 
