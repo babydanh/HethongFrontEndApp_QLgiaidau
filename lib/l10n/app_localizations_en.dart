@@ -20200,4 +20200,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get venueHintSameText => 'The venue name and address are identical.';
+
+  @override
+  String get rosterListTitle => 'Athlete list';
+
+  @override
+  String rosterListPairs(int count) {
+    return '$count pairs';
+  }
+
+  @override
+  String get rosterListAdd => 'Add athlete';
+
+  @override
+  String get rosterListDetailTitle => 'Details';
+
+  @override
+  String rosterListPlayerName(int n) {
+    return 'Athlete $n name';
+  }
+
+  @override
+  String rosterListPlayerPhone(int n) {
+    return 'Athlete $n phone';
+  }
+
+  @override
+  String rosterListPlayerEmail(int n) {
+    return 'Athlete $n email';
+  }
+
+  @override
+  String get rosterListPaid => 'Fee paid';
+
+  @override
+  String get rosterListNotes => 'Notes';
+
+  @override
+  String get rosterListDelete => 'Delete pair';
+
+  @override
+  String get rosterListDone => 'Done';
+
+  @override
+  String get rosterListDeleted => 'Pair deleted';
+
+  @override
+  String get rosterListUndo => 'Undo';
+
+  @override
+  String get rosterListEmailInvalid => 'Invalid email';
+
+  @override
+  String get rosterListAccountAuto => 'Auto link';
+
+  @override
+  String get rosterListAccountNone => 'No link';
+
+  @override
+  String get rosterListResetWarning =>
+      'Re-mapping will discard manual edits in the list. Continue?';
+
+  @override
+  String get rosterListResetConfirm => 'Re-map';
+
+  @override
+  String get rosterListCancel => 'Cancel';
+
+  @override
+  String get rosterListLinked => 'Account linked';
+
+  @override
+  String get rosterListNoAccount => 'No account yet';
 }

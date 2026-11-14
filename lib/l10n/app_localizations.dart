@@ -36174,6 +36174,132 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tên sân và địa chỉ đang giống hệt nhau.'**
   String get venueHintSameText;
+
+  /// No description provided for @rosterListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách VĐV'**
+  String get rosterListTitle;
+
+  /// No description provided for @rosterListPairs.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} cặp'**
+  String rosterListPairs(int count);
+
+  /// No description provided for @rosterListAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm VĐV'**
+  String get rosterListAdd;
+
+  /// No description provided for @rosterListDetailTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết'**
+  String get rosterListDetailTitle;
+
+  /// No description provided for @rosterListPlayerName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ tên VĐV {n}'**
+  String rosterListPlayerName(int n);
+
+  /// No description provided for @rosterListPlayerPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT VĐV {n}'**
+  String rosterListPlayerPhone(int n);
+
+  /// No description provided for @rosterListPlayerEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email VĐV {n}'**
+  String rosterListPlayerEmail(int n);
+
+  /// No description provided for @rosterListPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng phí'**
+  String get rosterListPaid;
+
+  /// No description provided for @rosterListNotes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú'**
+  String get rosterListNotes;
+
+  /// No description provided for @rosterListDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa cặp'**
+  String get rosterListDelete;
+
+  /// No description provided for @rosterListDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get rosterListDone;
+
+  /// No description provided for @rosterListDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa cặp'**
+  String get rosterListDeleted;
+
+  /// No description provided for @rosterListUndo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tác'**
+  String get rosterListUndo;
+
+  /// No description provided for @rosterListEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email chưa đúng'**
+  String get rosterListEmailInvalid;
+
+  /// No description provided for @rosterListAccountAuto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự liên kết'**
+  String get rosterListAccountAuto;
+
+  /// No description provided for @rosterListAccountNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không liên kết'**
+  String get rosterListAccountNone;
+
+  /// No description provided for @rosterListResetWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép lại sẽ bỏ các sửa tay trong danh sách. Tiếp tục?'**
+  String get rosterListResetWarning;
+
+  /// No description provided for @rosterListResetConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép lại'**
+  String get rosterListResetConfirm;
+
+  /// No description provided for @rosterListCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get rosterListCancel;
+
+  /// No description provided for @rosterListLinked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã liên kết tài khoản'**
+  String get rosterListLinked;
+
+  /// No description provided for @rosterListNoAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tài khoản'**
+  String get rosterListNoAccount;
 }
 
 class _AppLocalizationsDelegate
