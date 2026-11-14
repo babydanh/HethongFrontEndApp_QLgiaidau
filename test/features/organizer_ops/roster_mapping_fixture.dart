@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:app_quanly_giaidau/core/services/roster_excel_reader.dart';
 
 import 'roster_fixture_workbook.dart';
@@ -17,6 +19,17 @@ const List<String> sampleUserLayoutHeaders = [
 
 /// Ba cặp, mỗi cặp hai dòng liền nhau gộp STT và xác nhận. Tên, SĐT và ngày sinh đều bịa.
 Future<List<RosterGridSheet>> sampleUserLayoutGrid() {
+  final sample = _sampleUserLayout();
+  return workbookFrom(sample.rows, merges: sample.merges);
+}
+
+/// Cùng nội dung với [sampleUserLayoutGrid], dạng bytes xlsx cho file picker giả của test màn nhập.
+Uint8List sampleUserLayoutBytes() {
+  final sample = _sampleUserLayout();
+  return workbookBytes(sample.rows, merges: sample.merges);
+}
+
+({List<List<FixtureCell>> rows, List<String> merges}) _sampleUserLayout() {
   final rows = <List<FixtureCell>>[
     ['DANH SÁCH VĐV GIẢI MẪU'],
     sampleUserLayoutHeaders,
@@ -42,5 +55,5 @@ Future<List<RosterGridSheet>> sampleUserLayoutGrid() {
       ..add('A$sheetRow:A${sheetRow + 1}')
       ..add('I$sheetRow:I${sheetRow + 1}');
   }
-  return workbookFrom(rows, merges: merges);
+  return (rows: rows, merges: merges);
 }

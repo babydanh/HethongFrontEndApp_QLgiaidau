@@ -11,9 +11,11 @@ import 'package:app_quanly_giaidau/core/services/roster_excel_reader.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_column_mapping_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_digest.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_mapping_draft.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Giới hạn số dòng mỗi lần nhập, giống `MAX_BATCH_PARTICIPANTS` của web.
@@ -191,8 +193,18 @@ class _DraftRow {
   bool get hasPlayer2 => parsed.hasPlayer2;
 }
 
-/// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi.
-enum _LayoutStatus { idle, rules, loading, done, unavailable, error, empty }
+/// Trạng thái hỏi AI về bố cục file: `rules` là luật đủ tin nên không hỏi; `edited` là người dùng đã
+/// ghép cột tay (không còn là bố cục của AI).
+enum _LayoutStatus {
+  idle,
+  rules,
+  loading,
+  done,
+  unavailable,
+  error,
+  empty,
+  edited,
+}
 
 class _DraftGroup {
   _DraftGroup(this.target);
@@ -596,6 +608,65 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       };
       _createError = null;
     });
+  }
+
+  /// Cần chú ý tới việc ghép cột: không khối nào có cột Tên hoặc Đội, còn sheet bị bỏ qua, hoặc không có dòng.
+  bool get _mappingNeedsAttention =>
+      _skippedSheets.isNotEmpty ||
+      _rows.isEmpty ||
+      _readings.any(
+        (reading) =>
+            reading.mapping.indexOf(RosterSlot.player1Name) == null &&
+            reading.mapping.indexOf(RosterSlot.teamName) == null,
+      );
+
+  /// Mở popup ghép cột trên bản sao của các khối đang dùng và các sheet bị bỏ qua.
+  Future<void> _openMapping() async {
+    final drafts = [
+      for (final reading in _readings)
+        RosterMappingDraft.fromReading(
+          reading,
+          isDoublesFor: _isDoublesForLabel,
+        ),
+      for (final name in _skippedSheets)
+        for (final sheet in _grid.where((grid) => grid.name == name))
+          RosterMappingDraft.forSkippedSheet(
+            sheet,
+            isDoublesFor: _isDoublesForLabel,
+          ),
+    ];
+    final result = await showRosterColumnMappingSheet(context, drafts: drafts);
+    if (!mounted || result == null) return;
+    _applyMapping(result);
+  }
+
+  /// Áp kết quả popup: dựng lại dòng từ các khối đã sửa. Không gọi `_installParsed` vì nó quên nội dung
+  /// đã tạo trong phiên (bước xác nhận tạo nội dung sẽ hiện lại); chỉ số dòng đổi nên ứng viên tài khoản
+  /// và lựa chọn tài khoản của dòng cũ bỏ đi, để preview mới quyết định lại.
+  void _applyMapping(RosterMappingResult result) {
+    _layoutRequest++;
+    _editRevision++;
+    _readings = result.readings;
+    final parsed = _assembleWorkbook(result.readings, result.skippedSheets);
+    final unmatched = parsed.groups
+        .where((group) => group.target.divisionId == null)
+        .toList(growable: false);
+    _candidates.clear();
+    setState(() {
+      _layoutStatus = _LayoutStatus.edited;
+      _rows = parsed.rows;
+      _groups = parsed.groups;
+      _skippedSheets = parsed.skippedSheets;
+      _preview = null;
+      _previewPlan = null;
+      _previewError = null;
+      _pendingDivisionConfirm = unmatched.isNotEmpty;
+      _createChoice = {
+        for (final group in unmatched) _foldName(group.target.label),
+      };
+      _createError = null;
+    });
+    if (!_pendingDivisionConfirm) unawaited(_runPreview());
   }
 
   /// Hỏi AI về bố cục khi luật không đủ tin. AI tắt (`aiAvailable: false`), hết lượt (429), lỗi (503) hay
@@ -1103,6 +1174,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
         footerReason == null;
 
     final busy = _reading || _committing || _creating;
+    final mappingBusy = busy || _layoutStatus == _LayoutStatus.loading;
     final fileError = _fileError;
     final previewError = _previewError;
     final createError = _createError;
@@ -1141,6 +1213,25 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           ),
         ],
       ),
+      if (_fileName != null) ...[
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _mappingNeedsAttention
+              ? FilledButton.icon(
+                  key: const ValueKey('roster-import-open-mapping'),
+                  onPressed: mappingBusy ? null : _openMapping,
+                  icon: const Icon(Icons.view_column_rounded),
+                  label: Text(l10n.rosterMapOpen),
+                )
+              : OutlinedButton.icon(
+                  key: const ValueKey('roster-import-open-mapping'),
+                  onPressed: mappingBusy ? null : _openMapping,
+                  icon: const Icon(Icons.view_column_rounded),
+                  label: Text(l10n.rosterMapOpen),
+                ),
+        ),
+      ],
       const SizedBox(height: 8),
       if (_fileName == null && !_reading)
         Text(
