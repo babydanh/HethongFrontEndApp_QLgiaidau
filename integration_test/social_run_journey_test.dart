@@ -8,7 +8,7 @@ import 'support/app_driver.dart';
 import 'support/backend_api.dart';
 import 'support/social_journey.dart';
 
-/// Journey Social 2/3: chi tiết buổi, người tham gia, quyền, trận đấu (TC-SOCIAL-APP-05..13).
+/// Journey Social 2/3: chi tiết buổi, người tham gia, quyền, trận đấu (TC-SOCIAL-APP-05..12).
 /// Emulator Android + Backend thật. Host = `admin1`, người chơi = `user8`; người phụ tạo bằng API.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();

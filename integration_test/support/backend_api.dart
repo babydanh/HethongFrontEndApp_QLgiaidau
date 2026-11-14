@@ -526,8 +526,8 @@ class BackendApi {
     return found.first['id'] as String;
   }
 
-  /// Tạo CLB (`POST /communities`). [joinMode] OPEN|APPROVAL. CLB mới ở trạng thái PENDING
-  /// cho tới khi ADMIN duyệt (`approveCommunityAsAdmin`). Trả id CLB.
+  /// Tạo CLB (`POST /communities`). [joinMode] OPEN|APPROVAL. Chạy cloud cho thấy Backend tạo CLB ở
+  /// trạng thái ACTIVE ngay khi gọi bằng API (chưa PENDING), nên `approveCommunityAsAdmin` thường thừa. Trả id CLB.
   Future<String> createCommunity({
     required String token,
     required String name,
