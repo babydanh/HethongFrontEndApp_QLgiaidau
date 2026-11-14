@@ -80,18 +80,10 @@ void main() {
       final container = await signInAsOrganizer(tester);
       await _openImportSheet(tester, container, single.tournamentId);
       await _pickFile(tester, bytes);
-      // Chưa ghép cột email thì chưa ai nhập được.
-      await expectKey(tester, 'roster-import-open-mapping');
+      // MISSING_EMAIL không chặn nhập: nút Nhập vẫn bật, nhưng cột Mail chưa được đọc nên ô email trống.
+      await _waitForCommitReady(tester, expectedCount: 4);
       await snap(tester, 'mail-chua-ghep');
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('roster-import-commit')),
-            )
-            .onPressed,
-        isNull,
-        reason: 'thiếu email thì nút Nhập phải tắt',
-      );
+      expect(await _emailOfRow(tester, 0), isEmpty);
 
       // Cột C (chỉ số 2) là "Mail": gán thành email VĐV 1 trong popup Ghép cột.
       await tapKey(tester, 'roster-import-open-mapping');
@@ -100,6 +92,8 @@ void main() {
       await snap(tester, 'mail-da-chon-cot');
       await tapKey(tester, 'roster-map-done');
       await _waitForCommitReady(tester, expectedCount: 4);
+      expect(await _emailOfRow(tester, 0), corpusEmail(1));
+      expect(await _emailOfRow(tester, 3), corpusEmail(4));
 
       await _commit(tester);
       final names = [for (var i = 1; i <= 4; i++) corpusName(i)];
@@ -109,7 +103,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-ROSTER-E2E-04: email hỏng và trống: chỉ dòng hợp lệ nhập được, sửa email trong chi tiết thì thêm dòng',
+    'TC-ROSTER-E2E-04: email sai bị chặn, sửa trong chi tiết thì nhập được; dòng thiếu email vẫn nhập',
     (tester) async {
       final single = await seedTournament(api, players: 0, maxParticipants: 64);
       final item = _caseOf('single-invalid-email');
@@ -118,8 +112,8 @@ void main() {
       final container = await signInAsOrganizer(tester);
       await _openImportSheet(tester, container, single.tournamentId);
       await _pickFile(tester, bytes);
-      // 4 dòng: hợp lệ chỉ có dòng 3; dòng 1 email sai, dòng 2 trống, dòng 4 email sai.
-      await _waitForCommitReady(tester, expectedCount: 1);
+      // 4 dòng: email sai (dòng 1, 4) bị chặn; dòng 2 thiếu email và dòng 3 hợp lệ vẫn nhập được.
+      await _waitForCommitReady(tester, expectedCount: 2);
       await snap(tester, 'invalid-email-preview');
 
       // Sửa email dòng 1 (chỉ số 0) trong sheet chi tiết rồi chờ xem trước chạy lại.
@@ -132,15 +126,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await snap(tester, 'invalid-email-detail');
       await tapKey(tester, 'roster-detail-done');
-      await _waitForCommitReady(tester, expectedCount: 2);
+      await _waitForCommitReady(tester, expectedCount: 3);
 
       await _commit(tester);
-      await _waitBackendHas(tester, single, [corpusName(1), corpusName(3)]);
+      await _waitBackendHas(tester, single, [
+        corpusName(1),
+        corpusName(2),
+        corpusName(3),
+      ]);
       final manage = await _fetchManage(single.token, single.tournamentId);
       expect(
         jsonEncode(manage),
-        isNot(contains(corpusName(2))),
-        reason: 'dòng thiếu email không được nhập',
+        isNot(contains(corpusName(4))),
+        reason: 'dòng email sai chưa sửa không được nhập',
       );
     },
     timeout: _timeout,
@@ -297,6 +295,25 @@ Future<void> _waitForCommitReady(
     timeout: const Duration(seconds: 90),
     what: 'nút Nhập bật với $expectedCount dòng (xem trước trên máy chủ xong)',
   );
+}
+
+/// Mở chi tiết dòng [index], đọc ô email VĐV 1, rồi đóng chi tiết.
+Future<String> _emailOfRow(WidgetTester tester, int index) async {
+  await tapKey(tester, 'roster-row-$index');
+  await expectKey(tester, 'roster-detail-email-1');
+  final editable = find.descendant(
+    of: find.byKey(const ValueKey('roster-detail-email-1')),
+    matching: find.byType(EditableText),
+  );
+  final text = tester.widget<EditableText>(editable).controller.text;
+  await tapKey(tester, 'roster-detail-close');
+  await pumpUntilCondition(
+    tester,
+    () =>
+        find.byKey(const ValueKey('roster-detail-email-1')).evaluate().isEmpty,
+    what: 'sheet chi tiết đóng',
+  );
+  return text;
 }
 
 Future<void> _commit(WidgetTester tester) async {
