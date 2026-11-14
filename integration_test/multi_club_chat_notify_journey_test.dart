@@ -840,8 +840,12 @@ Future<void> _leave(WidgetTester tester, ProviderContainer container) async {
   await socialWait(tester, const Duration(seconds: 2));
   _drain(tester);
   await tester.pumpWidget(const SizedBox.shrink());
+  // Socket chat đóng bất đồng bộ sau khi gỡ cây (BUG-CHAT-01): chờ rồi gỡ lỗi trước khi kết thúc ca.
+  await socialWait(tester, const Duration(seconds: 3));
   _drain(tester);
   container.dispose();
+  await socialWait(tester, const Duration(seconds: 1));
+  _drain(tester);
 }
 
 /// Gỡ lỗi sản phẩm ĐÃ BIẾT, ghi `BUG-SAN-PHAM` vào log (không nuốt im lặng); lỗi khác thì fail.
