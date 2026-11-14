@@ -827,7 +827,7 @@ List<RosterParsedRow> parseRosterSheet(
   String headerOf(int column) =>
       column < headers.length && headers[column].trim().isNotEmpty
       ? headers[column].trim()
-      : '[${_columnLetter(column)}]';
+      : '[${rosterColumnLetter(column)}]';
   final width = sheet.rows.fold<int>(
     headers.length,
     (m, r) => r.length > m ? r.length : m,
@@ -1020,7 +1020,7 @@ int? _firstWhereIndex(List<String> items, bool Function(String) test) {
 }
 
 /// `A` = 0, `Z` = 25, `AA` = 26: tên cột ở dạng chữ.
-String _columnLetter(int index) {
+String rosterColumnLetter(int index) {
   var letters = '';
   for (var value = index + 1; value > 0; value = (value - 1) ~/ 26) {
     letters = String.fromCharCode(65 + ((value - 1) % 26)) + letters;
