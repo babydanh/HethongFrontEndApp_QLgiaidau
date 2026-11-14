@@ -264,7 +264,7 @@ Future<void> _openImportSheet(
 ) async {
   await openManageHub(tester, container, tournamentId);
   await openHubTab(tester, 'VĐV');
-  await tapKey(tester, 'athletes-more');
+  // Nút Nhập Excel nằm ngay trên thanh công cụ của tab VĐV, không nằm trong menu Khác.
   await tapKey(tester, 'athletes-import-excel');
   await expectKey(tester, 'roster-import-sheet', step: 'sheet Nhập Excel');
 }
