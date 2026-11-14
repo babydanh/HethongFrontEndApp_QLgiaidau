@@ -282,27 +282,34 @@ void main() {
       'TC-MULTI-H-13 chat: người ngoài phòng không gửi được; không thu hồi tin của người khác',
       (tester) async {
         final fx = await _fixture();
+        // Chủ CLB và thành viên đã vào CLB ở H-11 nên được phép chat 1-1 với nhau.
+        final roomId = await fx.api.createDirectRoom(
+          token: fx.token('clubOwner'),
+          otherUserId: fx.actor('member').userId,
+        );
+        final messageId = await fx.api.sendChatMessage(
+          token: fx.token('clubOwner'),
+          roomId: roomId,
+          text: '${fx.tag} tin của chủ CLB',
+        );
         final send = {
-          'roomId': fx.roomId,
+          'roomId': roomId,
           'messageText': '${fx.tag} tin ngoài phòng',
         };
-        final revoke = '/chat/messages/${fx.messageId}/revoke';
+        final revoke = '/chat/messages/$messageId/revoke';
         await _runMatrix(fx, 'H-13', [
-          for (final r in ['viewer', 'clubOwner', 'guest'])
+          for (final r in ['viewer', 'player', 'guest'])
             _Cell(r, Want.deny, 'POST', '/chat/messages', data: send),
           _Cell(
             'member',
             Want.pass,
             'POST',
             '/chat/messages',
-            data: {
-              'roomId': fx.roomId,
-              'messageText': '${fx.tag} tin của member',
-            },
+            data: {'roomId': roomId, 'messageText': '${fx.tag} tin của member'},
           ),
-          for (final r in ['viewer', 'clubOwner', 'member', 'guest'])
+          for (final r in ['viewer', 'player', 'member', 'guest'])
             _Cell(r, Want.deny, 'POST', revoke),
-          _Cell('player', Want.pass, 'POST', revoke),
+          _Cell('clubOwner', Want.pass, 'POST', revoke),
         ]);
       },
     );
@@ -534,8 +541,6 @@ class _Fixture {
     required this.match2,
     required this.participants,
     required this.communityId,
-    required this.roomId,
-    required this.messageId,
   });
 
   final BackendApi api;
@@ -551,8 +556,6 @@ class _Fixture {
   /// [trận 1 bên 1, trận 1 bên 2, trận 2 bên 1, trận 2 bên 2].
   final List<String> participants;
   final String communityId;
-  final String roomId;
-  final String messageId;
 
   E2eActor actor(String role) => actors[role]!;
   String token(String role) => actors[role]!.token;
@@ -673,17 +676,6 @@ Future<_Fixture> _buildFixture() async {
     name: '$tag CLB',
   );
 
-  // Phòng chat 1-1 player <-> member và một tin của player.
-  final roomId = await api.createDirectRoom(
-    token: actors['player']!.token,
-    otherUserId: actors['member']!.userId,
-  );
-  final messageId = await api.sendChatMessage(
-    token: actors['player']!.token,
-    roomId: roomId,
-    text: '$tag tin của player',
-  );
-
   return _Fixture(
     api: api,
     actors: actors,
@@ -701,7 +693,5 @@ Future<_Fixture> _buildFixture() async {
       round1[1]['participant2Id'] as String,
     ],
     communityId: communityId,
-    roomId: roomId,
-    messageId: messageId,
   );
 }
