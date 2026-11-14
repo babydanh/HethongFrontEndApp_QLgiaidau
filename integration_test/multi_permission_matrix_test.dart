@@ -653,6 +653,9 @@ Future<_Fixture> _buildFixture() async {
       accept: true,
     );
   }
+  // Trọng tài chỉ bắt đầu/chấm trận khi giải đã khai mạc (409 TOURNAMENT_NOT_STARTED nếu chưa).
+  await api.startTournament(token: btc, tournamentId: t.tournamentId);
+
   // Giải 2: chưa duyệt, dùng cho ô ADMIN duyệt và ô xoá giải.
   final t2 = await api.createLiteTournament(
     token: btc,
@@ -718,7 +721,12 @@ Future<String> _diagnose(_Fixture fx, _Cell cell) async {
 /// định bị chặn (về /login, /home hoặc có chữ báo không có quyền). Màn tải chậm ở lần mở đầu.
 Future<void> _expectOpsBlocked(WidgetTester tester, String tournamentId) async {
   final route = '/organizer/tournaments/$tournamentId/ops';
-  appContainer(tester).read(routerProvider).go(route);
+  final router = appContainer(tester).read(routerProvider);
+  router.go(route);
+  // Chờ cho điều hướng sau đăng nhập (nếu còn) xong rồi mở lại, để /home thấy sau đó là do chặn quyền.
+  await socialWait(tester, const Duration(seconds: 3));
+  router.go(route);
+  await tester.pump(const Duration(milliseconds: 500));
   final message = find.byWidgetPredicate(
     (w) =>
         w is Text &&
