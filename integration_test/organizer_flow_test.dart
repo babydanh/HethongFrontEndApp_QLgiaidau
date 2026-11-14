@@ -186,7 +186,11 @@ void main() {
         find.byKey(const ValueKey('add-athlete-direct-email')),
         '$tag-guest@example.com',
       );
-      await tester.tap(find.byKey(const ValueKey('add-athlete-direct-submit')));
+      // Nút gửi nằm dưới các ô nhập trong sheet cuộn (ngoài màn): đưa vào giữa rồi mới bấm.
+      await tapCentered(
+        tester,
+        find.byKey(const ValueKey('add-athlete-direct-submit')),
+      );
       await tester.pump();
 
       var participants = <Map<String, dynamic>>[];
