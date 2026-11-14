@@ -1,6 +1,6 @@
 # Handoff: E2E nhiều tài khoản cho mọi module App + Allure
 <!-- Đọc file này TRƯỚC khi làm tiếp nhánh. Cập nhật TRƯỚC khi báo xong, fast-handoff, hoặc hết phiên. -->
-Cập nhật: 2026-11-14 · bởi: claude · nhánh: app-e2e-nhieu-tai-khoan · OpenSpec: app-e2e-nhieu-tai-khoan
+Cập nhật: 2026-11-14 11:17 · bởi: claude · nhánh: app-e2e-nhieu-tai-khoan · OpenSpec: app-e2e-nhieu-tai-khoan · giao máy: danh1
 
 ## Mục tiêu
 Người dùng đã duyệt plan và nói làm A-Z (coi như đã "apply"): làm hết `tasks.md` từ 0.1 tới 3.3. Kết quả: 8 file `integration_test/multi_*` chạy xanh trên cloud (trừ ca `skip: 'BUG-...'`), E2E App có báo cáo Allure lưu ở kho private, danh sách lỗi sản phẩm ghi ở `design.md`. Chi tiết: `proposal.md`, `design.md`, `tasks.md` cùng thư mục.
