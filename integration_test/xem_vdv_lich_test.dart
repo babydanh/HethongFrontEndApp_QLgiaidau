@@ -10,8 +10,11 @@ import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart'
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -27,7 +30,7 @@ void main() {
   testWidgets('xem: danh sach doi', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
-      xemApp(
+      _fakeApp(
         overrides: [
           teamsProvider.overrideWith((ref, id) => Stream.value(_teams)),
           tournamentProvider.overrideWith((ref, id) => Stream.value(null)),
@@ -41,43 +44,7 @@ void main() {
   testWidgets('xem: tab VDV hang nut va hang VDV', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
-      xemApp(
-        overrides: [
-          introTeamsProvider(
-            'tournament-1',
-          ).overrideWith((ref) async => const <Team>[]),
-          tournamentDivisionsProvider(
-            'tournament-1',
-          ).overrideWith((ref) async => _divisions),
-          tournamentRepositoryProvider.overrideWithValue(
-            _ParticipantsRepository(),
-          ),
-          tournamentManagementRepositoryProvider.overrideWithValue(
-            _EmptyManagementRepository(),
-          ),
-        ],
-        home: Scaffold(
-          body: TournamentManagementAthletesTab(
-            tournament: _tournament(),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(
-      find.byKey(const ValueKey('athlete-division-row-div-mixed')),
-    );
-    await settle(tester);
-    await shooter.snap('tab-vdv-hang-muc-mo');
-
-    await tester.tap(find.byKey(const ValueKey('athletes-more')));
-    await settle(tester);
-    await shooter.snap('tab-vdv-menu-khac');
-  });
-
-  testWidgets('xem: tab VDV hop chon cach ghep tu dong', (tester) async {
-    final shooter = XemShooter(tester, binding);
-    await shooter.pump(
-      xemApp(
+      _fakeApp(
         overrides: [
           introTeamsProvider(
             'tournament-1',
@@ -97,9 +64,39 @@ void main() {
         ),
       ),
     );
-    await tester.tap(
-      find.byKey(const ValueKey('athlete-division-row-div-mixed')),
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-mixed')));
+    await settle(tester);
+    await shooter.snap('tab-vdv-hang-muc-mo');
+
+    await tester.tap(find.byKey(const ValueKey('athletes-more')));
+    await settle(tester);
+    await shooter.snap('tab-vdv-menu-khac');
+  });
+
+  testWidgets('xem: tab VDV hop chon cach ghep tu dong', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(
+      _fakeApp(
+        overrides: [
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const <Team>[]),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => _divisions),
+          tournamentRepositoryProvider.overrideWithValue(
+            _ParticipantsRepository(),
+          ),
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            _EmptyManagementRepository(),
+          ),
+        ],
+        home: Scaffold(
+          body: TournamentManagementAthletesTab(tournament: _tournament()),
+        ),
+      ),
     );
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-mixed')));
     await settle(tester);
     await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
     await settle(tester);
@@ -109,7 +106,7 @@ void main() {
   testWidgets('xem: tab VDV dang mo dang ky an vong check-in', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
-      xemApp(
+      _fakeApp(
         overrides: [
           introTeamsProvider(
             'tournament-1',
@@ -131,9 +128,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(
-      find.byKey(const ValueKey('athlete-division-row-div-mixed')),
-    );
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-mixed')));
     await settle(tester);
     await shooter.snap('tab-vdv-dang-ky');
   });
@@ -141,7 +136,7 @@ void main() {
   testWidgets('xem: ho so VDV', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
-      xemApp(
+      _fakeApp(
         overrides: [
           tournamentManagementRepositoryProvider.overrideWithValue(
             _EmptyManagementRepository(),
@@ -175,7 +170,7 @@ void main() {
   testWidgets('xem: luoi lich', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
-      xemApp(
+      _fakeApp(
         overrides: [
           tournamentManagementRepositoryProvider.overrideWithValue(
             _VenuesRepository(),
@@ -199,6 +194,20 @@ void main() {
     await shooter.snap('lich-luoi-san');
   });
 }
+
+/// [xemApp] plus a fake ELO lookup: avatars in these screens would otherwise
+/// call `GET /rankings/user/:id` on the real DioClient (no Backend here), and
+/// the late failure leaks into whichever test is running next.
+Widget _fakeApp({required Widget home, List<Override> overrides = const []}) =>
+    xemApp(
+      home: home,
+      overrides: [
+        userRankingsSummaryProvider.overrideWith(
+          (ref, userId) async => const <PlayerRanking>[],
+        ),
+        ...overrides,
+      ],
+    );
 
 // --- Fixtures -----------------------------------------------------------
 
