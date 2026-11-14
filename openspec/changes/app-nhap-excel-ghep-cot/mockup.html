@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App · Ghép cột Excel</title>
+<style>
+  :root{
+    --bg:#0f1115; --cap:#c9cfdb;
+    --pri:#1D8EF8; --pri-d:#0F5AA6; --pri-s:#E8F2FE; --err:#EF4444; --ok:#16A34A; --wn:#F59E0B;
+    --a-bg:#fff; --a-sf:#F8FAFC; --a-ln:#E2E8F0; --a-tx:#0F172A; --a-mu:#64748B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#fff;font:15px/1.5 system-ui,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1240px;margin:0 auto;padding:28px 16px 56px}
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;align-items:start}
+  .cap{margin:0 0 10px;text-align:center;font-weight:700;color:var(--cap)}
+  .phone{background:#000;border-radius:36px;padding:10px;max-width:340px;margin:0 auto;box-shadow:0 12px 32px #0009}
+  .screen{position:relative;background:var(--a-bg);border-radius:28px;overflow:hidden;height:640px;color:var(--a-tx);font-size:14px}
+  .bar{height:52px;display:flex;align-items:center;gap:12px;padding:0 16px;font-weight:700;font-size:16px;border-bottom:1px solid var(--a-ln)}
+  .cnt{margin-left:auto;font-size:13px;font-weight:700;color:var(--pri-d);background:var(--pri-s);border-radius:99px;padding:3px 10px}
+  .dim{position:absolute;inset:0;background:#0f172a73}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;display:flex;flex-direction:column}
+  .sheet.tall{top:48px}
+  .sheet.fit{max-height:88%}
+  .grab{width:36px;height:4px;border-radius:4px;background:#CBD5E1;margin:8px auto 0;flex:none}
+  .head{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 18px;flex:none}
+  .head h3{margin:0;font-size:17px}
+  .ib{width:44px;height:44px;border:0;background:none;border-radius:50%;display:grid;place-items:center;color:var(--a-mu);cursor:pointer}
+  .ib:hover{background:var(--a-sf)}
+  .mode{margin:0 16px 8px;display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-radius:12px;background:var(--a-sf);font-weight:600;flex:none}
+  .mode svg{flex:none;color:var(--pri)}
+  .mode span{flex:1}
+  .list{flex:1;overflow:auto;padding:0 16px}
+  .col{border-bottom:1px solid var(--a-ln)}
+  .row{display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 0;cursor:pointer;width:100%;background:none;border:0;text-align:left;font:inherit;color:inherit}
+  .row.lock{cursor:default}
+  .nm{flex:1;min-width:0}
+  .nm b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nm i{display:block;font-style:normal;font-size:12px;color:var(--a-mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pill{flex:none;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px 0 12px;border-radius:99px;font-weight:700;font-size:13px;background:var(--pri-s);color:var(--pri-d)}
+  .pill.note{background:#fff;color:var(--a-mu);font-weight:600;border:1px dashed #CBD5E1}
+  .pill.lockp{background:var(--a-sf);color:var(--a-mu);font-weight:600;padding:0 12px}
+  .pill.err{background:#FEF2F2;color:var(--err);outline:1.5px solid var(--err)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 14px}
+  .chip{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--a-ln);background:#fff;font:600 13px system-ui;color:var(--a-tx);cursor:pointer}
+  .chip:hover{border-color:var(--pri)}
+  .chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+  .chip.used{color:var(--a-mu);background:var(--a-sf)}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-top:1px solid var(--a-ln);flex:none;background:#fff}
+  .foot em{font-style:normal;color:var(--a-mu);font-weight:600;font-size:13px}
+  .foot em.bad{color:var(--err)}
+  .btn{height:46px;padding:0 28px;border:0;border-radius:12px;background:var(--pri);color:#fff;font:700 15px system-ui;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+  .file{margin:14px 16px;padding:14px;border:1px solid var(--a-ln);border-radius:14px;display:flex;align-items:center;gap:12px}
+  .file b{display:block}.file i{font-style:normal;font-size:12px;color:var(--a-mu)}
+  .ico{width:40px;height:40px;border-radius:10px;background:#DCFCE7;color:var(--ok);display:grid;place-items:center;flex:none}
+  .cta{margin:0 16px;display:flex;gap:10px}
+  .cta .btn{flex:1;padding:0}
+  .plist{padding:12px 16px 84px;display:flex;flex-direction:column;gap:10px;height:calc(100% - 52px);overflow:hidden}
+  .pc{display:flex;align-items:center;gap:10px;border:1px solid var(--a-ln);border-radius:14px;padding:10px 12px;background:#fff;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+  .pc:hover{border-color:var(--pri)}
+  .pc.warn{border-color:#FCD34D;background:#FFFBEB}
+  .pc.dup{border-color:#FCA5A5;background:#FEF2F2}
+  .av{width:34px;height:34px;border-radius:50%;background:var(--pri-s);color:var(--pri-d);display:grid;place-items:center;font-weight:800;flex:none}
+  .pn{flex:1;min-width:0}
+  .pn b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pn i{display:block;font-style:normal;font-size:11px;color:var(--a-mu)}
+  .pc.warn .pn i{color:#B45309;font-weight:700}
+  .pc.dup .pn i{color:var(--err);font-weight:700}
+  .vs{width:1px;align-self:stretch;background:var(--a-ln)}
+  .st{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+  .st.ok{background:var(--ok)} .st.wn{background:var(--wn)} .st.er{background:var(--err)}
+  .pfoot{position:absolute;left:0;right:0;bottom:0}
+  /* detail sheet */
+  .dbody{padding:0 16px 18px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+  .alert{display:flex;align-items:center;gap:8px;border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px}
+  .alert.wn{background:#FFFBEB;color:#B45309}
+  .alert.er{background:#FEF2F2;color:var(--err)}
+  .ply{display:flex;align-items:center;gap:12px}
+  .ply .av{width:40px;height:40px}
+  .ply .pn b{font-size:15px}
+  .ply .pn i{font-size:12px}
+  .ply .pn i.miss{color:var(--err);font-weight:700}
+  .kv{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .kv div{background:var(--a-sf);border-radius:12px;padding:8px 10px}
+  .kv small{display:block;font-size:11px;color:var(--a-mu);font-weight:600}
+  .kv b{font-size:14px}
+  .notes{display:flex;flex-wrap:wrap;gap:6px}
+  .nt{border:1px dashed #CBD5E1;border-radius:99px;padding:4px 10px;font-size:12px;color:#475569}
+  .nt b{color:var(--a-mu);font-weight:600;margin-right:4px}
+  .cnt{margin-left:auto}
+  .addb{margin-right:-8px;color:var(--pri)}
+  .pbox{display:flex;flex-direction:column;gap:8px;border:1px solid var(--a-ln);border-radius:14px;padding:10px}
+  .fld{width:100%;height:44px;border:1px solid var(--a-ln);border-radius:10px;padding:0 12px;font:600 14px system-ui;color:var(--a-tx);background:#fff}
+  .fld.bad{border-color:var(--err);background:#FEF2F2}
+  .fld.ta{height:84px;padding:10px 12px;font-weight:500;font-size:13px;resize:none;line-height:1.4}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ply .fld{flex:1}
+  .paid{display:flex;align-items:center;gap:10px;height:44px;font-weight:600}
+  .paid input{width:22px;height:22px;accent-color:var(--pri)}
+  .dfoot{display:flex;gap:10px}
+  .dfoot .btn{flex:1;padding:0}
+  .btn.del{background:#fff;color:var(--err);border:1px solid #FCA5A5}
+  :focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phones">
+    <div>
+      <p class="cap">1 · Mở popup</p>
+      <div class="phone"><div class="screen">
+        <div class="bar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Nhập VĐV từ Excel
+        </div>
+        <div class="file">
+          <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13l4 4m0-4l-4 4"/></svg></div>
+          <div><b>DRAGONS_Lan_IV.xlsx</b><i>74 dòng</i></div>
+        </div>
+        <div class="cta"><button class="btn" type="button">Ghép cột</button><button class="btn ghost" type="button">Tiếp tục</button></div>
+      </div></div>
+    </div>
+
+    <div>
+      <p class="cap">2 · Ghép cột (chạm thử)</p>
+      <div class="phone"><div class="screen"><div class="dim"></div><div class="sheet tall" id="s2"></div></div></div>
+    </div>
+
+    <div>
+      <p class="cap">3 · Danh sách VĐV (chạm một cặp)</p>
+      <div class="phone"><div class="screen" id="s3"></div></div>
+    </div>
+
+    <div>
+      <p class="cap">4 · Chi tiết một cặp</p>
+      <div class="phone"><div class="screen" id="s4"></div></div>
+    </div>
+
+    <div>
+      <p class="cap">5 · Thiếu cột tên</p>
+      <div class="phone"><div class="screen"><div class="dim"></div><div class="sheet tall" id="s5"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var I = {
+    chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+    close: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+    pair: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.5 6 5.5"/></svg>',
+    lock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    ok: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
+    wn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 6v8M12 18v.5"/></svg>',
+    er: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  };
+
+  /* ---------- Column mapping popup ---------- */
+  // Only fields the import really has. Anything else goes to Ghi chú (Web: rosterNoteColumns).
+  var SLOTS = [
+    ['player1Name', 'Tên'], ['player1Phone', 'SĐT'], ['player1Email', 'Email'],
+    ['player2Name', 'Tên VĐV 2'], ['teamName', 'Đội'], ['pairCode', 'Mã cặp'],
+    ['divisionName', 'Nội dung'], ['isPaid', 'Đã đóng phí'], ['elo', 'ELO'], ['notes', 'Ghi chú']
+  ];
+  var LABEL = { index: 'STT', secret: 'Không lưu' };
+  SLOTS.forEach(function (s) { LABEL[s[0]] = s[1]; });
+  // kind: normal | index (file numbering, never stored) | secret (personal data, never stored)
+  var COLS = [
+    ['STT', '1', 'index'], ['Họ và tên VĐV', 'Nguyễn Văn A'], ['Đơn vị công tác', 'Công ty X'],
+    ['Chức vụ', 'Quản lý'], ['Số điện thoại', '09xx xxx 111'], ['Size áo', 'XL'],
+    ['Trình điểm gần nhất', '620'], ['Ngày sinh', '01/01/1990', 'secret']
+  ];
+  var PAIR_OPTS = ['Đánh đơn', 'Mỗi VĐV một cột', 'Hai VĐV một ô', '2 dòng liền nhau là 1 cặp'];
+
+  function mountMap(el, st) {
+    function render() {
+      var hasName = st.map.indexOf('player1Name') > -1;
+      var h = '<div class="grab"></div><div class="head"><h3>Ghép cột</h3><button class="ib" type="button" aria-label="Đóng">' + I.close + '</button></div>';
+      h += '<label class="mode">' + I.pair + '<span><select data-pair style="border:0;background:none;font:600 14px system-ui;width:100%;color:inherit">' +
+        PAIR_OPTS.map(function (o, i) { return '<option' + (i === st.pair ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select></span></label>';
+      h += '<div class="list">';
+      COLS.forEach(function (c, i) {
+        var kind = c[2] || 'normal', v = st.map[i], open = st.open === i;
+        if (kind !== 'normal') {
+          h += '<div class="col"><div class="row lock"><span class="nm"><b>' + c[0] + '</b><i>' + c[1] + '</i></span>' +
+            '<span class="pill lockp">' + (kind === 'secret' ? I.lock + ' ' : '') + LABEL[kind === 'secret' ? 'secret' : 'index'] + '</span></div></div>';
+          return;
+        }
+        var cls = v === 'notes' ? 'note' : (!hasName && st.warn && i === 1 ? 'err' : '');
+        h += '<div class="col"><button class="row" type="button" data-i="' + i + '" aria-expanded="' + open + '">' +
+          '<span class="nm"><b>' + c[0] + '</b><i>' + (c[1] || '—') + '</i></span>' +
+          '<span class="pill ' + cls + '">' + LABEL[v] + I.chev + '</span></button>';
+        if (open) {
+          h += '<div class="chips">' + SLOTS.map(function (s) {
+            var used = s[0] !== 'notes' && st.map.indexOf(s[0]) > -1 && st.map[i] !== s[0];
+            return '<button type="button" class="chip' + (v === s[0] ? ' on' : used ? ' used' : '') + '" data-i="' + i + '" data-s="' + s[0] + '">' + s[1] + '</button>';
+          }).join('') + '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div><div class="foot"><em class="' + (hasName ? '' : 'bad') + '">' + (hasName ? '74 dòng' : 'Chọn cột Tên') + '</em>' +
+        '<button class="btn" type="button"' + (hasName ? '' : ' disabled') + '>Xong</button></div>';
+      el.innerHTML = h;
+    }
+    el.addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (chip) {
+        var i = +chip.dataset.i, s = chip.dataset.s;
+        // One column per field: the previous owner falls back to Ghi chú.
+        if (s !== 'notes') st.map = st.map.map(function (v) { return v === s ? 'notes' : v; });
+        st.map[i] = s; st.open = -1; render(); return;
+      }
+      var row = e.target.closest('.row[data-i]');
+      if (row) { var n = +row.dataset.i; st.open = st.open === n ? -1 : n; render(); }
+    });
+    el.addEventListener('change', function (e) { if (e.target.matches('[data-pair]')) st.pair = e.target.selectedIndex; });
+    render();
+  }
+  var guess = ['notes', 'player1Name', 'notes', 'notes', 'player1Phone', 'notes', 'notes', 'notes'];
+  mountMap(document.getElementById('s2'), { map: guess.slice(), pair: 3, open: 4 });
+  mountMap(document.getElementById('s5'), { map: guess.map(function (v) { return v === 'player1Name' ? 'notes' : v; }), pair: 3, open: -1, warn: true });
+
+  /* ---------- VĐV list + detail ---------- */
+  var NOTE_KEYS = ['Đơn vị công tác', 'Chức vụ', 'Size áo', 'Trình điểm gần nhất'];
+  var P = [
+    { a: ['Nguyễn Văn A', '09xx xxx 111'], b: ['Trần Văn B', '09xx xxx 222'], st: 'ok', n: ['Công ty X', 'Quản lý', 'XL', '620'] },
+    { a: ['Lê Văn C', '09xx xxx 333'], b: ['Phạm Văn D', '09xx xxx 444'], st: 'ok', n: ['Công ty Y', 'Giám đốc', 'L', '580'] },
+    { a: ['Hoàng Văn E', ''], b: ['Võ Văn F', '09xx xxx 666'], st: 'wn', msg: 'Thiếu SĐT', n: ['Công ty Z', 'Nhân viên', 'M', '600'] },
+    { a: ['Đặng Văn G', '09xx xxx 777'], b: ['Bùi Văn H', '09xx xxx 888'], st: 'ok', n: ['Công ty T', 'Trưởng phòng', 'XL', '640'] },
+    { a: ['Nguyễn Văn A', '09xx xxx 111'], b: ['Ngô Văn K', '09xx xxx 000'], st: 'er', msg: 'Trùng', n: ['Công ty X', 'Quản lý', 'XL', '620'] }
+  ];
+  var CLS = { ok: '', wn: ' warn', er: ' dup' };
+
+  // Editable like the Web row: name, phone, email and the account link.
+  function player(p, n) {
+    return '<div class="pbox"><div class="ply"><div class="av">' + p[0].split(' ').pop()[0] + '</div>' +
+      '<input class="fld" value="' + p[0] + '" aria-label="Họ tên VĐV ' + n + '"></div>' +
+      '<div class="two"><input class="fld' + (p[1] ? '' : ' bad') + '" value="' + p[1] + '" placeholder="SĐT" inputmode="tel" aria-label="SĐT VĐV ' + n + '">' +
+      '<input class="fld" value="" placeholder="Email" inputmode="email" aria-label="Email VĐV ' + n + '"></div>' +
+      '<span class="pill note" style="border-style:solid;border-color:var(--a-ln)">Tự liên kết' + I.chev + '</span></div>';
+  }
+
+  function mountList(el, st) {
+    function render() {
+      var h = '<div class="bar">' + I.back + 'Danh sách VĐV<span class="cnt">37 cặp</span>' +
+        '<button class="ib addb" type="button" aria-label="Thêm VĐV"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div><div class="plist">';
+      P.forEach(function (p, i) {
+        var c = p.st === 'ok' ? '' : '<i>' + p.msg + '</i>';
+        h += '<button class="pc' + CLS[p.st] + '" type="button" data-i="' + i + '"><div class="av">' + p.a[0].split(' ').pop()[0] + '</div>' +
+          '<div class="pn"><b>' + p.a[0] + '</b><i>' + (p.a[1] || 'Thiếu SĐT') + '</i></div><div class="vs"></div>' +
+          '<div class="pn"><b>' + p.b[0] + '</b><i>' + p.b[1] + '</i></div>' +
+          '<span class="st ' + p.st + '">' + I[p.st] + '</span></button>';
+      });
+      h += '</div><div class="foot pfoot"><em>36/37</em><button class="btn" type="button">Nhập 72 VĐV</button></div>';
+      if (st.open > -1) {
+        var p = P[st.open];
+        h += '<div class="dim" data-close></div><div class="sheet fit"><div class="grab"></div>' +
+          '<div class="head"><h3>Chi tiết</h3><button class="ib" type="button" data-close aria-label="Đóng">' + I.close + '</button></div><div class="dbody">';
+        if (p.st !== 'ok') h += '<div class="alert ' + p.st + '">' + I[p.st].replace('width="16" height="16"', 'width="18" height="18"') + p.msg + '</div>';
+        h += player(p.a, 1) + player(p.b, 2);
+        h += '<label class="paid"><input type="checkbox"> <span>Đã đóng phí</span></label>';
+        h += '<textarea class="fld ta" aria-label="Ghi chú">' + NOTE_KEYS.map(function (k, j) { return k + ': ' + p.n[j]; }).join(' · ') + '</textarea>';
+        h += '<div class="dfoot"><button class="btn del" type="button">Xóa cặp</button><button class="btn" type="button" data-close>Xong</button></div>';
+        h += '</div></div>';
+      }
+      el.innerHTML = h;
+    }
+    el.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) { st.open = -1; render(); return; }
+      var c = e.target.closest('.pc'); if (c) { st.open = +c.dataset.i; render(); }
+    });
+    render();
+  }
+  mountList(document.getElementById('s3'), { open: -1 });
+  mountList(document.getElementById('s4'), { open: 2 });
+})();
+</script>
+</body>
+</html>
