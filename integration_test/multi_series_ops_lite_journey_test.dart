@@ -270,7 +270,7 @@ void main() {
       for (var i = 1; i <= 4; i++) {
         await _searchRoster(tester, '${opsT.tag} VDV $i');
         expect(
-          find.textContaining('${opsT.tag} VDV $i'),
+          _rosterRow('${opsT.tag} VDV $i'),
           findsWidgets,
           reason: 'Danh sách phải có VĐV $i',
         );
@@ -293,7 +293,7 @@ void main() {
       final newTag = '${opsT.tag}N';
       await _searchRoster(tester, '$newTag VDV 1');
       expect(
-        find.textContaining('$newTag VDV 1'),
+        _rosterRow('$newTag VDV 1'),
         findsNothing,
         reason: 'Trước khi nhập chưa có VĐV mới',
       );
@@ -313,7 +313,7 @@ void main() {
       );
       await pumpUntil(
         tester,
-        find.textContaining('$newTag VDV 1'),
+        _rosterRow('$newTag VDV 1'),
         timeout: const Duration(seconds: 45),
       );
       await shooter.snap('ops-thay-vdv-moi');
@@ -677,6 +677,12 @@ Future<void> _goUntil(
     timeout: timeout,
   );
 }
+
+/// Dòng VĐV trong danh sách: chỉ tính `Text`, không tính ô tìm đang chứa đúng chuỗi vừa gõ.
+Finder _rosterRow(String name) => find.byWidgetPredicate(
+  (w) => w is Text && (w.data ?? '').contains(name),
+  description: 'Text chứa "$name"',
+);
 
 /// Gõ [query] vào ô tìm của tab Danh sách tham gia: danh sách dựng lười nên chỉ dòng đầu hiện sẵn.
 Future<void> _searchRoster(WidgetTester tester, String query) async {
