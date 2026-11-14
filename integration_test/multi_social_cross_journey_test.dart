@@ -46,6 +46,12 @@ void main() {
     return session;
   }
 
+  /// Thông báo ở cả hai scope Backend tách ra (app đọc cả hai).
+  Future<List<Map<String, dynamic>>> allNotifications(String token) async => [
+    for (final scope in const ['player', 'management'])
+      ...await backend.listNotifications(token: token, scope: scope),
+  ];
+
   /// Chờ tới khi Backend có thông báo nhắc tới buổi (id hoặc tiêu đề) cho [token]; null khi hết giờ.
   Future<Map<String, dynamic>?> sessionNotification(
     WidgetTester tester,
@@ -54,7 +60,7 @@ void main() {
   ) async {
     final deadline = DateTime.now().add(const Duration(seconds: 45));
     while (DateTime.now().isBefore(deadline)) {
-      final items = await backend.listNotifications(token: token);
+      final items = await allNotifications(token);
       for (final n in items) {
         final raw = jsonEncode(n);
         if (raw.contains(session.id) || raw.contains(session.title)) return n;
@@ -150,7 +156,8 @@ void main() {
           notification,
           isNotNull,
           reason:
-              'host thêm người chơi vào buổi ${session.id} mà sau 45 giây người chơi vẫn không có thông báo nào nhắc tới buổi',
+              'host thêm người chơi vào buổi ${session.id} mà sau 45 giây người chơi vẫn không có thông báo nào nhắc tới buổi; '
+              'thông báo hiện có: ${(await allNotifications(player.token)).map((n) => "${n['type']}:${n['title']}").toList()}',
         );
         expect(
           '${notification!['title'] ?? ''}'.isNotEmpty,
@@ -354,7 +361,7 @@ void main() {
           await sessionNotification(tester, player.token, session),
           isNotNull,
         );
-        final leaked = await backend.listNotifications(token: outsider.token);
+        final leaked = await allNotifications(outsider.token);
         expect(
           leaked.any((n) {
             final raw = jsonEncode(n);
