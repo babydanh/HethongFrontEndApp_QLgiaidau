@@ -24,6 +24,8 @@ Future<void> runCreateCameraFlow({
   final saved = await CameraEditorSheet.show(
     context,
     courts: courts,
+    facebookLiveTournamentId: tournamentId,
+    facebookLiveRepository: ref.read(facebookCameraLiveRepositoryProvider),
     onSubmit: (value) async {
       created = await ref
           .read(cameraAdminRepositoryProvider)
@@ -32,6 +34,7 @@ Future<void> runCreateCameraFlow({
             name: value.name,
             mode: value.mode,
             courtId: value.courtId,
+            playbackUrl: value.playbackUrl,
           );
       await refresh();
       messenger

@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
+import 'package:app_quanly_giaidau/features/match/utils/live_embed.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_embed_player.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_player.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/camera_wall.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -8,8 +10,12 @@ import 'package:flutter/material.dart';
 /// Dựng trình phát cho [url]; test thay bằng widget giả để khỏi chạm plugin.
 typedef CameraPlayerBuilder = Widget Function(BuildContext context, String url);
 
-Widget defaultCameraPlayer(BuildContext context, String url) =>
-    LiveVideoPlayer(url: url, fill: true);
+Widget defaultCameraPlayer(BuildContext context, String url) {
+  final embed = LiveEmbed.parse(url);
+  return embed.isOk
+      ? LiveEmbedPlayer(embed: embed, fill: true)
+      : LiveVideoPlayer(url: url, fill: true);
+}
 
 /// Một ô của tường camera: tên + sân, huy hiệu tín hiệu, hình (chỉ khi LIVE và
 /// còn bật xem thử), công tắc xem thử và dòng trận. Không hiện tỉ số.

@@ -1,0 +1,328 @@
+import 'dart:async';
+
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_editor_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// TC-CAMFB-APP-01..10: "Tạo live trên Facebook" trong form tạo camera.
+const _live = CreatedFacebookLive(
+  providerSessionId: '1234567890123456',
+  watchUrl: 'https://www.facebook.com/watch/?v=1234567890123456',
+  rtmpUrl: 'rtmps://live-api-s.facebook.com:443/rtmp',
+  streamKey: 'FB-SECRET-KEY',
+);
+
+class _FakeRepo implements IFacebookCameraLiveRepository {
+  _FakeRepo({this.connected = true, this.hasCommunity = true});
+
+  bool connected;
+  final bool hasCommunity;
+  int createCalls = 0;
+  Completer<CreatedFacebookLive>? gate;
+  Object? createError;
+
+  @override
+  Future<FacebookLiveConnection> getConnection(String tournamentId) async =>
+      FacebookLiveConnection(
+        communityId: hasCommunity ? 'c1' : null,
+        connected: connected,
+        pageName: connected ? 'CLB Pickle' : null,
+      );
+
+  @override
+  Future<CreatedFacebookLive> createLive(String tournamentId) {
+    createCalls++;
+    final error = createError;
+    if (error != null) return Future.error(error);
+    return gate?.future ?? Future.value(_live);
+  }
+
+  @override
+  Future<Uri> getConnectUrl(String communityId) async =>
+      Uri.parse('https://www.facebook.com/dialog/oauth?x=1');
+}
+
+DioException _dioError(int? status, [Object? data]) => DioException(
+  requestOptions: RequestOptions(path: '/x'),
+  response: status == null
+      ? null
+      : Response(
+          requestOptions: RequestOptions(path: '/x'),
+          statusCode: status,
+          data: data,
+        ),
+);
+
+Widget _host(Widget child, {double width = 320}) => MaterialApp(
+  theme: AppTheme.lightTheme,
+  locale: const Locale('en'),
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(
+    body: SingleChildScrollView(
+      child: SizedBox(width: width, child: child),
+    ),
+  ),
+);
+
+Future<void> _pumpPanel(
+  WidgetTester tester,
+  _FakeRepo repo, {
+  ValueChanged<String>? onCreated,
+  ExternalLauncher? launcher,
+  double width = 320,
+}) async {
+  await tester.pumpWidget(
+    _host(
+      FacebookLivePanel(
+        tournamentId: 't1',
+        repository: repo,
+        onCreated: onCreated ?? (_) {},
+        launcher: launcher ?? (_) async => true,
+      ),
+      width: width,
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+final _create = find.byKey(const ValueKey('fb-live-create'));
+final _connect = find.byKey(const ValueKey('fb-live-connect'));
+final _error = find.byKey(const ValueKey('fb-live-error'));
+
+void main() {
+  test('TC-CAMFB-APP-01 parse response and never prints the key', () {
+    final live = CreatedFacebookLive.fromJson(const {
+      'providerSessionId': '123',
+      'watchUrl': 'https://www.facebook.com/watch/?v=123',
+      'rtmpUrl': 'rtmps://a/rtmp',
+      'streamKey': 'SECRET',
+    });
+    expect(live.streamKey, 'SECRET');
+    expect(live.toString(), isNot(contains('SECRET')));
+    expect(
+      () => CreatedFacebookLive.fromJson(const {'watchUrl': 'x'}),
+      throwsFormatException,
+    );
+    final off = FacebookLiveConnection.fromJson(const {
+      'communityId': null,
+      'connected': false,
+      'pageName': null,
+    });
+    expect(off.connected, isFalse);
+    expect(off.communityId, isNull);
+  });
+
+  test('TC-CAMFB-APP-02 error mapping', () {
+    FacebookLiveError map(Object e) => facebookLiveError(e);
+    expect(
+      map(_dioError(400, {'code': 'FACEBOOK_NOT_CONNECTED'})),
+      FacebookLiveError.notConnected,
+    );
+    expect(
+      map(_dioError(400, {'code': 'FACEBOOK_CONNECTION_EXPIRED'})),
+      FacebookLiveError.expired,
+    );
+    expect(
+      map(_dioError(400, {'code': 'FACEBOOK_PERMISSION_MISSING'})),
+      FacebookLiveError.permission,
+    );
+    expect(
+      map(_dioError(400, {'code': 'PROVIDER_UNAVAILABLE'})),
+      FacebookLiveError.unavailable,
+    );
+    expect(map(_dioError(403)), FacebookLiveError.forbidden);
+    expect(map(_dioError(503)), FacebookLiveError.unavailable);
+    expect(map(_dioError(null)), FacebookLiveError.network);
+    expect(map(_dioError(400, 'x')), FacebookLiveError.generic);
+    expect(map(StateError('x')), FacebookLiveError.generic);
+  });
+
+  testWidgets('TC-CAMFB-APP-03 not connected: Connect opens browser, recheck', (
+    tester,
+  ) async {
+    final repo = _FakeRepo(connected: false);
+    final opened = <Uri>[];
+    await _pumpPanel(
+      tester,
+      repo,
+      launcher: (uri) async {
+        opened.add(uri);
+        return true;
+      },
+    );
+    expect(_create, findsNothing);
+    expect(_connect, findsOneWidget);
+    await tester.tap(_connect);
+    await tester.pumpAndSettle();
+    expect(opened.single.host, 'www.facebook.com');
+    expect(find.byKey(const ValueKey('fb-live-recheck')), findsOneWidget);
+    repo.connected = true;
+    await tester.tap(find.byKey(const ValueKey('fb-live-recheck')));
+    await tester.pumpAndSettle();
+    expect(_create, findsOneWidget);
+    expect(find.text('Page: CLB Pickle'), findsOneWidget);
+  });
+
+  testWidgets('TC-CAMFB-APP-04 browser cannot open shows a fix hint', (
+    tester,
+  ) async {
+    await _pumpPanel(
+      tester,
+      _FakeRepo(connected: false),
+      launcher: (_) async => false,
+    );
+    await tester.tap(_connect);
+    await tester.pumpAndSettle();
+    expect(_error, findsOneWidget);
+    expect(find.textContaining('Connect the page on the Web'), findsOneWidget);
+  });
+
+  testWidgets('TC-CAMFB-APP-05 no community disables Connect', (tester) async {
+    await _pumpPanel(tester, _FakeRepo(connected: false, hasCommunity: false));
+    expect(tester.widget<FilledButton>(_connect).onPressed, isNull);
+    expect(find.textContaining('no club'), findsOneWidget);
+  });
+
+  testWidgets('TC-CAMFB-APP-06 double tap calls create once, shows spinner', (
+    tester,
+  ) async {
+    final repo = _FakeRepo()..gate = Completer();
+    final filled = <String>[];
+    await _pumpPanel(tester, repo, onCreated: filled.add);
+    await tester.tap(_create);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(_create).onPressed, isNull);
+    expect(find.text('Working...'), findsOneWidget);
+    await tester.tap(_create, warnIfMissed: false);
+    await tester.pump();
+    expect(repo.createCalls, 1);
+    repo.gate!.complete(_live);
+    await tester.pumpAndSettle();
+    expect(repo.createCalls, 1);
+    expect(filled, [_live.watchUrl]);
+  });
+
+  testWidgets('TC-CAMFB-APP-07 key block: masked, toggle, copy', (tester) async {
+    final clip = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          clip.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await _pumpPanel(tester, _FakeRepo());
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+
+    EditableText field(String key) => tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(field('fb-live-rtmp').obscureText, isFalse);
+    expect(field('fb-live-key').obscureText, isTrue);
+    await tester.tap(find.byKey(const ValueKey('fb-live-key-toggle')));
+    await tester.pump();
+    expect(field('fb-live-key').obscureText, isFalse);
+    await tester.tap(find.byKey(const ValueKey('fb-live-key-toggle')));
+    await tester.pump();
+    expect(field('fb-live-key').obscureText, isTrue);
+
+    await tester.tap(find.byKey(const ValueKey('fb-live-rtmp-copy')));
+    await tester.tap(find.byKey(const ValueKey('fb-live-key-copy')));
+    await tester.pump();
+    expect(clip, [_live.rtmpUrl, _live.streamKey]);
+    expect(find.textContaining('Paste these 2 lines'), findsOneWidget);
+  });
+
+  testWidgets('TC-CAMFB-APP-08 failure shows mapped message, retry works', (
+    tester,
+  ) async {
+    final repo = _FakeRepo()..createError = _dioError(null);
+    await _pumpPanel(tester, repo);
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('network is down'), findsOneWidget);
+    repo.createError = null;
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+    expect(repo.createCalls, 2);
+    expect(_error, findsNothing);
+  });
+
+  testWidgets('TC-CAMFB-APP-09 no overflow at 320dp with key shown', (
+    tester,
+  ) async {
+    await _pumpPanel(tester, _FakeRepo(), width: 320);
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('fb-live-key-toggle')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TC-CAMFB-APP-10 sheet fills the link and previews it', (
+    tester,
+  ) async {
+    final repo = _FakeRepo();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => CameraEditorSheet.show(
+                context,
+                courts: const <TournamentCourtRef>[],
+                onSubmit: (_) async {},
+                facebookLiveTournamentId: 't1',
+                facebookLiveRepository: repo,
+                previewBuilder: (context, embed) =>
+                    Text(embed.embedUrl!, key: const ValueKey('preview')),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('fb-live-panel')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('camera-source-live')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(_create);
+    await tester.tap(_create);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('camera-live-link')))
+          .controller!
+          .text,
+      _live.watchUrl,
+    );
+    expect(find.byKey(const ValueKey('preview')), findsOneWidget);
+  });
+}

@@ -33079,6 +33079,228 @@ abstract class AppLocalizations {
   /// **'Đổi sân camera'**
   String get tournamentCameraEditTitle;
 
+  /// No description provided for @tournamentCameraSourcePush.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera / điện thoại'**
+  String get tournamentCameraSourcePush;
+
+  /// No description provided for @tournamentCameraSourceLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Live YouTube / Facebook'**
+  String get tournamentCameraSourceLive;
+
+  /// No description provided for @tournamentCameraLiveLinkLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán link live YouTube hoặc Facebook'**
+  String get tournamentCameraLiveLinkLabel;
+
+  /// No description provided for @tournamentCameraLiveLinkHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở video đang live, bấm Chia sẻ rồi sao chép link. Chỉ nhận live công khai.'**
+  String get tournamentCameraLiveLinkHint;
+
+  /// No description provided for @tournamentCameraLivePaste.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán'**
+  String get tournamentCameraLivePaste;
+
+  /// No description provided for @tournamentCameraLiveErrorChannel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Link này là trang kênh hoặc trang cá nhân. Hãy mở video đang live rồi sao chép link.'**
+  String get tournamentCameraLiveErrorChannel;
+
+  /// No description provided for @tournamentCameraLiveErrorNoId.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy mã video trong link. Hãy sao chép lại link video đang live.'**
+  String get tournamentCameraLiveErrorNoId;
+
+  /// No description provided for @tournamentCameraLiveErrorUnsupported.
+  ///
+  /// In vi, this message translates to:
+  /// **'Link chưa đúng. Chỉ nhận link YouTube (youtube.com, youtu.be) hoặc Facebook (facebook.com, fb.watch).'**
+  String get tournamentCameraLiveErrorUnsupported;
+
+  /// No description provided for @tournamentCameraLivePreviewTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trước'**
+  String get tournamentCameraLivePreviewTitle;
+
+  /// No description provided for @tournamentCameraLivePreviewHelp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thấy hình? Kiểm tra live có công khai, đã bắt đầu và cho phép nhúng không.'**
+  String get tournamentCameraLivePreviewHelp;
+
+  /// No description provided for @tournamentCameraLiveSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu camera live'**
+  String get tournamentCameraLiveSave;
+
+  /// No description provided for @tournamentCameraFbTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo live trên fanpage Facebook'**
+  String get tournamentCameraFbTitle;
+
+  /// No description provided for @tournamentCameraFbHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ thống tạo sẵn live trên fanpage của bạn. Video đi thẳng từ máy bạn lên Facebook.'**
+  String get tournamentCameraFbHint;
+
+  /// No description provided for @tournamentCameraFbChecking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra kết nối fanpage...'**
+  String get tournamentCameraFbChecking;
+
+  /// No description provided for @tournamentCameraFbPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Fanpage: {name}'**
+  String tournamentCameraFbPage(Object name);
+
+  /// No description provided for @tournamentCameraFbConnect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết nối fanpage'**
+  String get tournamentCameraFbConnect;
+
+  /// No description provided for @tournamentCameraFbConnectHelp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Facebook sẽ mở trong trình duyệt. Cấp quyền xong, quay lại app và bấm Kiểm tra lại.'**
+  String get tournamentCameraFbConnectHelp;
+
+  /// No description provided for @tournamentCameraFbRecheck.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra lại'**
+  String get tournamentCameraFbRecheck;
+
+  /// No description provided for @tournamentCameraFbCreate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo live'**
+  String get tournamentCameraFbCreate;
+
+  /// No description provided for @tournamentCameraFbWorking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xử lý...'**
+  String get tournamentCameraFbWorking;
+
+  /// No description provided for @tournamentCameraFbNoCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải này chưa thuộc CLB nào nên chưa kết nối được fanpage.'**
+  String get tournamentCameraFbNoCommunity;
+
+  /// No description provided for @tournamentCameraFbHowTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán 2 dòng này vào app livestream hoặc OBS rồi bấm Bắt đầu phát.'**
+  String get tournamentCameraFbHowTo;
+
+  /// No description provided for @tournamentCameraFbRtmpLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ máy chủ (RTMP)'**
+  String get tournamentCameraFbRtmpLabel;
+
+  /// No description provided for @tournamentCameraFbKeyLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoá phát'**
+  String get tournamentCameraFbKeyLabel;
+
+  /// No description provided for @tournamentCameraFbKeyWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ kín khoá phát, không gửi cho người lạ. Link xem đã tự điền ở trên; khung xem trước có thể trống đến khi bạn bắt đầu phát.'**
+  String get tournamentCameraFbKeyWarning;
+
+  /// No description provided for @tournamentCameraFbShowKey.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện khoá phát'**
+  String get tournamentCameraFbShowKey;
+
+  /// No description provided for @tournamentCameraFbHideKey.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn khoá phát'**
+  String get tournamentCameraFbHideKey;
+
+  /// No description provided for @tournamentCameraFbCopy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép {label}'**
+  String tournamentCameraFbCopy(Object label);
+
+  /// No description provided for @tournamentCameraFbCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép {label}'**
+  String tournamentCameraFbCopied(Object label);
+
+  /// No description provided for @tournamentCameraFbErrorNotConnected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa kết nối fanpage. Bấm \"Kết nối fanpage\" rồi thử lại.'**
+  String get tournamentCameraFbErrorNotConnected;
+
+  /// No description provided for @tournamentCameraFbErrorExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết nối fanpage đã hết hạn. Bấm \"Kết nối fanpage\" để cấp quyền lại.'**
+  String get tournamentCameraFbErrorExpired;
+
+  /// No description provided for @tournamentCameraFbErrorPermission.
+  ///
+  /// In vi, this message translates to:
+  /// **'Fanpage chưa cấp quyền phát video. Hãy kết nối lại và chọn đủ quyền.'**
+  String get tournamentCameraFbErrorPermission;
+
+  /// No description provided for @tournamentCameraFbErrorNetwork.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mạng đang gián đoạn hoặc quá chậm. Kiểm tra mạng rồi thử lại.'**
+  String get tournamentCameraFbErrorNetwork;
+
+  /// No description provided for @tournamentCameraFbErrorUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Facebook đang bận. Chờ vài phút rồi thử lại.'**
+  String get tournamentCameraFbErrorUnavailable;
+
+  /// No description provided for @tournamentCameraFbErrorForbidden.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ chủ giải hoặc người tổ chức mới tạo được live.'**
+  String get tournamentCameraFbErrorForbidden;
+
+  /// No description provided for @tournamentCameraFbErrorGeneric.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tạo được live. Hãy thử lại sau ít phút.'**
+  String get tournamentCameraFbErrorGeneric;
+
+  /// No description provided for @tournamentCameraFbErrorBrowser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không mở được trình duyệt. Hãy kết nối fanpage ở Web rồi bấm Kiểm tra lại.'**
+  String get tournamentCameraFbErrorBrowser;
+
   /// No description provided for @tournamentCameraNameLabel.
   ///
   /// In vi, this message translates to:
