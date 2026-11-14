@@ -25,7 +25,7 @@ void main() {
       final title = '$tag Giao lưu đôi';
       final shooter = SocialShooter(tester, binding, 'TC-SOCIAL-APP-01');
 
-      await signInAs(tester, email: kOrganizerEmail);
+      await signInWithEmail(tester, email: kOrganizerEmail);
       await openCreateSocialForm(tester);
       await shooter.snap('form-tao-keo-trong');
 
@@ -114,7 +114,7 @@ void main() {
       final title = '$tag Thiếu địa điểm';
       final shooter = SocialShooter(tester, binding, 'TC-SOCIAL-APP-02');
 
-      await signInAs(tester, email: kOrganizerEmail);
+      await signInWithEmail(tester, email: kOrganizerEmail);
       await openCreateSocialForm(tester);
       final fields = find.byType(TextFormField);
       await pumpUntilFound(tester, fields, what: 'ô tên kèo');
@@ -176,7 +176,7 @@ void main() {
       );
       final venueName = '${seed.raw['venueName'] ?? 'Sân E2E ${seed.title}'}';
 
-      await signInAs(tester, email: kOrganizerEmail);
+      await signInWithEmail(tester, email: kOrganizerEmail);
       await openCreateSocialForm(tester);
       await tapText(tester, 'Chọn địa điểm');
       final search = find.widgetWithText(TextField, 'Tìm theo tên hoặc địa chỉ');
@@ -224,7 +224,7 @@ void main() {
       );
       await backend.approveTournamentAsAdmin(tournament.tournamentId);
 
-      final container = await signInAs(tester, email: kPlayerEmail);
+      final container = await signInWithEmail(tester, email: kPlayerEmail);
       final navExplore = find.descendant(
         of: find.byType(FloatingBottomNav),
         matching: find.text('Khám phá'),

@@ -25,7 +25,7 @@ void main() {
       await api.addUser(hostToken, session.id, '${(await api.profile(playerToken))['id']}');
       final message = '$tag xin chào cả nhà';
 
-      var container = await signInAs(tester, email: kOrganizerEmail);
+      var container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Trò chuyện');
       final input = find.byType(TextField);
@@ -48,7 +48,7 @@ void main() {
       await shooter.snap('host-da-gui-tin');
 
       // Người tham gia mở buổi, vào tab Trò chuyện và thấy tin của host.
-      container = await signInAs(tester, email: kPlayerEmail);
+      container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Trò chuyện');
       await pumpUntilFound(
@@ -72,7 +72,7 @@ void main() {
       final session = await api.createSession(token: hostToken, title: '$tag Sửa rồi huỷ');
       final newTitle = '$tag Đã đổi tên';
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
 
       // Sửa: menu ⋮ -> Chỉnh sửa kèo -> đổi tên -> Cập nhật kèo.
@@ -145,7 +145,7 @@ void main() {
       final account = await api.registerUser(tag: tag, label: 'Dong Tien');
       await api.addUser(hostToken, session.id, account.id);
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Thanh toán');
       await pumpUntilFound(tester, find.text('TỔNG QUAN TÀI CHÍNH'), what: 'tổng quan tài chính');
@@ -187,7 +187,7 @@ void main() {
         feePerSlot: 50000,
       );
 
-      final container = await signInAs(tester, email: kPlayerEmail);
+      final container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, session);
       await shooter.snap('nguoi-ngoai-chi-tiet');
       expect(find.text('Thanh toán'), findsNothing, reason: 'tab Thanh toán chỉ dành cho host');

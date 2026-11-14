@@ -24,7 +24,7 @@ void main() {
       final hostToken = await api.login(kOrganizerEmail);
       final session = await api.createSession(token: hostToken, title: '$tag Chi tiết host');
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await shooter.snap('chi-tiet-host');
 
@@ -82,7 +82,7 @@ void main() {
       );
       final deferred = await api.createSession(token: hostToken, title: '$tag Chưa có sân');
 
-      final container = await signInAs(tester, email: kPlayerEmail);
+      final container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, pinned);
       expect(find.text('Chỉ đường'), findsOneWidget, reason: 'buổi có toạ độ phải có nút Chỉ đường');
       await shooter.snap('co-chi-duong');
@@ -104,7 +104,7 @@ void main() {
       final playerToken = await api.login(kPlayerEmail);
       final session = await api.createSession(token: hostToken, title: '$tag Xin tham gia');
 
-      var container = await signInAs(tester, email: kPlayerEmail);
+      var container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, session);
       expect(find.text('Thanh toán'), findsNothing, reason: 'người chơi không có tab Thanh toán');
       expect(find.text('Tìm thêm người chơi'), findsNothing, reason: 'người chơi không có nút của host');
@@ -147,7 +147,7 @@ void main() {
       await sendRequest();
 
       // Host duyệt trên tab Người tham gia.
-      container = await signInAs(tester, email: kOrganizerEmail);
+      container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Người tham gia');
       await pumpUntilFound(tester, find.textContaining('ĐÃ YÊU CẦU • 1'), what: 'mục ĐÃ YÊU CẦU • 1');
@@ -170,7 +170,7 @@ void main() {
       );
 
       // Người chơi mở lại thấy "Đã tham gia".
-      container = await signInAs(tester, email: kPlayerEmail);
+      container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, session);
       await pumpUntilFound(tester, find.text('Đã tham gia'), what: 'nút "Đã tham gia" của người chơi');
       await shooter.snap('nguoi-choi-da-tham-gia');
@@ -189,7 +189,7 @@ void main() {
       final account = await api.registerUser(tag: tag, label: 'Tai Khoan');
       final guestName = '$tag Khach';
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Người tham gia');
       await pumpUntilFound(tester, find.textContaining('XÁC NHẬN THAM GIA • 1/6'), what: 'chỉ có host: 1/6');
@@ -278,7 +278,7 @@ void main() {
       final full = await api.getSession(hostToken, session.id);
       expect('${full['status']}'.toUpperCase(), 'FULL', reason: 'đủ 2/2 người thì Backend đặt FULL');
 
-      final container = await signInAs(tester, email: kPlayerEmail);
+      final container = await signInWithEmail(tester, email: kPlayerEmail);
       await openSession(tester, container, session);
       final fullButton = find.widgetWithText(ElevatedButton, 'Đã đủ người');
       await pumpUntilFound(tester, fullButton, what: 'nút "Đã đủ người"');
@@ -307,7 +307,7 @@ void main() {
       final player = await api.profile(playerToken);
       await api.addUser(hostToken, session.id, '${player['id']}');
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await shooter.snap('chi-tiet-co-nguoi-tham-gia');
       expect(find.text('Host'), findsWidgets);
@@ -337,7 +337,7 @@ void main() {
         await api.addUser(hostToken, session.id, user.id);
       }
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Trận đấu');
       await pumpUntilFound(
@@ -433,7 +433,7 @@ void main() {
         await api.addUser(hostToken, session.id, user.id);
       }
 
-      final container = await signInAs(tester, email: kOrganizerEmail);
+      final container = await signInWithEmail(tester, email: kOrganizerEmail);
       await openSession(tester, container, session);
       await openSocialTab(tester, 'Trận đấu');
       await tapText(tester, 'Tạo trận đấu');
