@@ -642,12 +642,16 @@ Future<_Fixture> _buildFixture() async {
     token: btc,
     tournamentId: t.tournamentId,
   );
-  await api.respondReferee(
-    token: actors['referee']!.token,
-    tournamentId: t.tournamentId,
-    refereeId: invites.first['id'] as String,
-    accept: true,
-  );
+  // Backend có thể tự nhận lời mời cho tài khoản đã có sẵn: chỉ phản hồi khi còn INVITED.
+  final pending = invites.where((i) => i['status'] == 'INVITED').toList();
+  if (pending.isNotEmpty) {
+    await api.respondReferee(
+      token: actors['referee']!.token,
+      tournamentId: t.tournamentId,
+      refereeId: pending.first['id'] as String,
+      accept: true,
+    );
+  }
   await api.addStaff(
     token: btc,
     tournamentId: t.tournamentId,
