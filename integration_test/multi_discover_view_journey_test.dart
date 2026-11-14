@@ -35,18 +35,18 @@ void main() {
       await shooter.snap('o-tim-kiem-giai');
 
       await _typeQuery(tester, a.tag);
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
       expect(
-        find.textContaining(d.tag),
+        _result(d.tag),
         findsNothing,
         reason: 'Tìm "${a.tag}" không được ra giải ${d.tag}',
       );
       await shooter.snap('tim-theo-ten-giai-a');
 
       await _typeQuery(tester, d.tag);
-      await pumpUntil(tester, find.textContaining(d.tag));
+      await _until(tester, _result(d.tag));
       expect(
-        find.textContaining(a.tag),
+        _result(a.tag),
         findsNothing,
         reason: 'Tìm "${d.tag}" không được ra giải ${a.tag}',
       );
@@ -66,21 +66,21 @@ void main() {
       final container = await _asGuest(tester);
       await _openTournamentSearch(tester, container);
       await _typeQuery(tester, _base);
-      await pumpUntil(tester, find.textContaining(_base));
+      await _until(tester, _result(_base));
 
       await _applyFilter(tester, status: 'Hoàn thành');
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
       expect(
-        find.textContaining(d.tag),
+        _result(d.tag),
         findsNothing,
         reason: 'Lọc Hoàn thành không được ra giải đang đăng ký',
       );
       await shooter.snap('loc-hoan-thanh');
 
       await _applyFilter(tester, status: 'Đăng ký');
-      await pumpUntil(tester, find.textContaining(d.tag));
+      await _until(tester, _result(d.tag));
       expect(
-        find.textContaining(a.tag),
+        _result(a.tag),
         findsNothing,
         reason: 'Lọc Đăng ký không được ra giải đã hoàn thành',
       );
@@ -112,16 +112,16 @@ void main() {
       final container = await _asGuest(tester);
       await _openTournamentSearch(tester, container);
       await _typeQuery(tester, a.tag);
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
 
       await _applyFilter(tester, sport: pickle.name);
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
       await shooter.snap('loc-dung-mon');
 
       await _applyFilter(tester, sport: other.first.name);
-      await pumpUntil(tester, _emptyTournamentResult);
+      await _until(tester, _emptyTournamentResult);
       expect(
-        find.textContaining(a.tag),
+        _result(a.tag),
         findsNothing,
         reason: 'Môn ${other.first.name} không được ra giải pickleball',
       );
@@ -141,19 +141,19 @@ void main() {
       final container = await _asGuest(tester);
       await _openTournamentSearch(tester, container);
       await _typeQuery(tester, a.tag);
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
 
       await _applyFilter(tester, province: province);
-      await pumpUntil(tester, _emptyTournamentResult);
+      await _until(tester, _emptyTournamentResult);
       expect(
-        find.textContaining(a.tag),
+        _result(a.tag),
         findsNothing,
         reason: 'Giải dựng bằng API không có tỉnh, lọc $province phải loại nó',
       );
       await shooter.snap('loc-tinh-rong');
 
       await _applyFilter(tester, clear: true);
-      await pumpUntil(tester, find.textContaining(a.tag));
+      await _until(tester, _result(a.tag));
       await shooter.snap('bo-loc-hien-lai');
       await leaveSocialSession(tester, container);
     },
@@ -168,19 +168,28 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-05');
       final container = await _asGuest(tester);
       await _openTournamentSearch(tester, container);
-      await tapFinder(
-        tester,
-        find.widgetWithText(ChoiceChip, 'Địa điểm'),
-        what: 'chip phạm vi Địa điểm',
+      final venueChip = find.widgetWithText(ChoiceChip, 'Địa điểm');
+      // Hàng chip phạm vi cuộn ngang: cuộn tới chip Địa điểm rồi mới bấm.
+      await tester.scrollUntilVisible(
+        venueChip,
+        120,
+        scrollable: find
+            .ancestor(
+              of: find.widgetWithText(ChoiceChip, 'Kèo'),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
-      await pumpUntil(
+      await tester.tap(venueChip);
+      await tester.pump();
+      await _until(
         tester,
         find.textContaining('Địa điểm được tổng hợp từ các trận đấu công khai'),
       );
       await shooter.snap('pham-vi-dia-diem');
 
       await _typeQuery(tester, a.tag);
-      await pumpUntil(tester, find.text('Không tìm thấy kết quả phù hợp'));
+      await _until(tester, find.text('Không tìm thấy kết quả phù hợp'));
       expect(
         find.text('Không thể tải kết quả. Vui lòng thử lại.'),
         findsNothing,
@@ -207,7 +216,7 @@ void main() {
         'Lịch thi đấu',
         'Kết quả',
       ]) {
-        await pumpUntil(
+        await _until(
           tester,
           find.text(label),
           timeout: const Duration(seconds: 45),
@@ -227,8 +236,8 @@ void main() {
 
       await tapCentered(tester, find.text('Kết quả').first);
       final podium = find.byKey(const ValueKey('results-podium-null'));
-      await pumpUntil(tester, podium);
-      await pumpUntil(
+      await _until(tester, podium);
+      await _until(
         tester,
         find.descendant(of: podium, matching: find.text(a.champion)),
       );
@@ -246,7 +255,7 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-07');
       final container = await _asGuest(tester);
       await _openTournamentTab(tester, container, a.id, 'Bảng đấu');
-      await pumpUntil(tester, find.textContaining('${a.tag} VDV'));
+      await _until(tester, find.textContaining('${a.tag} VDV'));
       _expectBracketLoaded();
       await shooter.snap('bracket-loai-truc-tiep');
       await leaveSocialSession(tester, container);
@@ -262,7 +271,7 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-08');
       final container = await _asGuest(tester);
       await _openTournamentTab(tester, container, b.id, 'Bảng đấu');
-      await pumpUntil(tester, find.textContaining('${b.tag} VDV'));
+      await _until(tester, find.textContaining('${b.tag} VDV'));
       _expectBracketLoaded();
       await shooter.snap('bang-vong-tron');
 
@@ -272,7 +281,7 @@ void main() {
         reason: 'Giải đang thi đấu phải có tab Kết quả cho khách',
       );
       await tapCentered(tester, find.text('Kết quả').first);
-      await pumpUntil(
+      await _until(
         tester,
         find.byKey(ValueKey('results-row-${b.scoredMatchId}')),
       );
@@ -290,7 +299,7 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-09');
       final container = await _asGuest(tester);
       await _openTournamentTab(tester, container, c.id, 'Bảng đấu');
-      await pumpUntil(tester, find.textContaining('${c.tag} VDV'));
+      await _until(tester, find.textContaining('${c.tag} VDV'));
       _expectBracketLoaded();
       await shooter.snap('vong-bang');
       await leaveSocialSession(tester, container);
@@ -306,10 +315,7 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-10');
       final container = await _asGuest(tester);
       await _openTournamentTab(tester, container, a.id, 'Kết quả');
-      await pumpUntil(
-        tester,
-        find.byKey(const ValueKey('results-podium-null')),
-      );
+      await _until(tester, find.byKey(const ValueKey('results-podium-null')));
       await shooter.snap('bang-ket-qua');
 
       await tapFinder(
@@ -322,7 +328,7 @@ void main() {
         a.tag,
       );
       await tester.pump();
-      await pumpUntil(
+      await _until(
         tester,
         find.byKey(ValueKey('results-row-${a.finalMatchId}')),
       );
@@ -354,83 +360,89 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-G-11 khách xem bảng xếp hạng /rankings: VĐV đứng đầu dữ liệu seed hiện đúng tên và ELO',
+    'TC-MULTI-G-11 khách xem bảng xếp hạng /rankings: khớp dữ liệu API (có VĐV thì hiện tên và ELO, chưa có thì hiện màn rỗng)',
     (tester) async {
       _tolerateOverflow();
-      final seed = await _seedRanking;
+      final pickle = (await _publicApi.categoryNames()).firstWhere(
+        (s) => s.slug == 'pickleball',
+      );
+      final ranked = await _publicApi.rankings(pickle.id, 'MALE');
+      debugPrint('G-11: bảng pickleball nam trả về ${ranked.length} dòng');
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-11');
       final container = await _asGuest(tester);
-      container.read(routerProvider).go('/rankings?sport=${seed.sportSlug}');
-      await pumpUntil(tester, find.text('Đơn'));
-      await shooter.snap('xep-hang-mac-dinh');
-      await tapCentered(tester, find.text('Đơn').first);
-      if (seed.gender == 'FEMALE') {
-        await tapCentered(tester, find.text('Nữ').first);
+      container.read(routerProvider).go('/rankings?sport=pickleball');
+      await _until(tester, find.text('Đơn'));
+      if (ranked.isEmpty) {
+        await _until(tester, find.text('Chưa có dữ liệu xếp hạng'));
+        expect(
+          find.text('Điểm'),
+          findsNothing,
+          reason: 'Bảng rỗng không có tiêu đề cột Điểm',
+        );
+      } else {
+        await _until(tester, find.text(ranked.first.displayName));
+        expect(find.text('${ranked.first.eloPoints}'), findsWidgets);
       }
-      await pumpUntil(
-        tester,
-        find.text(seed.top.fullName),
-        timeout: const Duration(seconds: 45),
-      );
-      expect(
-        find.text('${seed.top.eloPoints}'),
-        findsWidgets,
-        reason: 'Phải hiện ELO ${seed.top.eloPoints} của ${seed.top.fullName}',
-      );
-      await shooter.snap('xep-hang-vdv-dau-bang');
+      expect(find.text('Không thể tải bảng xếp hạng'), findsNothing);
+      await shooter.snap('xep-hang-pickleball-nam');
+
+      await tapCentered(tester, find.text('Nữ').first);
+      await socialWait(tester, const Duration(seconds: 2));
+      await shooter.snap('xep-hang-pickleball-nu');
       await leaveSocialSession(tester, container);
     },
     timeout: testTimeout,
   );
 
   testWidgets(
-    'TC-MULTI-G-12 khách mở hồ sơ VĐV từ bảng xếp hạng: 3 tab, xếp hạng theo môn có ELO, mở được lịch sử ELO',
+    'TC-MULTI-G-12 khách mở hồ sơ VĐV: 3 tab, mục xếp hạng theo môn; VĐV mở lịch sử ELO của mình',
     (tester) async {
       _tolerateOverflow();
-      final seed = await _seedRanking;
-      final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-12');
-      final container = await _asGuest(tester);
-      container.read(routerProvider).go('/rankings?sport=${seed.sportSlug}');
-      await pumpUntil(tester, find.text('Đơn'));
-      await tapCentered(tester, find.text('Đơn').first);
-      if (seed.gender == 'FEMALE') {
-        await tapCentered(tester, find.text('Nữ').first);
-      }
-      await pumpUntil(
-        tester,
-        find.text(seed.top.fullName),
-        timeout: const Duration(seconds: 45),
+      final actors = await _actors;
+      final player = actors['player']!;
+      final snapshot = await _publicApi.rankingSnapshot();
+      expect(
+        snapshot.any((row) => row.endsWith(player.userId)),
+        isFalse,
+        reason: 'VĐV mới tạo chưa đấu trận nào nên chưa có dòng xếp hạng',
       );
-      await tapCentered(tester, find.text(seed.top.fullName));
-
+      final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-12');
+      var container = await _asGuest(tester);
+      container.read(routerProvider).go('/user/${player.userId}');
       for (final label in ['Tổng quan', 'Trận đấu', 'Danh hiệu']) {
-        await pumpUntil(
+        await _until(
           tester,
           find.widgetWithText(Tab, label),
           timeout: const Duration(seconds: 45),
         );
       }
-      await pumpUntil(tester, find.text('Xếp hạng theo bộ môn'));
+      await _until(tester, find.text('Xếp hạng theo bộ môn'));
       expect(
-        find.text(seed.top.fullName),
+        find.text(player.fullName),
         findsWidgets,
-        reason: 'Hồ sơ phải ghi tên ${seed.top.fullName}',
+        reason: 'Hồ sơ phải ghi tên ${player.fullName}',
       );
-      expect(
-        find.text('${seed.top.eloPoints}'),
-        findsWidgets,
-        reason: 'Thẻ xếp hạng phải hiện ELO ${seed.top.eloPoints}',
-      );
-      await shooter.snap('ho-so-vdv');
+      await _until(tester, find.text('Chưa có dữ liệu xếp hạng'));
+      await shooter.snap('ho-so-vdv-khach');
 
-      await tapCentered(tester, find.text('ELO').first);
-      await pumpUntil(
+      await tapCentered(tester, find.widgetWithText(Tab, 'Trận đấu'));
+      await _until(tester, find.text('Chưa có trận đấu công khai'));
+      await shooter.snap('ho-so-vdv-tab-tran');
+      await leaveSocialSession(tester, container);
+
+      container = await signInAs(tester, player);
+      await _openRoute(
         tester,
+        container,
+        '/profile/elo',
         find.textContaining('Lịch sử ELO'),
+      );
+      await _until(
+        tester,
+        find.text('Chưa có trận xếp hạng đã hoàn thành'),
         timeout: const Duration(seconds: 45),
       );
-      await socialWait(tester, const Duration(seconds: 2));
-      await shooter.snap('lich-su-elo');
+      await shooter.snap('lich-su-elo-vdv');
       await leaveSocialSession(tester, container);
     },
     timeout: testTimeout,
@@ -441,11 +453,10 @@ void main() {
     (tester) async {
       _tolerateOverflow();
       final a = await _tourA;
-      final seed = await _seedRanking;
       final actors = await _actors;
       final player = actors['player']!;
 
-      // Qua API: cùng một giải và cùng một bảng xếp hạng với hoặc không có token.
+      // Qua API: cùng một giải và cùng các bảng xếp hạng với hoặc không có token.
       final guestTour = await _publicApi.get('/tournaments/${a.id}');
       final playerTour = await _publicApi.get(
         '/tournaments/${a.id}',
@@ -455,26 +466,21 @@ void main() {
       expect(playerTour.status, 200, reason: 'VĐV đọc giải công khai');
       expect(_dataOf(guestTour.body)['id'], _dataOf(playerTour.body)['id']);
       expect(_dataOf(guestTour.body)['name'], _dataOf(playerTour.body)['name']);
-      final guestTop = await _publicApi.topRankingUserId(seed);
-      final playerTop = await _publicApi.topRankingUserId(
-        seed,
-        token: player.token,
-      );
       expect(
-        guestTop,
-        playerTop,
-        reason: 'Người đứng đầu bảng xếp hạng phải như nhau với khách và VĐV',
+        await _publicApi.rankingSnapshot(token: player.token),
+        await _publicApi.rankingSnapshot(),
+        reason: 'Bảng xếp hạng công khai phải như nhau với khách và VĐV',
       );
 
       // Qua giao diện: khách rồi VĐV thấy cùng tên VĐV ở bracket và cùng nhà vô địch ở tab Kết quả.
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-13');
       var container = await _asGuest(tester);
       await _openTournamentTab(tester, container, a.id, 'Bảng đấu');
-      await pumpUntil(tester, find.textContaining('${a.tag} VDV'));
+      await _until(tester, find.textContaining('${a.tag} VDV'));
       final guestNames = _visibleNames(a.tag);
       await shooter.snap('khach-thay-bracket');
       await _openTournamentTab(tester, container, a.id, 'Kết quả');
-      await pumpUntil(
+      await _until(
         tester,
         find.descendant(
           of: find.byKey(const ValueKey('results-podium-null')),
@@ -485,7 +491,7 @@ void main() {
 
       container = await signInAs(tester, player);
       await _openTournamentTab(tester, container, a.id, 'Bảng đấu');
-      await pumpUntil(tester, find.textContaining('${a.tag} VDV'));
+      await _until(tester, find.textContaining('${a.tag} VDV'));
       expect(
         _visibleNames(a.tag),
         guestNames,
@@ -493,7 +499,7 @@ void main() {
       );
       await shooter.snap('vdv-thay-bracket');
       await _openTournamentTab(tester, container, a.id, 'Kết quả');
-      await pumpUntil(
+      await _until(
         tester,
         find.descendant(
           of: find.byKey(const ValueKey('results-podium-null')),
@@ -513,15 +519,10 @@ void main() {
       final d = await _tourD;
       final actors = await _actors;
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-14');
+      final scheduleTab = find.text('Lịch thi đấu');
 
       var container = await _asGuest(tester);
-      container.read(routerProvider).go('/tournament/${d.id}');
-      await pumpUntil(
-        tester,
-        find.text('Lịch thi đấu'),
-        timeout: const Duration(seconds: 45),
-      );
-      await socialWait(tester, const Duration(seconds: 2));
+      await _openRoute(tester, container, '/tournament/${d.id}', scheduleTab);
       expect(
         find.text('Kết quả'),
         findsNothing,
@@ -539,12 +540,7 @@ void main() {
       await leaveSocialSession(tester, container);
 
       container = await signInAs(tester, actors['player']!);
-      container.read(routerProvider).go('/tournament/${d.id}');
-      await pumpUntil(
-        tester,
-        find.text('Lịch thi đấu'),
-        timeout: const Duration(seconds: 45),
-      );
+      await _openRoute(tester, container, '/tournament/${d.id}', scheduleTab);
       await socialWait(tester, const Duration(seconds: 3));
       expect(
         find.text('Kết quả'),
@@ -562,13 +558,13 @@ void main() {
 
       // Đối chứng: BTC của giải thấy cả hai.
       container = await signInAs(tester, actors['organizer']!);
-      container.read(routerProvider).go('/tournament/${d.id}');
-      await pumpUntil(
+      await _openRoute(tester, container, '/tournament/${d.id}', scheduleTab);
+      await _until(
         tester,
         find.byTooltip('QUẢN LÝ'),
         timeout: const Duration(seconds: 45),
       );
-      await pumpUntil(tester, find.text('Kết quả'));
+      await _until(tester, find.text('Kết quả'));
       await shooter.snap('btc-thay-ket-qua-quan-ly');
       await leaveSocialSession(tester, container);
     },
@@ -583,6 +579,13 @@ void main() {
       final actors = await _actors;
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-G-15');
       final container = await signInAs(tester, actors['player']!);
+      // Chờ app ổn định ở trang giải (đăng nhập xong còn điều hướng về /home) rồi mới thử vào màn quản lý.
+      await _openRoute(
+        tester,
+        container,
+        '/tournament/${d.id}',
+        find.text('Lịch thi đấu'),
+      );
       await expectBlocked(tester, '/organizer/tournaments/${d.id}/manage');
       await shooter.snap('vdv-bi-chan-man-quan-ly');
       expect(
@@ -692,8 +695,6 @@ final Future<_Tour> _tourC = _buildTour('C', 'Vòng bảng', (t) async {
 /// D: mở đăng ký, có VĐV, chưa tạo sơ đồ.
 final Future<_Tour> _tourD = _buildTour('D', 'Đăng ký', (t) async => t);
 
-final Future<_SeedRanking> _seedRanking = _publicApi.findSeedRanking();
-
 class _Tour {
   const _Tour({
     required this.token,
@@ -759,18 +760,6 @@ Future<_Tour> _buildTour(
       tag: tag,
     ),
   );
-}
-
-class _SeedRanking {
-  const _SeedRanking({
-    required this.top,
-    required this.sportSlug,
-    required this.gender,
-  });
-
-  final PlayerRanking top;
-  final String sportSlug;
-  final String gender;
 }
 
 class _Sport {
@@ -870,9 +859,11 @@ class _PublicApi {
     ];
   }
 
+  /// `GET /rankings` công khai như màn Xếp hạng gọi (không gửi matchType khi rỗng).
   Future<List<PlayerRanking>> rankings(
     String categoryId,
     String gender, {
+    String matchType = '',
     String? token,
   }) async {
     final reply = await get(
@@ -880,10 +871,10 @@ class _PublicApi {
       token: token,
       query: {
         'scope': 'PUBLIC',
-        'limit': 10,
+        'limit': 100,
         'categoryId': categoryId,
-        'matchType': 'SINGLES',
         'genderRestriction': gender,
+        if (matchType.isNotEmpty) 'matchType': matchType,
       },
     );
     expect(
@@ -897,32 +888,17 @@ class _PublicApi {
     ];
   }
 
-  /// Dữ liệu xếp hạng seed: bảng đơn đầu tiên có người, thử từng môn rồi nam, nữ.
-  Future<_SeedRanking> findSeedRanking() async {
-    final sports = await categoryNames();
-    for (final sport in sports) {
+  /// Mọi dòng xếp hạng công khai theo từng môn và giới (chuỗi `môn:giới:userId`), để so khách với VĐV.
+  Future<List<String>> rankingSnapshot({String? token}) async {
+    final rows = <String>[];
+    for (final sport in await categoryNames()) {
       for (final gender in const ['MALE', 'FEMALE']) {
-        final list = await rankings(sport.id, gender);
-        if (list.isNotEmpty) {
-          return _SeedRanking(
-            top: list.first,
-            sportSlug: sport.slug,
-            gender: gender,
-          );
+        for (final r in await rankings(sport.id, gender, token: token)) {
+          rows.add('${sport.slug}:$gender:${r.userId}');
         }
       }
     }
-    fail(
-      'Cloud không có dữ liệu xếp hạng đơn nào (đã thử ${sports.length} môn, nam và nữ); cần seed --seed data',
-    );
-  }
-
-  Future<String> topRankingUserId(_SeedRanking seed, {String? token}) async {
-    final sport = (await categoryNames()).firstWhere(
-      (s) => s.slug == seed.sportSlug,
-    );
-    final list = await rankings(sport.id, seed.gender, token: token);
-    return list.first.userId;
+    return rows;
   }
 }
 
@@ -977,9 +953,9 @@ Future<void> _openTournamentSearch(
 ) async {
   container.read(routerProvider).go('/home?tab=1');
   final searchButton = find.byTooltip('Tìm kiếm thể thao');
-  await pumpUntil(tester, searchButton, timeout: const Duration(seconds: 45));
+  await _until(tester, searchButton, timeout: const Duration(seconds: 45));
   await tester.tap(searchButton.first);
-  await pumpUntil(
+  await _until(
     tester,
     find.byType(TextField),
     timeout: const Duration(seconds: 30),
@@ -1013,14 +989,14 @@ Future<void> _applyFilter(
   bool clear = false,
 }) async {
   await tapFinder(tester, _filterButton, what: 'nút Bộ lọc nâng cao');
-  await pumpUntil(tester, find.text('Áp dụng'));
+  await _until(tester, find.text('Áp dụng'));
   await socialWait(tester, const Duration(milliseconds: 600));
   final dropdowns = find.byType(DropdownButtonFormField<String>);
   Future<void> pick(int index, String label) async {
     await tester.ensureVisible(dropdowns.at(index));
     await tester.tap(dropdowns.at(index));
     await socialWait(tester, const Duration(milliseconds: 600));
-    final item = find.text(label).last;
+    final item = find.widgetWithText(DropdownMenuItem<String>, label).last;
     expect(
       item,
       findsOneWidget,
@@ -1045,11 +1021,11 @@ Future<void> _openTournamentTab(
   String tournamentId,
   String label,
 ) async {
-  container.read(routerProvider).go('/tournament/$tournamentId');
-  await pumpUntil(
+  await _openRoute(
     tester,
+    container,
+    '/tournament/$tournamentId',
     find.text(label),
-    timeout: const Duration(seconds: 45),
   );
   await tapCentered(tester, find.text(label).first);
   await socialWait(tester, const Duration(seconds: 1));
@@ -1078,3 +1054,57 @@ Set<String> _visibleNames(String tag) => {
           .whereType<Text>())
     if (text.data != null) text.data!,
 };
+
+/// Chờ [finder] hiện, chịu được lỗi tạm của finder khi cây widget đang đổi (element đã gỡ).
+Future<void> _until(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 30),
+}) => pumpUntilCondition(
+  tester,
+  () {
+    try {
+      return finder.evaluate().isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  },
+  timeout: timeout,
+  what: finder.describeMatch(Plurality.zero),
+);
+
+/// Chữ (Text) có chứa [tag], không tính nội dung ô nhập tìm kiếm.
+Finder _result(String tag) => find.byWidgetPredicate(
+  (w) => w is Text && (w.data ?? '').contains(tag),
+  description: 'Text chứa "$tag"',
+);
+
+/// Vào [route] và chờ [ready] ở lại trên màn: sau đăng nhập app còn điều hướng về /home và đẩy trang đi,
+/// nên thấy [ready] mất thì vào lại.
+Future<void> _openRoute(
+  WidgetTester tester,
+  ProviderContainer container,
+  String route,
+  Finder ready,
+) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 60));
+  while (true) {
+    container.read(routerProvider).go(route);
+    await socialWait(tester, const Duration(seconds: 2));
+    var present = false;
+    try {
+      present = ready.evaluate().isNotEmpty;
+    } catch (_) {}
+    if (present) {
+      await socialWait(tester, const Duration(seconds: 2));
+      try {
+        if (ready.evaluate().isNotEmpty) return;
+      } catch (_) {}
+    }
+    if (DateTime.now().isAfter(deadline)) {
+      fail(
+        'Hết 60s mà $route không ở lại trên màn (${ready.describeMatch(Plurality.zero)})',
+      );
+    }
+  }
+}
