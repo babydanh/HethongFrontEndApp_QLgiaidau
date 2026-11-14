@@ -19,6 +19,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_layout_di
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_widgets.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_pair_card.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_pair_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_division_match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -35,6 +36,30 @@ enum _LayoutStatus {
   empty,
   edited,
 }
+
+/// Cặp vừa xóa, đủ thông tin để đưa về đúng vị trí trong 5 giây.
+class _PendingUndo {
+  const _PendingUndo({
+    required this.row,
+    required this.rowsPosition,
+    required this.group,
+    required this.groupIndex,
+    required this.groupPosition,
+    required this.groupRemoved,
+    required this.candidates,
+  });
+
+  final RosterDraftRow row;
+  final int rowsPosition;
+  final RosterDraftGroup group;
+  final int groupIndex;
+  final int groupPosition;
+  final bool groupRemoved;
+  final RosterRowCandidates? candidates;
+}
+
+/// Thời gian nút Hoàn tác còn tác dụng sau khi xóa cặp.
+const Duration _undoWindow = Duration(seconds: 5);
 
 class _ParsedWorkbook {
   const _ParsedWorkbook({
@@ -111,8 +136,14 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
   /// Tăng mỗi lần chạy preview để bỏ kết quả của lần cũ đến muộn.
   int _previewGeneration = 0;
 
+  /// Số lần người dùng sửa, xóa hoặc thêm cặp trong danh sách; > 0 thì Ghép cột phải hỏi trước.
+  int _editedRowCount = 0;
+  _PendingUndo? _pendingUndo;
+  Timer? _undoTimer;
+
   @override
   void dispose() {
+    _undoTimer?.cancel();
     _previewGeneration++;
     _layoutRequest++;
     super.dispose();
@@ -245,6 +276,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       if (!mounted) return;
       final requestId = ++_layoutRequest;
       _editRevision = 0;
+      _editedRowCount = 0;
+      _clearUndo();
       // Ô gộp được điền xuống trước khi đọc: cả hai dòng của một cặp mang STT và dấu thanh toán.
       final grid = [for (final sheet in sheets) fillRosterMerges(sheet)];
       final byRules = _readByRules(grid);
@@ -331,6 +364,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
             ),
     ];
     if (drafts.isEmpty) return;
+    if (_editedRowCount > 0 && !await _confirmResetEdits()) return;
+    if (!mounted) return;
     final result = await showRosterColumnMappingSheet(context, drafts: drafts);
     if (result == null || !mounted) return;
     _applyMapping(result);
@@ -342,6 +377,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     _layoutRequest++;
     _editRevision++;
     _previewGeneration++;
+    _editedRowCount = 0;
+    _clearUndo();
     final parsed = _assembleWorkbook(result.readings, result.skippedSheets);
     final unmatched = parsed.groups
         .where((group) => group.target.divisionId == null)
@@ -588,8 +625,9 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       eloSource: parsed.eloSource,
       isPaid: parsed.isPaid,
       autoApprove: _autoApprove,
-      sourceRowIndex: parsed.sourceRowIndex,
-      sourceSheetName: parsed.sheetName,
+      // Cặp thêm tay không có dòng nguồn: Backend yêu cầu sourceRowIndex >= 1.
+      sourceRowIndex: parsed.sourceRowIndex > 0 ? parsed.sourceRowIndex : null,
+      sourceSheetName: parsed.sheetName.isEmpty ? null : parsed.sheetName,
       customResponses: notes == null || notes.isEmpty ? null : {'notes': notes},
       confirmedPlayer1UserId: _effectiveLink(
         row.player1Link,
@@ -681,6 +719,296 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       _preview = response;
       _previewPlan = sent;
     });
+  }
+
+  /// Đang đọc, tạo nội dung, nhập, hoặc chờ xác nhận tạo nội dung: không sửa danh sách.
+  /// (Tạo nội dung dựng lại dòng từ file nên sửa tay trước đó sẽ mất.)
+  bool get _editingLocked =>
+      _reading || _committing || _creating || _pendingDivisionConfirm;
+
+  String? _normalizedEmail(String? email) => email?.trim().toLowerCase();
+
+  void _clearUndo() {
+    _undoTimer?.cancel();
+    _undoTimer = null;
+    _pendingUndo = null;
+  }
+
+  /// Tính lại trùng email và mã chặn cục bộ cho cả danh sách (trùng là quan hệ giữa các dòng).
+  void _recomputeLocalStatus() {
+    final duplicates = rosterDuplicateRowIndices(_rows);
+    for (final row in _rows) {
+      row.localStatus = rosterLocalStatusOf(
+        row,
+        duplicate: duplicates.contains(row.index),
+      );
+    }
+  }
+
+  /// Mọi sửa danh sách: preview cũ không còn đúng, câu trả lời AI đến sau bị bỏ, hoàn tác cũ hết tác dụng.
+  void _markEdited() {
+    _editRevision++;
+    _editedRowCount++;
+    _preview = null;
+    _previewPlan = null;
+    _clearUndo();
+  }
+
+  Future<bool> _confirmResetEdits() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(l10n.rosterListResetWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.rosterListCancel),
+          ),
+          FilledButton(
+            key: const ValueKey('roster-list-reset-confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.rosterListResetConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  RosterParsedRow _parsedAfterEdit(RosterParsedRow old, RosterRowEdit edit) {
+    return old.copyWith(
+      player1Name: edit.player1Name,
+      clearPlayer1Name: edit.player1Name == null,
+      player1Email: edit.player1Email,
+      clearPlayer1Email: edit.player1Email == null,
+      player1Phone: edit.player1Phone,
+      clearPlayer1Phone: edit.player1Phone == null,
+      player2Name: edit.player2Name,
+      clearPlayer2Name: edit.player2Name == null,
+      player2Email: edit.player2Email,
+      clearPlayer2Email: edit.player2Email == null,
+      player2Phone: edit.player2Phone,
+      clearPlayer2Phone: edit.player2Phone == null,
+      isPaid: edit.isPaid,
+      notes: edit.notes,
+      clearNotes: edit.notes == null,
+      localErrors: rosterLocalErrors(
+        name: edit.player1Name,
+        email: edit.player1Email,
+        player2Email: edit.player2Email,
+      ),
+    );
+  }
+
+  /// Mở chi tiết của [row]. Trả bản sửa, hoặc null khi đóng không bấm `Xong`.
+  Future<RosterRowEdit?> _showDetail(
+    RosterDraftRow row, {
+    bool allowDelete = true,
+  }) {
+    final server = _serverRowsByIndex(_preview)[row.index];
+    final candidates = _candidates[row.index];
+    final reasons = <String>{...row.localStatus, ...?server?.status}.toList();
+    return showRosterPairDetailSheet(
+      context,
+      row: row,
+      reasonCodes: reasons,
+      customResponseError: server?.customResponseError != null,
+      candidates1: candidates?.player1 ?? const [],
+      candidates2: candidates?.player2 ?? const [],
+      showPlayer2: row.target.isDoubles || row.hasPlayer2,
+      readOnly: false,
+      allowDelete: allowDelete,
+    );
+  }
+
+  Future<void> _openDetail(RosterDraftRow row) async {
+    if (_editingLocked) return;
+    final edit = await _showDetail(row);
+    // Dòng có thể đã bị thay (AI trả lời, ghép cột) trong lúc sheet mở: bỏ bản sửa.
+    if (edit == null || !mounted || !_rows.any((r) => identical(r, row))) {
+      return;
+    }
+    if (edit.delete) {
+      _deleteRow(row);
+    } else {
+      _applyRowEdit(row, edit);
+    }
+  }
+
+  /// Áp bản sửa vào dòng. Email đổi thì VĐV đó về `Tự liên kết` và bỏ ứng viên cũ, vì Backend từ chối
+  /// tài khoản đã chọn không còn khớp email; tên, SĐT, ghi chú, phí không đụng tới liên kết.
+  void _applyRowEdit(RosterDraftRow row, RosterRowEdit edit) {
+    final old = row.parsed;
+    final email1Changed =
+        _normalizedEmail(old.player1Email) !=
+        _normalizedEmail(edit.player1Email);
+    final email2Changed =
+        _normalizedEmail(old.player2Email) !=
+        _normalizedEmail(edit.player2Email);
+    final candidates = _candidates[row.index];
+    setState(() {
+      row.parsed = _parsedAfterEdit(old, edit);
+      row.player1Link = email1Changed
+          ? const RosterPlayerLink.auto()
+          : edit.player1Link;
+      row.player2Link = email2Changed
+          ? const RosterPlayerLink.auto()
+          : edit.player2Link;
+      if (candidates != null && (email1Changed || email2Changed)) {
+        _candidates[row.index] = RosterRowCandidates(
+          player1: email1Changed ? const [] : candidates.player1,
+          player2: email2Changed ? const [] : candidates.player2,
+        );
+      }
+      _recomputeLocalStatus();
+      _markEdited();
+    });
+    unawaited(_runPreview());
+  }
+
+  void _deleteRow(RosterDraftRow row) {
+    final groupIndex = _groups.indexWhere((g) => g.rows.contains(row));
+    if (groupIndex < 0) return;
+    final group = _groups[groupIndex];
+    final undo = _PendingUndo(
+      row: row,
+      rowsPosition: _rows.indexOf(row),
+      group: group,
+      groupIndex: groupIndex,
+      groupPosition: group.rows.indexOf(row),
+      groupRemoved: group.rows.length == 1,
+      candidates: _candidates[row.index],
+    );
+    setState(() {
+      group.rows.remove(row);
+      _groups = [
+        for (final g in _groups)
+          if (g.rows.isNotEmpty) g,
+      ];
+      _rows = [
+        for (final r in _rows)
+          if (!identical(r, row)) r,
+      ];
+      _candidates.remove(row.index);
+      _recomputeLocalStatus();
+      _markEdited();
+      _pendingUndo = undo;
+      _undoTimer = Timer(_undoWindow, () {
+        if (mounted) setState(_clearUndo);
+      });
+    });
+    unawaited(_runPreview());
+  }
+
+  void _undoDelete() {
+    final undo = _pendingUndo;
+    if (undo == null || _editingLocked) return;
+    setState(() {
+      final groups = [..._groups];
+      if (undo.groupRemoved) {
+        groups.insert(undo.groupIndex.clamp(0, groups.length), undo.group);
+      }
+      _groups = groups;
+      undo.group.rows.insert(
+        undo.groupPosition.clamp(0, undo.group.rows.length),
+        undo.row,
+      );
+      _rows = [..._rows]
+        ..insert(undo.rowsPosition.clamp(0, _rows.length), undo.row);
+      final candidates = undo.candidates;
+      if (candidates != null) _candidates[undo.row.index] = candidates;
+      _recomputeLocalStatus();
+      _markEdited();
+    });
+    unawaited(_runPreview());
+  }
+
+  /// Số nhỏ nhất chưa dùng trong 0..499 (giới hạn `clientRowIndex` của Backend).
+  int? _nextFreeIndex() {
+    final used = {for (final row in _rows) row.index};
+    for (var index = 0; index < rosterMaxBatchParticipants; index++) {
+      if (!used.contains(index)) return index;
+    }
+    return null;
+  }
+
+  bool get _canAddRow =>
+      !_editingLocked && _rows.length < rosterMaxBatchParticipants;
+
+  /// Thêm một cặp bằng tay vào nội dung đang mở. `Xong` mà không nhập tên hay email thì không thêm gì.
+  Future<void> _addRow() async {
+    if (!_canAddRow) return;
+    final index = _nextFreeIndex();
+    if (index == null) return;
+    final target = _targetFor(null);
+    final blank = RosterDraftRow(
+      index: index,
+      parsed: const RosterParsedRow(
+        sheetName: '',
+        sourceRowIndex: 0,
+        localErrors: [],
+      ),
+      target: target,
+    );
+    final edit = await _showDetail(blank, allowDelete: false);
+    if (edit == null || edit.delete || !mounted || !_canAddRow) return;
+    final hasContent =
+        edit.player1Name != null ||
+        edit.player1Email != null ||
+        edit.player2Name != null ||
+        edit.player2Email != null;
+    final freeIndex = _nextFreeIndex();
+    if (!hasContent || freeIndex == null) return;
+    final row = RosterDraftRow(
+      index: freeIndex,
+      parsed: _parsedAfterEdit(blank.parsed, edit),
+      target: target,
+    );
+    row.player1Link = edit.player1Link;
+    row.player2Link = edit.player2Link;
+    setState(() {
+      _candidates.remove(freeIndex);
+      _rows = [..._rows, row];
+      final groupIndex = _groups.indexWhere((g) => g.target.key == target.key);
+      if (groupIndex >= 0) {
+        _groups[groupIndex].rows.add(row);
+      } else {
+        _groups = [..._groups, RosterDraftGroup(target)..rows.add(row)];
+      }
+      _recomputeLocalStatus();
+      _markEdited();
+    });
+    unawaited(_runPreview());
+  }
+
+  /// Thanh hoàn tác ngay trong sheet (SnackBar của màn dưới bị sheet che).
+  Widget _undoBar(AppLocalizations l10n, AppColorsExtension colors) {
+    return Container(
+      key: const ValueKey('roster-list-undo-bar'),
+      color: colors.bgSurface,
+      padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.rosterListDeleted,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            key: const ValueKey('roster-list-undo'),
+            style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
+            onPressed: _undoDelete,
+            child: Text(l10n.rosterListUndo),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Nút mở popup Ghép cột: nổi bật khi chưa đọc ra người nào hoặc có sheet bị bỏ qua.
@@ -1065,9 +1393,11 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 8),
-            Text(
-              l10n.rosterImportChecking,
-              style: TextStyle(color: colors.textSecondary, fontSize: 13),
+            Expanded(
+              child: Text(
+                l10n.rosterImportChecking,
+                style: TextStyle(color: colors.textSecondary, fontSize: 13),
+              ),
             ),
           ],
         ),
@@ -1135,6 +1465,21 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
                                 ),
                               ),
                               IconButton(
+                                key: const ValueKey('roster-import-add'),
+                                tooltip: l10n.rosterListAdd,
+                                constraints: const BoxConstraints(
+                                  minWidth: 48,
+                                  minHeight: 48,
+                                ),
+                                onPressed: _canAddRow
+                                    ? () => unawaited(_addRow())
+                                    : null,
+                                icon: Icon(
+                                  Icons.add_rounded,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                              IconButton(
                                 tooltip: l10n.rosterImportClose,
                                 onPressed: _committing || _creating
                                     ? null
@@ -1182,6 +1527,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
                             ],
                           ),
                         ),
+                        if (_pendingUndo != null) _undoBar(l10n, colors),
                         Container(
                           padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                           decoration: BoxDecoration(
@@ -1329,7 +1675,7 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
           null,
       hasAccountCandidate1: candidates?.player1.isNotEmpty ?? false,
       hasAccountCandidate2: candidates?.player2.isNotEmpty ?? false,
-      onTap: null,
+      onTap: _editingLocked ? null : () => unawaited(_openDetail(row)),
     );
   }
 }

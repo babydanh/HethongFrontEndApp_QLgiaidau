@@ -511,10 +511,14 @@ void main() {
       );
 
       // Chọn tay "Không liên kết" cho VĐV A.
-      await tester.ensureVisible(_key('roster-account-0-1'));
-      await tester.tap(_key('roster-account-0-1'));
+      await tester.ensureVisible(_key('roster-row-0'));
+      await tester.tap(_key('roster-row-0'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(_l10n(tester).rosterImportLeaveUnlinked).last);
+      await tester.tap(_key('roster-detail-account-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_l10n(tester).rosterImportLeaveUnlinked));
+      await tester.pumpAndSettle();
+      await tester.tap(_key('roster-detail-done'));
       await tester.pumpAndSettle();
       expect(
         _sent(repo)
@@ -523,7 +527,10 @@ void main() {
         isNull,
       );
 
+      // Đã sửa tay nên Ghép cột hỏi xác nhận trước khi bỏ các sửa tay.
       await _openMapping(tester);
+      await tester.tap(_key('roster-list-reset-confirm'));
+      await tester.pumpAndSettle();
       await _done(tester);
 
       final items = _sent(repo);

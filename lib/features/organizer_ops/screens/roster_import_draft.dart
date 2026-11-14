@@ -77,7 +77,7 @@ class RosterDraftRow {
 
   /// clientRowIndex: duy nhất trên toàn workbook.
   final int index;
-  final RosterParsedRow parsed;
+  RosterParsedRow parsed;
 
   /// Nội dung đích; đổi được khi tạo hạng mục mới khớp tên trong file.
   RosterDivisionTarget target;
