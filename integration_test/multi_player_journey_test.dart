@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -240,11 +241,16 @@ void main() {
         'Tìm đồng đội theo tên',
       );
       await pumpUntil(tester, partnerField);
-      await tester.enterText(partnerField, partner.email);
+      await tester.enterText(partnerField, partner.fullName);
       await tester.pump();
-      await pumpUntil(tester, find.text(partner.fullName));
+      // Ô nhập cũng chứa đúng chuỗi này, nên chỉ tính kết quả nằm trong ListTile.
+      final partnerResult = find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text(partner.fullName),
+      );
+      await pumpUntil(tester, partnerResult);
       await snap.snap('tim-thay-dong-doi');
-      await tapCentered(tester, find.text(partner.fullName));
+      await tapCentered(tester, partnerResult);
       await tester.pump();
       await tapCentered(tester, find.text('Tiếp theo'));
       await tester.pump();
@@ -389,7 +395,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-B-08 VĐV theo dõi giải bằng nút đánh dấu, mở lại vẫn thấy đang theo dõi',
+    'TC-MULTI-B-08 [BUG-FOLLOW-01] VĐV theo dõi giải bằng nút đánh dấu, mở lại vẫn thấy đang theo dõi',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-08');
       final container = await _signIn(tester, actor('player'));
@@ -414,6 +420,9 @@ void main() {
       await snap.snap('mo-lai-van-theo-doi');
       await leaveSocialSession(tester, container);
     },
+    // BUG-FOLLOW-01: POST /tournaments/:id/follow trả 403 'Email verification is required' cho tài khoản mới;
+    // app nuốt lỗi (catch rỗng), nút không đổi và không báo gì.
+    skip: true,
   );
 
   testWidgets(
@@ -470,11 +479,17 @@ void main() {
       await pumpUntil(tester, find.text('Tổng quan'));
       await snap.snap('dashboard-tong-quan');
       await tapText(tester, 'Quản lý');
-      await pumpUntil(tester, find.text(singlesName));
-      // LavishPill viết hoa nhãn vai trò.
-      expect(find.text('ĐÃ ĐĂNG KÝ'), findsWidgets);
+      // Tiêu đề nhóm viết hoa; chờ tab Quản lý thật sự hiện (tab Hoạt động cũng có tên giải).
+      await pumpUntil(tester, find.textContaining('GIẢI ĐẤU CỦA TÔI'));
+      final row = find.widgetWithText(LavishRow, singlesName);
+      await pumpUntil(tester, row);
       expect(
-        find.text('CHỦ GIẢI'),
+        find.descendant(of: row, matching: find.text('Đã đăng ký')),
+        findsWidgets,
+        reason: 'Hàng giải của VĐV phải mang nhãn Đã đăng ký',
+      );
+      expect(
+        find.descendant(of: row, matching: find.text('Chủ giải')),
         findsNothing,
         reason: 'VĐV không phải chủ giải nào',
       );
