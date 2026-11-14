@@ -21,8 +21,9 @@ import 'support/social_journey.dart';
 /// Đặt true để bỏ qua các ca đỏ vì lỗi sản phẩm đã xác nhận (BUG-...).
 const bool _skipKnownBugs = true;
 
-/// Ca 09, 10 đang chạy để lấy phản hồi của Backend cho POST /users/change-requests (xem `_sendGenderChangeRequest`).
-const bool _skipChangeRequestCases = false;
+/// Ca 09, 10 (BUG-ADMIN-04): GET /admin/change-requests 404. Ngoài ra POST /users/change-requests trả 400
+/// "Giới tính chưa bị khóa" với tài khoản mới, nên chưa dựng được yêu cầu để duyệt; xem lại khi Backend có endpoint.
+const bool _skipChangeRequestCases = true;
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
