@@ -86,7 +86,7 @@ void main() {
           return adapter.requests.single.query['status'];
         }
 
-        expect(await statusFor('registration'), 'REGISTRATION');
+        expect(await statusFor('registration'), 'REGISTRATION_OPEN');
         expect(await statusFor('UPCOMING'), 'UPCOMING,REGISTRATION_CLOSED');
         expect(await statusFor('in_progress'), 'IN_PROGRESS');
         expect(await statusFor('completed'), 'COMPLETED');
