@@ -33211,6 +33211,24 @@ abstract class AppLocalizations {
   /// **'Giữ kín khoá phát, không gửi cho người lạ. Link xem đã tự điền ở trên; khung xem trước có thể trống đến khi bạn bắt đầu phát.'**
   String get tournamentCameraFbKeyWarning;
 
+  /// No description provided for @tournamentCameraFbLarixHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát bằng điện thoại này: cài Larix Broadcaster (miễn phí), bấm Mở trong Larix, xác nhận nhập kết nối rồi bấm nút phát.'**
+  String get tournamentCameraFbLarixHint;
+
+  /// No description provided for @tournamentCameraFbLarixOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở trong Larix'**
+  String get tournamentCameraFbLarixOpen;
+
+  /// No description provided for @tournamentCameraFbLarixMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa mở được Larix. Hãy cài Larix Broadcaster từ cửa hàng ứng dụng rồi thử lại.'**
+  String get tournamentCameraFbLarixMissing;
+
   /// No description provided for @tournamentCameraFbShowKey.
   ///
   /// In vi, this message translates to:

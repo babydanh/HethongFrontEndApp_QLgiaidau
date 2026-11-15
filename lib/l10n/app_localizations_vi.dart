@@ -18430,6 +18430,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Giữ kín khoá phát, không gửi cho người lạ. Link xem đã tự điền ở trên; khung xem trước có thể trống đến khi bạn bắt đầu phát.';
 
   @override
+  String get tournamentCameraFbLarixHint =>
+      'Phát bằng điện thoại này: cài Larix Broadcaster (miễn phí), bấm Mở trong Larix, xác nhận nhập kết nối rồi bấm nút phát.';
+
+  @override
+  String get tournamentCameraFbLarixOpen => 'Mở trong Larix';
+
+  @override
+  String get tournamentCameraFbLarixMissing =>
+      'Chưa mở được Larix. Hãy cài Larix Broadcaster từ cửa hàng ứng dụng rồi thử lại.';
+
+  @override
   String get tournamentCameraFbShowKey => 'Hiện khoá phát';
 
   @override

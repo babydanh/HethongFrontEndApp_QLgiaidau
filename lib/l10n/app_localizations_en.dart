@@ -18504,6 +18504,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep the stream key private. The watch link is filled in above; the preview may stay blank until you start streaming.';
 
   @override
+  String get tournamentCameraFbLarixHint =>
+      'Stream from this phone: install Larix Broadcaster (free), tap Open in Larix, confirm the connection import, then tap the start button.';
+
+  @override
+  String get tournamentCameraFbLarixOpen => 'Open in Larix';
+
+  @override
+  String get tournamentCameraFbLarixMissing =>
+      'Could not open Larix. Install Larix Broadcaster from the app store and try again.';
+
+  @override
   String get tournamentCameraFbShowKey => 'Show stream key';
 
   @override
