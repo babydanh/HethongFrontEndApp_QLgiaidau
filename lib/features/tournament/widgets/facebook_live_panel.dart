@@ -1,36 +1,35 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/larix_link.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-Future<bool> _launchExternal(Uri uri) =>
-    launchUrl(uri, mode: LaunchMode.externalApplication);
-
-/// "Tạo live trên fanpage Facebook" trong form tạo camera: nút Tạo live (fanpage
-/// chung của hệ thống) rồi khối khoá phát. Khoá phát chỉ nằm trong state của widget này.
+/// "Tạo live trên fanpage Facebook" trong form tạo camera: một nút tạo live trên
+/// fanpage chung rồi giao live cho cha ([onCreated]) để tạo camera. Khoá phát đi
+/// theo [CreatedFacebookLive] sang sheet "Camera đã sẵn sàng", không nằm lại đây.
 class FacebookLivePanel extends StatefulWidget {
   const FacebookLivePanel({
     super.key,
     required this.tournamentId,
     required this.repository,
     required this.onCreated,
+    this.onBeforeCreate,
+    this.onBusyChanged,
     this.enabled = true,
-    this.launchLink = _launchExternal,
   });
 
   final String tournamentId;
   final IFacebookCameraLiveRepository repository;
 
-  /// Cha điền link xem vào ô link.
-  final ValueChanged<String> onCreated;
-  final bool enabled;
+  /// Cha tạo camera từ live vừa tạo; panel giữ nút bận cho tới khi xong.
+  final Future<void> Function(CreatedFacebookLive live) onCreated;
 
-  /// Mở link ngoài app (Larix); tách ra để test không gọi plugin thật.
-  final Future<bool> Function(Uri uri) launchLink;
+  /// Cha kiểm dữ liệu form trước khi gọi Facebook; trả false thì không tạo live.
+  final bool Function()? onBeforeCreate;
+
+  /// Báo cha khi panel bắt đầu/xong việc, để cha khoá phần còn lại của sheet.
+  final ValueChanged<bool>? onBusyChanged;
+  final bool enabled;
 
   @override
   State<FacebookLivePanel> createState() => _FacebookLivePanelState();
@@ -40,9 +39,7 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
   FacebookLiveConnection? _connection;
   bool _loadFailed = false;
   bool _busy = false;
-  bool _launching = false;
   FacebookLiveError? _error;
-  CreatedFacebookLive? _live;
 
   @override
   void initState() {
@@ -71,43 +68,28 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
       _busy = true;
       _error = null;
     });
+    widget.onBusyChanged?.call(true);
     try {
       await action();
     } on Object catch (failure) {
       if (mounted) setState(() => _error = facebookLiveError(failure));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        widget.onBusyChanged?.call(false);
+      }
     }
   }
 
-  Future<void> _create() => _run(() async {
+  Future<void> _create() async {
+    if (_busy || widget.onBeforeCreate?.call() == false) return;
+    await _run(_createAndHandOver);
+  }
+
+  Future<void> _createAndHandOver() async {
     final live = await widget.repository.createLive(widget.tournamentId);
     if (!mounted) return;
-    setState(() => _live = live);
-    widget.onCreated(live.watchUrl);
-  });
-
-  /// Larix chưa cài (hoặc không mở được) thì báo cách xử lý thay vì im lặng.
-  Future<void> _openLarix(String link) async {
-    if (_launching) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final missing = AppLocalizations.of(
-      context,
-    )!.tournamentCameraFbLarixMissing;
-    setState(() => _launching = true);
-    var opened = false;
-    try {
-      opened = await widget.launchLink(Uri.parse(link));
-    } on Object {
-      opened = false;
-    } finally {
-      if (mounted) setState(() => _launching = false);
-    }
-    if (!opened) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(missing)));
-    }
+    await widget.onCreated(live);
   }
 
   @override
@@ -117,10 +99,6 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
     final connection = _connection;
     final connected = connection?.connected == true;
     final canTap = widget.enabled && !_busy;
-    final live = _live;
-    final larixLink = live == null
-        ? null
-        : buildLarixSetupUrl(live.rtmpUrl, live.streamKey, 'SportO Live');
     return Container(
       key: const ValueKey('fb-live-panel'),
       padding: const EdgeInsets.all(12),
@@ -170,7 +148,7 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
               child: Text(l10n.tournamentCameraFbRecheck),
             ),
           ],
-          if (connection != null && live == null && connected)
+          if (connection != null && connected)
             FilledButton.icon(
               key: const ValueKey('fb-live-create'),
               onPressed: canTap ? _create : null,
@@ -184,11 +162,11 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
                   : const Icon(Icons.live_tv_outlined),
               label: Text(
                 _busy
-                    ? l10n.tournamentCameraFbWorking
-                    : l10n.tournamentCameraFbCreate,
+                    ? l10n.tournamentCameraFbCreatingCamera
+                    : l10n.tournamentCameraFbCreateCamera,
               ),
             ),
-          if (connection != null && live == null && !connected)
+          if (connection != null && !connected)
             Text(
               l10n.tournamentCameraFbErrorNotConnected,
               key: const ValueKey('fb-live-not-configured'),
@@ -205,128 +183,8 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
               ),
             ),
           ],
-          if (live != null) ...[
-            Text(
-              l10n.tournamentCameraFbHowTo,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _SecretRow(
-              fieldKey: 'fb-live-rtmp',
-              label: l10n.tournamentCameraFbRtmpLabel,
-              value: live.rtmpUrl,
-            ),
-            const SizedBox(height: 12),
-            _SecretRow(
-              fieldKey: 'fb-live-key',
-              label: l10n.tournamentCameraFbKeyLabel,
-              value: live.streamKey,
-              masked: true,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.tournamentCameraFbKeyWarning,
-              style: TextStyle(color: colors.textSecondary),
-            ),
-            if (larixLink != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                l10n.tournamentCameraFbLarixHint,
-                style: TextStyle(color: colors.textSecondary),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                key: const ValueKey('fb-live-larix-open'),
-                onPressed: _launching ? null : () => _openLarix(larixLink),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                ),
-                icon: const Icon(Icons.smartphone_outlined),
-                label: Text(l10n.tournamentCameraFbLarixOpen),
-              ),
-            ],
-          ],
         ],
       ),
-    );
-  }
-}
-
-class _SecretRow extends StatefulWidget {
-  const _SecretRow({
-    required this.fieldKey,
-    required this.label,
-    required this.value,
-    this.masked = false,
-  });
-
-  final String fieldKey;
-  final String label;
-  final String value;
-  final bool masked;
-
-  @override
-  State<_SecretRow> createState() => _SecretRowState();
-}
-
-class _SecretRowState extends State<_SecretRow> {
-  bool _visible = false;
-
-  Future<void> _copy() async {
-    final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
-    await Clipboard.setData(ClipboardData(text: widget.value));
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(l10n.tournamentCameraFbCopied(widget.label))),
-      );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: TextFormField(
-            key: ValueKey(widget.fieldKey),
-            initialValue: widget.value,
-            readOnly: true,
-            obscureText: widget.masked && !_visible,
-            autocorrect: false,
-            enableSuggestions: false,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-            decoration: InputDecoration(
-              labelText: widget.label,
-              isDense: true,
-            ),
-          ),
-        ),
-        if (widget.masked)
-          IconButton(
-            key: ValueKey('${widget.fieldKey}-toggle'),
-            tooltip: _visible
-                ? l10n.tournamentCameraFbHideKey
-                : l10n.tournamentCameraFbShowKey,
-            onPressed: () => setState(() => _visible = !_visible),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            icon: Icon(
-              _visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            ),
-          ),
-        IconButton(
-          key: ValueKey('${widget.fieldKey}-copy'),
-          tooltip: l10n.tournamentCameraFbCopy(widget.label),
-          onPressed: _copy,
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          icon: const Icon(Icons.copy_outlined),
-        ),
-      ],
     );
   }
 }

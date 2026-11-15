@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repo
 import 'package:app_quanly_giaidau/features/match/utils/live_embed.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_embed_player.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_add_help.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
@@ -25,6 +26,7 @@ class CameraEditorValue {
     required this.mode,
     this.courtId,
     this.playbackUrl,
+    this.facebookLive,
   });
 
   final String name;
@@ -35,6 +37,9 @@ class CameraEditorValue {
 
   /// Link live YouTube/Facebook đã chuẩn hoá; chỉ có khi tạo camera PULL.
   final String? playbackUrl;
+
+  /// Live vừa tạo bằng nút một chạm; flow tạo camera dùng nó để mở sheet "Camera đã sẵn sàng".
+  final CreatedFacebookLive? facebookLive;
 }
 
 /// Dựng khung xem trước của link live; test thay bằng widget giả để khỏi chạm plugin WebView.
@@ -107,10 +112,15 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
   bool _liveSource = false;
   late String? _courtId = widget.camera?.courtId;
   bool _busy = false;
+
+  /// The Facebook panel is creating a live: the rest of the sheet is locked so a
+  /// concurrent Save or close cannot orphan the live it is about to hand over.
+  bool _creatingLive = false;
   String? _nameError;
   String? _error;
 
   bool get _isEdit => widget.camera != null;
+  bool get _locked => _busy || _creatingLive;
 
   LiveEmbedResult get _embed => LiveEmbed.parse(_linkController.text);
   bool get _canSubmit => !_liveSource || _embed.isOk;
@@ -122,20 +132,33 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (_busy || !_canSubmit) return;
-    final l10n = AppLocalizations.of(context)!;
+  bool _isNameValid(String name) =>
+      _isEdit ||
+      (name.length >= _nameMinLength && name.length <= _nameMaxLength);
+
+  String _nameInvalidText(AppLocalizations l10n) =>
+      l10n.tournamentCameraNameInvalid(_nameMinLength, _nameMaxLength);
+
+  /// Runs before the Facebook live is created: a typed name that would be
+  /// rejected must not cost a Facebook call. An empty name falls back later.
+  bool _checkTypedName() {
     final name = _nameController.text.trim();
-    final nameInvalid =
-        !_isEdit &&
-        (name.length < _nameMinLength || name.length > _nameMaxLength);
-    if (nameInvalid) {
-      setState(() {
-        _nameError = l10n.tournamentCameraNameInvalid(
-          _nameMinLength,
-          _nameMaxLength,
-        );
-      });
+    if (name.isEmpty || _isNameValid(name)) return true;
+    setState(() => _nameError = _nameInvalidText(AppLocalizations.of(context)!));
+    return false;
+  }
+
+  /// [live] có khi người dùng bấm "Tạo camera live Facebook": bỏ qua ô link và
+  /// dùng `watchUrl` của live; tên trống thì lấy tên dự phòng.
+  Future<void> _submit({CreatedFacebookLive? live}) async {
+    if (_busy || (live == null && (_creatingLive || !_canSubmit))) return;
+    final l10n = AppLocalizations.of(context)!;
+    final typedName = _nameController.text.trim();
+    final name = typedName.isEmpty && live != null
+        ? facebookLiveDefaultCameraName(DateTime.now())
+        : typedName;
+    if (!_isNameValid(name)) {
+      setState(() => _nameError = _nameInvalidText(l10n));
       return;
     }
     setState(() {
@@ -149,7 +172,10 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
           name: widget.camera?.name ?? name,
           mode: widget.camera?.mode ?? (_liveSource ? 'PULL' : 'PUSH'),
           courtId: _courtId,
-          playbackUrl: _liveSource && !_isEdit ? _embed.canonicalUrl : null,
+          playbackUrl:
+              live?.watchUrl ??
+              (_liveSource && !_isEdit ? _embed.canonicalUrl : null),
+          facebookLive: live,
         ),
       );
       if (!mounted) return;
@@ -194,15 +220,18 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
             tournamentId: facebookTournamentId,
             repository: facebookRepository,
             enabled: !_busy,
-            onCreated: (watchUrl) =>
-                setState(() => _linkController.text = watchUrl),
+            onCreated: (live) => _submit(live: live),
+            onBeforeCreate: _checkTypedName,
+            onBusyChanged: (busy) {
+              if (mounted) setState(() => _creatingLive = busy);
+            },
           ),
           const SizedBox(height: 12),
         ],
         TextField(
           key: const ValueKey('camera-live-link'),
           controller: _linkController,
-          enabled: !_busy,
+          enabled: !_locked,
           keyboardType: TextInputType.url,
           autocorrect: false,
           enableSuggestions: false,
@@ -214,7 +243,7 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
             helperMaxLines: 3,
             suffixIcon: TextButton(
               key: const ValueKey('camera-live-paste'),
-              onPressed: _busy ? null : _paste,
+              onPressed: _locked ? null : _paste,
               style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
               child: Text(l10n.tournamentCameraLivePaste),
             ),
@@ -282,11 +311,11 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
       title: _isEdit
           ? l10n.tournamentCameraEditTitle
           : l10n.tournamentCameraAddTitle,
-      busy: _busy,
+      busy: _locked,
       actions: [
         FilledButton(
           key: const ValueKey('camera-editor-submit'),
-          onPressed: _busy || !_canSubmit ? null : _submit,
+          onPressed: _locked || !_canSubmit ? null : _submit,
           child: Text(
             _isEdit
                 ? l10n.tournamentManagementSave
@@ -296,7 +325,7 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
           ),
         ),
         OutlinedButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(false),
+          onPressed: _locked ? null : () => Navigator.of(context).pop(false),
           child: Text(l10n.tournamentManagementCancel),
         ),
       ],
@@ -316,7 +345,7 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
           ] else ...[
             _SourceSelector(
               live: _liveSource,
-              enabled: !_busy,
+              enabled: !_locked,
               onChanged: (live) => setState(() => _liveSource = live),
             ),
             const SizedBox(height: 12),
@@ -327,7 +356,7 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
             TextField(
               key: const ValueKey('camera-editor-name'),
               controller: _nameController,
-              enabled: !_busy,
+              enabled: !_locked,
               maxLength: _nameMaxLength,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
@@ -366,7 +395,7 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
                   ),
                 ),
             ],
-            onChanged: _busy
+            onChanged: _locked
                 ? null
                 : (value) => setState(() => _courtId = value),
           ),

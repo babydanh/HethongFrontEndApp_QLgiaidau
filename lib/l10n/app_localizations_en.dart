@@ -18487,6 +18487,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraFbCreate => 'Create live';
 
   @override
+  String get tournamentCameraFbCreateCamera => 'Create Facebook live camera';
+
+  @override
+  String get tournamentCameraFbCreatingCamera => 'Creating camera...';
+
+  @override
+  String get tournamentCameraFbErrorPageNotEligible =>
+      'The Facebook page needs at least 100 followers to go live. Please contact an administrator.';
+
+  @override
+  String get tournamentCameraFbReadyTitle => 'Camera is ready';
+
+  @override
+  String get tournamentCameraFbReadyHint =>
+      'The camera has been created. Stream from this phone with Larix, scan the QR code with Larix on another device, or paste the 2 lines below into OBS and start streaming. Keep the stream key private; the preview may stay blank until you start streaming.';
+
+  @override
+  String get tournamentCameraFbReadyDone => 'Done';
+
+  @override
+  String get tournamentCameraFbReadyShowQr => 'Show QR code';
+
+  @override
+  String get tournamentCameraFbReadyHideQr => 'Hide QR code';
+
+  @override
+  String get tournamentCameraFbReadyQrWarning =>
+      'The QR code contains the stream key. Do not send a screenshot of it to anyone.';
+
+  @override
+  String get tournamentCameraFbReadyQrLabel => 'QR code to open in Larix';
+
+  @override
   String get tournamentCameraFbWorking => 'Working...';
 
   @override
