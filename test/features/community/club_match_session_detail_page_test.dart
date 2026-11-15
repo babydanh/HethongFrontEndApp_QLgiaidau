@@ -1551,7 +1551,7 @@ void main() {
     });
   });
 
-  group('known app defects (expected behavior, skipped)', () {
+  group('regressions of fixed app defects', () {
     _test(
       'BUG-SESSDETAIL-03 a realtime event refreshes an idle screen without another frame',
       (tester) async {
@@ -1567,7 +1567,6 @@ void main() {
       // BUG-SESSDETAIL-03: _scheduleSessionDetailRefresh dùng
       // addPostFrameCallback (club_match_sessions_screen.dart:222), hàm này
       // không xin khung hình; màn đứng yên thì làm mới chỉ chạy ở khung kế tiếp.
-      skip: true,
     );
 
     _test(
@@ -1582,7 +1581,6 @@ void main() {
       },
       // BUG-SESSDETAIL-01: dispose() gọi ref.read (club_match_sessions_screen.dart:232),
       // Riverpod 3 ném StateError ở debug mỗi lần đóng trang chi tiết.
-      skip: true,
     );
 
     _test(
@@ -1599,7 +1597,6 @@ void main() {
       // BUG-SESSDETAIL-02: controller.dispose() ngay sau await showDialog
       // (club_match_sessions_screen.dart:380) khi dialog còn animation đóng,
       // TextField dùng controller đã dispose.
-      skip: true,
     );
   });
 }

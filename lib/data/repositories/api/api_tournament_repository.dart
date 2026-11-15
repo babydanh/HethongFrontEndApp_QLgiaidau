@@ -747,7 +747,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       if (status != null && status != 'all') {
         final s = status.toLowerCase();
         if (s == 'registration') {
-          backendStatus = 'REGISTRATION';
+          backendStatus = 'REGISTRATION_OPEN';
         } else if (s == 'upcoming') {
           backendStatus = 'UPCOMING,REGISTRATION_CLOSED';
         } else if (s == 'in_progress') {

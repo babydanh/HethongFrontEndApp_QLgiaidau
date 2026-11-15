@@ -194,7 +194,21 @@ class ChatSocketService {
     _socket = null;
   }
 
-  void dispose() => disconnect();
+  /// Gỡ mọi callback trước khi ngắt: socket phát `disconnect` sau khi màn đã
+  /// dispose sẽ không còn gọi ngược vào State đã hủy (BUG-CHAT-01).
+  void dispose() {
+    onMessage = null;
+    onTyping = null;
+    onReaction = null;
+    onPollVoted = null;
+    onRevoked = null;
+    onPinned = null;
+    onUserStatus = null;
+    onRoomRead = null;
+    onRoomActivity = null;
+    onConnection = null;
+    disconnect();
+  }
 
   Map<String, dynamic> _asMap(Object? value) {
     if (value is Map<String, dynamic>) {

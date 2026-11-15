@@ -68,7 +68,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-G-02 [BUG-FILTER-01] khách lọc giải theo trạng thái Đăng ký: ra giải đang mở đăng ký, không ra giải đã hoàn thành',
+    'TC-MULTI-G-02 khách lọc giải theo trạng thái Đăng ký: ra giải đang mở đăng ký, không ra giải đã hoàn thành',
     (tester) async {
       _tolerateOverflow();
       final a = await _tourA;
@@ -89,8 +89,6 @@ void main() {
       await shooter.snap('loc-dang-ky');
       await leaveSocialSession(tester, container);
     },
-    // SKIP BUG-FILTER-01: bộ lọc Đăng ký gửi status=REGISTRATION (api_tournament_repository.dart:749-751) nhưng giải mở đăng ký có status REGISTRATION_OPEN nên danh sách rỗng
-    skip: true,
     timeout: testTimeout,
   );
 
