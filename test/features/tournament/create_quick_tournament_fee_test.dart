@@ -197,7 +197,6 @@ void main() {
         final sent = h.submitCount == 0 ? null : h.lastBody['entryFee'];
         expect(sent, isNull, reason: 'entryFee âm không được gửi lên máy chủ');
       },
-      skip: true,
     );
   });
 }

@@ -175,6 +175,7 @@ class _CreatePublicQuickTournamentScreenState
   String _description = '';
   final _maxTeamsController = TextEditingController(text: '16');
   final _entryFeeController = TextEditingController(text: '0');
+  final _advancedTileController = ExpansibleController();
   final _maxCombinedEloController = TextEditingController();
   final _maxTeammateGapController = TextEditingController();
   final _venueNameController = TextEditingController();
@@ -516,7 +517,11 @@ class _CreatePublicQuickTournamentScreenState
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Ô lỗi có thể nằm trong khối nâng cao đang thu gọn: mở ra để người dùng thấy.
+      if (!_advancedTileController.isExpanded) _advancedTileController.expand();
+      return;
+    }
 
     final cached = ref.read(userProfileProvider).asData?.value;
     final isOrganizerOrAdmin =
@@ -2074,6 +2079,9 @@ class _CreatePublicQuickTournamentScreenState
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          controller: _advancedTileController,
+          // Giữ con trong cây khi thu gọn để validator (lệ phí) vẫn chạy khi gửi.
+          maintainState: true,
           initiallyExpanded: false,
           tilePadding: const EdgeInsets.symmetric(horizontal: 12),
           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),

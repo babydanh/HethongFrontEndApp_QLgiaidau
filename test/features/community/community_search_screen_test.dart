@@ -464,9 +464,6 @@ void main() {
 
       expect(find.text('Không tìm thấy kết quả phù hợp'), findsOneWidget);
     },
-    // BUG-SEARCH-01: hasResults đếm mọi loại, không theo chip đang chọn, nên
-    // màn trắng trơn thay vì báo rỗng (community_search_screen.dart:312).
-    skip: true,
   );
 
   testWidgets('initialQuery and initialType run a search on open', (

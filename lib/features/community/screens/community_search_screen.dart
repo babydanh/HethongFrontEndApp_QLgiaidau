@@ -309,11 +309,17 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
         _type == CommunitySearchType.tournaments) {
       sections.add(_buildTournamentSection(results.tournaments, l10n, colors));
     }
+    // Chỉ đếm loại đang hiển thị: API có thể trả mục khác loại chip đã chọn.
+    final showsAll = _type == CommunitySearchType.all;
     final hasResults =
-        results.posts.isNotEmpty ||
-        results.members.isNotEmpty ||
-        results.matches.isNotEmpty ||
-        results.tournaments.isNotEmpty;
+        (showsAll || _type == CommunitySearchType.posts) &&
+            results.posts.isNotEmpty ||
+        (showsAll || _type == CommunitySearchType.members) &&
+            results.members.isNotEmpty ||
+        (showsAll || _type == CommunitySearchType.matches) &&
+            results.matches.isNotEmpty ||
+        (showsAll || _type == CommunitySearchType.tournaments) &&
+            results.tournaments.isNotEmpty;
     if (!hasResults) {
       return Center(
         child: Text(

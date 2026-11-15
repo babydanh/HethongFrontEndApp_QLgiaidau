@@ -233,7 +233,7 @@ void main() {
     });
 
     chatTest(
-      'API phòng lỗi 500: không vỡ màn, kết thúc tải và hiện trạng thái rỗng',
+      'NOTE-CHAT-ERR-01 API phòng lỗi 500: không vỡ màn, hiện lỗi tải kèm nút Thử lại thay vì trạng thái rỗng',
       (tester) async {
         final adapter = FakeApiAdapter({
           'GET /chat/rooms': const FakeReply(500, {'message': 'boom'}),
@@ -242,9 +242,32 @@ void main() {
         await _pump(tester, adapter);
 
         expect(tester.takeException(), isNull);
-        expect(find.text(l10n.chatScreenNoConversations), findsOneWidget);
+        expect(find.text(l10n.chatScreenLoadError), findsOneWidget);
+        expect(find.text(l10n.infoRetry), findsOneWidget);
+        expect(find.text(l10n.chatScreenNoConversations), findsNothing);
       },
     );
+
+    chatTest('NOTE-CHAT-ERR-01 bấm Thử lại sau lỗi tải phòng gọi lại API và hiện danh sách', (
+      tester,
+    ) async {
+      final adapter = _CountingAdapter({
+        'GET /chat/rooms': const FakeReply(500, {'message': 'boom'}),
+        'GET /chat/support/me': _support(const []),
+      });
+      await _pump(tester, adapter);
+      final before = adapter.count('GET', '/chat/rooms');
+
+      adapter.routes['GET /chat/rooms'] = _rooms([
+        _room(id: '1', name: 'Phòng phục hồi'),
+      ]);
+      await tester.tap(find.text(l10n.infoRetry));
+      await _settle(tester);
+
+      expect(adapter.count('GET', '/chat/rooms'), greaterThan(before));
+      expect(find.text('Phòng phục hồi'), findsOneWidget);
+      expect(find.text(l10n.chatScreenLoadError), findsNothing);
+    });
 
     chatTest(
       'mất mạng khi tải phòng: không vỡ màn và vẫn dùng được các tab khác',
@@ -592,7 +615,7 @@ void main() {
       await _settle(tester);
 
       expect(adapter.count('GET', '/chat/rooms'), 2);
-    }, skip: true);
+    });
 
     chatTest('tự làm mới yên lặng sau 15 giây, không hiện lại khung chờ', (
       tester,
