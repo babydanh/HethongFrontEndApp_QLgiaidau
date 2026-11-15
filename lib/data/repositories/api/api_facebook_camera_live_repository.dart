@@ -33,19 +33,4 @@ class ApiFacebookCameraLiveRepository implements IFacebookCameraLiveRepository {
       CreatedFacebookLive.fromJson(
         _map(await _dio.post('/livestream/tournaments/$tournamentId/facebook-live')),
       );
-
-  @override
-  Future<Uri> getConnectUrl(String communityId) async {
-    final raw = _map(
-      await _dio.get(
-        '/livestream/facebook/connect',
-        queryParameters: {'communityId': communityId},
-      ),
-    )['authorizationUrl'];
-    final uri = raw is String ? Uri.tryParse(raw) : null;
-    if (uri == null || uri.scheme != 'https') {
-      throw const FormatException('Invalid Facebook authorization URL.');
-    }
-    return uri;
-  }
 }

@@ -4,15 +4,9 @@ import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-typedef ExternalLauncher = Future<bool> Function(Uri uri);
-
-Future<bool> _launchExternal(Uri uri) =>
-    launchUrl(uri, mode: LaunchMode.externalApplication);
-
-/// "Tạo live trên fanpage Facebook" trong form tạo camera: nút Kết nối/Tạo live
-/// rồi khối khoá phát. Khoá phát chỉ nằm trong state của widget này.
+/// "Tạo live trên fanpage Facebook" trong form tạo camera: nút Tạo live (fanpage
+/// chung của hệ thống) rồi khối khoá phát. Khoá phát chỉ nằm trong state của widget này.
 class FacebookLivePanel extends StatefulWidget {
   const FacebookLivePanel({
     super.key,
@@ -20,7 +14,6 @@ class FacebookLivePanel extends StatefulWidget {
     required this.repository,
     required this.onCreated,
     this.enabled = true,
-    this.launcher = _launchExternal,
   });
 
   final String tournamentId;
@@ -29,40 +22,22 @@ class FacebookLivePanel extends StatefulWidget {
   /// Cha điền link xem vào ô link.
   final ValueChanged<String> onCreated;
   final bool enabled;
-  final ExternalLauncher launcher;
 
   @override
   State<FacebookLivePanel> createState() => _FacebookLivePanelState();
 }
 
-class _FacebookLivePanelState extends State<FacebookLivePanel>
-    with WidgetsBindingObserver {
+class _FacebookLivePanelState extends State<FacebookLivePanel> {
   FacebookLiveConnection? _connection;
   bool _loadFailed = false;
   bool _busy = false;
-  bool _awaitingReturn = false;
   FacebookLiveError? _error;
   CreatedFacebookLive? _live;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _load();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  /// Quay lại app sau khi cấp quyền ở trình duyệt thì tự kiểm tra lại.
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _awaitingReturn && !_busy) {
-      _load();
-    }
   }
 
   Future<void> _load() async {
@@ -72,10 +47,7 @@ class _FacebookLivePanelState extends State<FacebookLivePanel>
         widget.tournamentId,
       );
       if (!mounted) return;
-      setState(() {
-        _connection = connection;
-        if (connection.connected) _awaitingReturn = false;
-      });
+      setState(() => _connection = connection);
     } on Object {
       if (!mounted) return;
       setState(() => _loadFailed = true);
@@ -98,18 +70,6 @@ class _FacebookLivePanelState extends State<FacebookLivePanel>
     }
   }
 
-  Future<void> _connect() => _run(() async {
-    final communityId = _connection?.communityId;
-    if (communityId == null) return;
-    final url = await widget.repository.getConnectUrl(communityId);
-    final opened = await widget.launcher(url);
-    if (!opened) {
-      if (mounted) setState(() => _error = FacebookLiveError.browser);
-      return;
-    }
-    if (mounted) setState(() => _awaitingReturn = true);
-  });
-
   Future<void> _create() => _run(() async {
     final live = await widget.repository.createLive(widget.tournamentId);
     if (!mounted) return;
@@ -123,7 +83,6 @@ class _FacebookLivePanelState extends State<FacebookLivePanel>
     final colors = context.colors;
     final connection = _connection;
     final connected = connection?.connected == true;
-    final hasCommunity = connection?.communityId != null;
     final canTap = widget.enabled && !_busy;
     final live = _live;
     return Container(
@@ -175,20 +134,10 @@ class _FacebookLivePanelState extends State<FacebookLivePanel>
               child: Text(l10n.tournamentCameraFbRecheck),
             ),
           ],
-          if (connection != null && live == null) ...[
-            if (connected && connection.pageName != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  l10n.tournamentCameraFbPage(connection.pageName!),
-                  key: const ValueKey('fb-live-page'),
-                ),
-              ),
+          if (connection != null && live == null && connected)
             FilledButton.icon(
-              key: ValueKey(connected ? 'fb-live-create' : 'fb-live-connect'),
-              onPressed: canTap && (connected || hasCommunity)
-                  ? (connected ? _create : _connect)
-                  : null,
+              key: const ValueKey('fb-live-create'),
+              onPressed: canTap ? _create : null,
               style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
               icon: _busy
                   ? const SizedBox(
@@ -196,31 +145,19 @@ class _FacebookLivePanelState extends State<FacebookLivePanel>
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Icon(connected ? Icons.live_tv_outlined : Icons.link),
+                  : const Icon(Icons.live_tv_outlined),
               label: Text(
                 _busy
                     ? l10n.tournamentCameraFbWorking
-                    : connected
-                    ? l10n.tournamentCameraFbCreate
-                    : l10n.tournamentCameraFbConnect,
+                    : l10n.tournamentCameraFbCreate,
               ),
             ),
-            if (!connected && !hasCommunity)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(l10n.tournamentCameraFbNoCommunity),
-              ),
-            if (!connected && _awaitingReturn) ...[
-              const SizedBox(height: 8),
-              Text(l10n.tournamentCameraFbConnectHelp),
-              TextButton(
-                key: const ValueKey('fb-live-recheck'),
-                onPressed: canTap ? _load : null,
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                child: Text(l10n.tournamentCameraFbRecheck),
-              ),
-            ],
-          ],
+          if (connection != null && live == null && !connected)
+            Text(
+              l10n.tournamentCameraFbErrorNotConnected,
+              key: const ValueKey('fb-live-not-configured'),
+              style: TextStyle(color: colors.textSecondary),
+            ),
           if (_error != null) ...[
             const SizedBox(height: 8),
             Semantics(

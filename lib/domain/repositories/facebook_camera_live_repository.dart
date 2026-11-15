@@ -1,4 +1,4 @@
-/// Giải đã nối fanpage Facebook chưa (`GET .../facebook-live/connection`).
+/// Server đã cấu hình fanpage chung chưa (`GET .../facebook-live/connection`).
 class FacebookLiveConnection {
   const FacebookLiveConnection({
     required this.communityId,
@@ -64,7 +64,4 @@ abstract class IFacebookCameraLiveRepository {
 
   /// Idempotent ở Backend: bấm lại trả đúng live đang chờ.
   Future<CreatedFacebookLive> createLive(String tournamentId);
-
-  /// URL OAuth để mở bằng trình duyệt ngoài.
-  Future<Uri> getConnectUrl(String communityId);
 }

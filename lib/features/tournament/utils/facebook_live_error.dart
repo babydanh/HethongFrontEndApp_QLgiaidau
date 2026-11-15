@@ -8,11 +8,10 @@ enum FacebookLiveError {
   network,
   unavailable,
   forbidden,
-  browser,
   generic,
 }
 
-/// Map lỗi tạo/kết nối live Facebook như Web `facebookLiveErrorKey`.
+/// Map lỗi tạo live Facebook như Web `facebookLiveErrorKey`.
 FacebookLiveError facebookLiveError(Object error) {
   if (error is! DioException) return FacebookLiveError.generic;
   final response = error.response;
@@ -43,6 +42,5 @@ String facebookLiveErrorText(AppLocalizations l10n, FacebookLiveError error) =>
       FacebookLiveError.network => l10n.tournamentCameraFbErrorNetwork,
       FacebookLiveError.unavailable => l10n.tournamentCameraFbErrorUnavailable,
       FacebookLiveError.forbidden => l10n.tournamentCameraFbErrorForbidden,
-      FacebookLiveError.browser => l10n.tournamentCameraFbErrorBrowser,
       FacebookLiveError.generic => l10n.tournamentCameraFbErrorGeneric,
     };
