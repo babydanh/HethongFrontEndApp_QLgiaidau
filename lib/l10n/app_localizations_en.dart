@@ -5633,6 +5633,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatScreenNoConversations => 'No conversations yet.';
 
   @override
+  String get chatScreenLoadError => 'Could not load conversations.';
+
+  @override
   String get chatScreenAiGreeting =>
       'Hello! I am Sporto AI assistant. You can ask about competition rules, ELO calculations, or how to join tournaments!';
 

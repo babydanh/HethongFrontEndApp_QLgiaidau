@@ -10520,6 +10520,12 @@ abstract class AppLocalizations {
   /// **'Chưa có cuộc trò chuyện nào.'**
   String get chatScreenNoConversations;
 
+  /// No description provided for @chatScreenLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách trò chuyện.'**
+  String get chatScreenLoadError;
+
   /// No description provided for @chatScreenAiGreeting.
   ///
   /// In vi, this message translates to:
