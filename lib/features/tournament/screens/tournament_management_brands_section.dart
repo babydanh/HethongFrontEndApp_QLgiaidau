@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/pending_uploads.dart';
+import 'package:app_quanly_giaidau/domain/repositories/community_social_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -35,12 +36,15 @@ class _TournamentManagementBrandsSectionState
   // Images uploaded in this session and not saved yet. The logo/banner loaded
   // from widget.tournament are saved images and are never tracked here.
   late final PendingUploads _pendingUploads;
+  // Set on the first upload (not in initState: the provider needs app config
+  // that widget tests do not set up) so dispose can delete without using ref.
+  ICommunitySocialRepository? _uploadRepository;
 
   @override
   void initState() {
     super.initState();
     _pendingUploads = PendingUploads(
-      ref.read(communitySocialRepositoryProvider).deleteUploadedImage,
+      (url) => _uploadRepository!.deleteUploadedImage(url),
     );
     _galleryFuture = ref
         .read(tournamentManagementRepositoryProvider)
@@ -184,9 +188,12 @@ class _TournamentManagementBrandsSectionState
         imageQuality: 88,
       );
       if (picked == null || !mounted) return;
-      final url = await ref
-          .read(communitySocialRepositoryProvider)
-          .uploadImage(await picked.readAsBytes(), picked.name);
+      final social = ref.read(communitySocialRepositoryProvider);
+      _uploadRepository = social;
+      final url = await social.uploadImage(
+        await picked.readAsBytes(),
+        picked.name,
+      );
       _pendingUploads.track(isLogo ? 'logo' : 'banner', url);
       await ref.read(tournamentRepositoryProvider).update(
         widget.tournament.id,
@@ -231,9 +238,12 @@ class _TournamentManagementBrandsSectionState
         imageQuality: 88,
       );
       if (picked == null || !mounted) return;
-      final url = await ref
-          .read(communitySocialRepositoryProvider)
-          .uploadImage(await picked.readAsBytes(), picked.name);
+      final social = ref.read(communitySocialRepositoryProvider);
+      _uploadRepository = social;
+      final url = await social.uploadImage(
+        await picked.readAsBytes(),
+        picked.name,
+      );
       _pendingUploads.track('gallery:$url', url);
       await ref
           .read(tournamentManagementRepositoryProvider)
