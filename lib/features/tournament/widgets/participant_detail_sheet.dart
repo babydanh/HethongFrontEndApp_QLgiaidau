@@ -1137,6 +1137,7 @@ const Set<String> _systemResponseKeys = {
   'is_wildcard',
   'importedElo',
   'eloSource',
+  'memberElos',
 };
 
 String _humanizeResponseKey(String key) {

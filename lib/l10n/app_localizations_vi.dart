@@ -20319,6 +20319,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get rosterListNoAccount => 'Chưa có tài khoản';
 
   @override
+  String rosterScoreLine(String parts) {
+    return 'Điểm trình: $parts';
+  }
+
+  @override
+  String rosterScoreTotal(String parts, String total) {
+    return '$parts · tổng $total';
+  }
+
+  @override
+  String get rosterScoreFlagRange =>
+      'File ghi một khoảng điểm, đang lấy số đầu';
+
+  @override
+  String get rosterScoreFlagMultiple =>
+      'Ô có nhiều điểm khác nhau, đang lấy điểm đầu tiên';
+
+  @override
+  String get rosterScoreFlagConverted =>
+      'Đã đổi thang cho khớp cột (ví dụ 6.2 thành 620)';
+
+  @override
+  String get rosterScoreFlagUnreadable =>
+      'Không đọc được điểm, nội dung ô nằm trong ghi chú';
+
+  @override
   String get socialLocationInlineNameLabel => 'Địa điểm';
 
   @override

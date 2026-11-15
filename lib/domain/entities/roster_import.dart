@@ -16,6 +16,8 @@ class RosterImportBatchItem {
     required this.teamName,
     this.elo,
     this.eloSource,
+    this.player1Elo,
+    this.player2Elo,
     this.isPaid,
     this.autoApprove,
     this.sourceRowIndex,
@@ -40,6 +42,10 @@ class RosterImportBatchItem {
 
   /// Thang của [elo]: `ELO` hoặc `DUPR`. Backend kiểm khoảng theo thang này.
   final String? eloSource;
+
+  /// Điểm riêng từng VĐV (cùng thang [eloSource]). Có ít nhất một thì gửi thay [elo]: backend tự tính điểm đôi.
+  final num? player1Elo;
+  final num? player2Elo;
   final bool? isPaid;
   final bool? autoApprove;
   final int? sourceRowIndex;
@@ -61,8 +67,13 @@ class RosterImportBatchItem {
     if (_present(player2Email)) 'player2Email': player2Email,
     if (_present(player2Phone)) 'player2Phone': player2Phone,
     'teamName': teamName,
-    if (elo != null) 'elo': elo,
-    if (elo != null && eloSource != null) 'eloSource': eloSource,
+    if (_hasMemberElo) ...{
+      if (player1Elo != null) 'player1Elo': player1Elo,
+      if (player2Elo != null) 'player2Elo': player2Elo,
+    } else if (elo != null)
+      'elo': elo,
+    if ((_hasMemberElo || elo != null) && eloSource != null)
+      'eloSource': eloSource,
     if (isPaid != null) 'isPaid': isPaid,
     if (autoApprove != null) 'autoApprove': autoApprove,
     if (sourceRowIndex != null) 'sourceRowIndex': sourceRowIndex,
@@ -73,6 +84,8 @@ class RosterImportBatchItem {
     if (_present(confirmedPlayer2UserId))
       'confirmedPlayer2UserId': confirmedPlayer2UserId,
   };
+
+  bool get _hasMemberElo => player1Elo != null || player2Elo != null;
 }
 
 class RosterImportBatchGroup {

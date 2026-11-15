@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_draft.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_widgets.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/utils/roster_excel_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Trạng thái hiển thị của một thẻ cặp.
@@ -175,11 +176,73 @@ class RosterPairCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  _RosterScoreLine(parsed: parsed),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Điểm trình của thẻ: `620 + 605 · tổng 1225`; điểm cần xem lại tô vàng kèm lý do. Không có điểm thì ẩn.
+class _RosterScoreLine extends StatelessWidget {
+  const _RosterScoreLine({required this.parsed});
+
+  final RosterParsedRow parsed;
+
+  static String _format(num value) => value == value.roundToDouble()
+      ? value.round().toString()
+      : value.toStringAsFixed(2);
+
+  static String _flagLabel(AppLocalizations l10n, String flag) =>
+      switch (flag) {
+        'RANGE' => l10n.rosterScoreFlagRange,
+        'MULTIPLE' => l10n.rosterScoreFlagMultiple,
+        'CONVERTED' => l10n.rosterScoreFlagConverted,
+        _ => l10n.rosterScoreFlagUnreadable,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final scores = rosterRowScores(parsed);
+    final flagged = parsed.eloFlags.isNotEmpty;
+    if (scores.parts.isEmpty && !flagged) return const SizedBox.shrink();
+    final parts = scores.parts.isEmpty
+        ? '—'
+        : scores.parts.map(_format).join(' + ');
+    final shown = scores.total == null
+        ? parts
+        : l10n.rosterScoreTotal(parts, _format(scores.total!));
+    final color = flagged ? colors.warning : colors.textMuted;
+    return Padding(
+      key: ValueKey('roster-score-${parsed.sourceRowIndex}'),
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (flagged) ...[
+            Icon(Icons.warning_amber_rounded, size: 16, color: color),
+            const SizedBox(width: 4),
+          ],
+          Expanded(
+            child: Text(
+              [
+                l10n.rosterScoreLine(shown),
+                if (flagged) _flagLabel(l10n, parsed.eloFlags.first),
+              ].join('\n'),
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

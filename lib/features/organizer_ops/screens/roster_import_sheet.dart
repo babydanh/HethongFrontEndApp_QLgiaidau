@@ -623,6 +623,9 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       teamName: teamName,
       elo: parsed.elo,
       eloSource: parsed.eloSource,
+      player1Elo: parsed.player1Elo,
+      // VĐV 2 đã bị bỏ thì điểm của VĐV đó không đi theo đôi.
+      player2Elo: name2 == null ? null : parsed.player2Elo,
       isPaid: parsed.isPaid,
       autoApprove: _autoApprove,
       // Cặp thêm tay không có dòng nguồn: Backend yêu cầu sourceRowIndex >= 1.
@@ -786,6 +789,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
       clearPlayer1Phone: edit.player1Phone == null,
       player2Name: edit.player2Name,
       clearPlayer2Name: edit.player2Name == null,
+      // Bỏ VĐV 2 thì bỏ cả điểm của VĐV đó; người nhập sau không thừa hưởng.
+      clearPlayer2Elo: edit.player2Name == null,
       player2Email: edit.player2Email,
       clearPlayer2Email: edit.player2Email == null,
       player2Phone: edit.player2Phone,

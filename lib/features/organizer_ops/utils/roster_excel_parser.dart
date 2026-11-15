@@ -51,6 +51,9 @@ class RosterParsedRow {
     this.player2Phone,
     this.elo,
     this.eloSource,
+    this.player1Elo,
+    this.player2Elo,
+    this.eloFlags = const [],
     this.isPaid = false,
     this.notes,
     this.fileIndex = '',
@@ -79,6 +82,13 @@ class RosterParsedRow {
 
   /// Thang của điểm: `ELO` (100–3000) hoặc `DUPR` (2–8); null khi không có điểm.
   final String? eloSource;
+
+  /// Điểm riêng của từng VĐV khi cặp gộp từ hai dòng, cùng thang [eloSource].
+  final num? player1Elo;
+  final num? player2Elo;
+
+  /// Lý do điểm cần BTC xem lại: RANGE, MULTIPLE, CONVERTED, UNREADABLE (xem trước tô vàng).
+  final List<String> eloFlags;
 
   /// Đã thanh toán theo file. Mặc định chưa: file không xác nhận thì không ai được đánh dấu.
   final bool isPaid;
@@ -126,6 +136,10 @@ class RosterParsedRow {
     num? elo,
     bool clearElo = false,
     String? eloSource,
+    num? player1Elo,
+    num? player2Elo,
+    bool clearPlayer2Elo = false,
+    List<String>? eloFlags,
     bool? isPaid,
     String? notes,
     bool clearNotes = false,
@@ -155,6 +169,11 @@ class RosterParsedRow {
           : (player2Phone ?? this.player2Phone),
       elo: clearElo ? null : (elo ?? this.elo),
       eloSource: clearElo ? null : (eloSource ?? this.eloSource),
+      player1Elo: clearElo ? null : (player1Elo ?? this.player1Elo),
+      player2Elo: clearElo || clearPlayer2Elo
+          ? null
+          : (player2Elo ?? this.player2Elo),
+      eloFlags: eloFlags ?? this.eloFlags,
       isPaid: isPaid ?? this.isPaid,
       notes: clearNotes ? null : (notes ?? this.notes),
       fileIndex: fileIndex,
@@ -164,6 +183,21 @@ class RosterParsedRow {
       partnerHint: partnerHint,
     );
   }
+}
+
+/// Điểm hiện ở xem trước: điểm riêng từng VĐV (`620 + 605`) kèm tổng đôi khi đủ hai, ngược lại điểm của dòng.
+/// VĐV 2 đã bị bỏ thì điểm của người đó không hiện.
+({List<num> parts, num? total}) rosterRowScores(RosterParsedRow row) {
+  final player2Elo = row.player2Name == null ? null : row.player2Elo;
+  if (row.player1Elo == null && player2Elo == null) {
+    return (parts: [if (row.elo != null) row.elo!], total: null);
+  }
+  final parts = [?row.player1Elo, ?player2Elo];
+  // DUPR có 2 số lẻ: làm tròn tổng để 3.1 + 4.2 không ra số lẻ thừa.
+  final total = parts.length == 2
+      ? ((parts[0] + parts[1]) * 100).round() / 100
+      : null;
+  return (parts: parts, total: total);
 }
 
 /// Số dòng header được quét từ đầu sheet (giống `ROSTER_HEADER_SCAN_ROWS` của web).
@@ -515,8 +549,22 @@ final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 /// Số kiểu `1.250` hoặc `1,250` (dấu nghìn), chỉ khi các nhóm sau dấu đều đủ 3 chữ số.
 final RegExp _thousandsElo = RegExp(r'^\d{1,3}([.,\s]\d{3})+$');
 
-/// Số đầu tiên trong chữ tự do (`620 Robinson , 625-630 CCTV` cho 620).
-final RegExp _firstNumber = RegExp(r'\d+(?:[.,]\d+)?');
+/// Mọi số trong chữ tự do (`620 Robinson , 625-630 CCTV`).
+final RegExp _scoreNumber = RegExp(r'\d+(?:[.,]\d+)?');
+
+/// Chữ đứng trước làm số kế tiếp thành hạng, vòng, số lần hay năm, không phải điểm: `Top 8`, `Giải 2`, `Năm 2025`.
+final RegExp _notAScoreBefore = RegExp(
+  r'(?:^|[^\p{L}])(?:top|giải|hạng|vòng|lần|bảng|năm)\s*[:#.]?\s*$',
+  caseSensitive: false,
+  unicode: true,
+);
+
+/// Số dính chữ (`4P`, `6xx`, `B1`) là nhãn, không phải điểm.
+final RegExp _letter = RegExp(r'\p{L}', unicode: true);
+
+/// Hai số nối thành khoảng: `605-610`, `600~605`.
+final RegExp _rangeAfter = RegExp(r'^\s*[-–~]\s*\d');
+final RegExp _rangeBefore = RegExp(r'\d\s*[-–~]\s*$');
 
 /// Ô chỉ là một số: chữ của ô không cần ghi chú khi số đã đọc được.
 final RegExp _bareNumber = RegExp(r'^\d+(?:[.,]\d+)?$');
@@ -560,31 +608,89 @@ const Set<String> _paidNo = {
 /// Số tiền: chữ số với dấu `.`/`,` ngăn nhóm và đơn vị tùy chọn (`500000`, `500.000đ`, `300k`).
 final RegExp _moneyAmount = RegExp(r'^\d[\d.,\s]*(?:k|tr|d|vnd|vnđ|đ)?$');
 
-/// Điểm trong một ô: số đầu tiên từ 2.0 đến 8.0 là DUPR, từ 100 đến 999 là ELO. Ô chỉ có số nghìn
-/// (`1.250`, `1250`) là ELO đến 3000. Không có số hợp lệ thì trả null và người gọi giữ chữ làm ghi chú.
-({num value, String source})? parseRosterScore(String text) {
-  final trimmed = text.trim();
-  if (_thousandsElo.hasMatch(trimmed)) {
-    final value = int.parse(trimmed.replaceAll(RegExp(r'[.,\s]'), ''));
-    return value >= 100 && value <= 3000 ? (value: value, source: 'ELO') : null;
-  }
-  final match = _firstNumber.firstMatch(trimmed);
-  if (match == null) return null;
-  final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
-  if (value == null) return null;
+/// Điểm đọc được từ một ô, kèm cờ khi BTC nên xem lại (`RANGE`, `MULTIPLE`).
+typedef RosterScore = ({num value, String source, String? flag});
+
+/// 100–999 là ELO, 2–8 là DUPR; 1000–3000 chỉ là ELO khi số chiếm trọn ô.
+({num value, String source})? _classifyScore(double value, bool wholeCell) {
   final isInteger = value == value.roundToDouble();
   if (isInteger && value >= 100 && value <= 999) {
     return (value: value.round(), source: 'ELO');
   }
-  // Một số trần 1000–3000 (`1250`) là ELO; trong chữ tự do thì không đủ chắc.
-  if (isInteger &&
-      value >= 1000 &&
-      value <= 3000 &&
-      _bareNumber.hasMatch(trimmed)) {
+  if (wholeCell && isInteger && value >= 1000 && value <= 3000) {
     return (value: value.round(), source: 'ELO');
   }
   if (value >= 2 && value <= 8) return (value: value, source: 'DUPR');
   return null;
+}
+
+/// Các điểm trong chữ tự do theo thứ tự, bỏ số dính chữ hoặc đứng sau chữ chỉ hạng/vòng/năm.
+List<({num value, String source, bool inRange})> _scoreCandidates(String text) {
+  final found = <({num value, String source, bool inRange})>[];
+  for (final match in _scoreNumber.allMatches(text)) {
+    final before = text.substring(0, match.start);
+    final after = text.substring(match.end);
+    final touchesLetter =
+        (before.isNotEmpty && _letter.hasMatch(before[before.length - 1])) ||
+        (after.isNotEmpty && _letter.hasMatch(after[0]));
+    if (touchesLetter || _notAScoreBefore.hasMatch(before)) continue;
+    final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
+    final score = value == null ? null : _classifyScore(value, false);
+    if (score == null) continue;
+    found.add((
+      value: score.value,
+      source: score.source,
+      inRange: _rangeAfter.hasMatch(after) || _rangeBefore.hasMatch(before),
+    ));
+  }
+  return found;
+}
+
+/// Điểm của một ô chữ tự do. Điểm ELO 100–999 đứng riêng thắng điểm DUPR: `Top 8 CCTV 610`, `4P 600` cho 610,
+/// 600. Điểm nằm trong khoảng (`605-610`) mang cờ RANGE, ô có nhiều điểm khác nhau mang cờ MULTIPLE. Ô chỉ có
+/// số nghìn (`1.250`, `1250`) là ELO đến 3000. Không đọc được thì trả null và người gọi giữ chữ làm ghi chú.
+RosterScore? parseRosterScore(String text) {
+  final trimmed = text.trim();
+  if (_thousandsElo.hasMatch(trimmed)) {
+    final value = int.parse(trimmed.replaceAll(RegExp(r'[.,\s]'), ''));
+    return value >= 100 && value <= 3000
+        ? (value: value, source: 'ELO', flag: null)
+        : null;
+  }
+  if (_bareNumber.hasMatch(trimmed)) {
+    final value = double.tryParse(trimmed.replaceAll(',', '.'));
+    final score = value == null ? null : _classifyScore(value, true);
+    return score == null
+        ? null
+        : (value: score.value, source: score.source, flag: null);
+  }
+  final scores = _scoreCandidates(trimmed);
+  if (scores.isEmpty) return null;
+  final chosen = scores.firstWhere(
+    (score) => score.source == 'ELO',
+    orElse: () => scores.first,
+  );
+  final distinct = scores.map((score) => score.value).toSet().length;
+  final flag = chosen.inRange ? 'RANGE' : (distinct > 1 ? 'MULTIPLE' : null);
+  return (value: chosen.value, source: chosen.source, flag: flag);
+}
+
+/// Cột phần lớn là điểm ELO ba chữ số mà vài ô ghi `6.2`: các ô đó thiếu số 0, đọc thành 620 và mang cờ
+/// CONVERTED. Cột phần lớn là DUPR giữ nguyên.
+List<RosterParsedRow> _alignScoreScale(List<RosterParsedRow> rows) {
+  final eloCount = rows.where((row) => row.eloSource == 'ELO').length;
+  final duprCount = rows.where((row) => row.eloSource == 'DUPR').length;
+  if (duprCount == 0 || eloCount <= duprCount) return rows;
+  return [
+    for (final row in rows)
+      row.eloSource == 'DUPR' && row.elo != null
+          ? row.copyWith(
+              elo: (row.elo! * 100).round(),
+              eloSource: 'ELO',
+              eloFlags: const ['CONVERTED'],
+            )
+          : row,
+  ];
 }
 
 /// Dấu thanh toán của một ô: `x`, `✓`, `đã ck`, `paid`, `1` và số tiền lớn hơn 0 là đã trả; `chưa`,
@@ -998,6 +1104,11 @@ List<RosterParsedRow> parseRosterSheet(
         player2Phone: player2Phone,
         elo: score?.value,
         eloSource: score?.source,
+        eloFlags: [
+          if (score?.flag != null) score!.flag!,
+          // Ô có chữ số mà không đọc ra điểm: BTC xem lại, chữ vẫn nằm trong ghi chú.
+          if (score == null && RegExp(r'\d').hasMatch(scoreText)) 'UNREADABLE',
+        ],
         isPaid: parseRosterPaid(
           _cellAt(cells, mapping.indexOf(RosterSlot.isPaid)),
           fallback: defaultPaid,
@@ -1020,7 +1131,7 @@ List<RosterParsedRow> parseRosterSheet(
     );
   }
   // Mã từ số thứ tự của file trước, rồi gợi ý đồng đội cho các dòng còn chưa có cặp.
-  return assignHintPairCodes(assignSttPairCodes(parsed));
+  return assignHintPairCodes(assignSttPairCodes(_alignScoreScale(parsed)));
 }
 
 int? _firstWhereIndex(List<String> items, bool Function(String) test) {

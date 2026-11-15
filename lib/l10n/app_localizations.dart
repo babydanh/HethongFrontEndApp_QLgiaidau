@@ -36517,6 +36517,42 @@ abstract class AppLocalizations {
   /// **'Chưa có tài khoản'**
   String get rosterListNoAccount;
 
+  /// No description provided for @rosterScoreLine.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm trình: {parts}'**
+  String rosterScoreLine(String parts);
+
+  /// No description provided for @rosterScoreTotal.
+  ///
+  /// In vi, this message translates to:
+  /// **'{parts} · tổng {total}'**
+  String rosterScoreTotal(String parts, String total);
+
+  /// No description provided for @rosterScoreFlagRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'File ghi một khoảng điểm, đang lấy số đầu'**
+  String get rosterScoreFlagRange;
+
+  /// No description provided for @rosterScoreFlagMultiple.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô có nhiều điểm khác nhau, đang lấy điểm đầu tiên'**
+  String get rosterScoreFlagMultiple;
+
+  /// No description provided for @rosterScoreFlagConverted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đổi thang cho khớp cột (ví dụ 6.2 thành 620)'**
+  String get rosterScoreFlagConverted;
+
+  /// No description provided for @rosterScoreFlagUnreadable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đọc được điểm, nội dung ô nằm trong ghi chú'**
+  String get rosterScoreFlagUnreadable;
+
   /// No description provided for @socialLocationInlineNameLabel.
   ///
   /// In vi, this message translates to:

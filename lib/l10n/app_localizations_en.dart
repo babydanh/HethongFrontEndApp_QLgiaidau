@@ -20404,6 +20404,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rosterListNoAccount => 'No account yet';
 
   @override
+  String rosterScoreLine(String parts) {
+    return 'Rating: $parts';
+  }
+
+  @override
+  String rosterScoreTotal(String parts, String total) {
+    return '$parts · total $total';
+  }
+
+  @override
+  String get rosterScoreFlagRange =>
+      'The file gives a score range; the first number is used';
+
+  @override
+  String get rosterScoreFlagMultiple =>
+      'The cell holds several scores; the first one is used';
+
+  @override
+  String get rosterScoreFlagConverted =>
+      'Rescaled to match the column (for example 6.2 to 620)';
+
+  @override
+  String get rosterScoreFlagUnreadable =>
+      'No score could be read; the cell text is kept in the notes';
+
+  @override
   String get socialLocationInlineNameLabel => 'Place';
 
   @override

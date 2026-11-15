@@ -319,25 +319,57 @@ List<RosterParsedRow> assignHintPairCodes(List<RosterParsedRow> rows) {
 
 // ---- Gộp hai dòng thành một cặp ----
 
+/// Điểm của cặp gộp từ hai dòng.
+typedef PairFileData = ({
+  bool isPaid,
+  num? elo,
+  String? eloSource,
+  num? player1Elo,
+  num? player2Elo,
+  List<String> eloFlags,
+});
+
 /// Điểm của cặp: trung bình các điểm đọc được cùng thang (làm tròn; DUPR 2 số lẻ), hoặc điểm duy nhất
-/// đọc được; hai thang khác nhau thì không trộn. Đã trả nếu file xác nhận một trong hai VĐV.
-({bool isPaid, num? elo, String? eloSource}) mergePairFileData(
-  RosterParsedRow first,
-  RosterParsedRow second,
-) {
+/// đọc được; hai thang khác nhau thì không trộn. Mỗi VĐV giữ điểm riêng ([PairFileData.player1Elo],
+/// [PairFileData.player2Elo]) để tính tổng đôi; cờ điểm của hai dòng được giữ. Đã trả nếu file xác nhận
+/// một trong hai VĐV.
+PairFileData mergePairFileData(RosterParsedRow first, RosterParsedRow second) {
   final paid = first.isPaid || second.isPaid;
+  final flags = {...first.eloFlags, ...second.eloFlags}.toList();
   if (first.elo == null || second.elo == null) {
-    final only = first.elo == null ? second : first;
-    return (isPaid: paid, elo: only.elo, eloSource: only.eloSource);
+    final firstHas = first.elo != null;
+    final only = firstHas ? first : second;
+    return (
+      isPaid: paid,
+      elo: only.elo,
+      eloSource: only.eloSource,
+      player1Elo: firstHas ? first.elo : null,
+      player2Elo: firstHas ? null : second.elo,
+      eloFlags: flags,
+    );
   }
   if (first.eloSource != second.eloSource) {
-    return (isPaid: paid, elo: null, eloSource: null);
+    return (
+      isPaid: paid,
+      elo: null,
+      eloSource: null,
+      player1Elo: null,
+      player2Elo: null,
+      eloFlags: flags,
+    );
   }
   final mean = (first.elo! + second.elo!) / 2;
   final value = first.eloSource == 'DUPR'
       ? (mean * 100).round() / 100
       : mean.round();
-  return (isPaid: paid, elo: value, eloSource: first.eloSource);
+  return (
+    isPaid: paid,
+    elo: value,
+    eloSource: first.eloSource,
+    player1Elo: first.elo,
+    player2Elo: second.elo,
+    eloFlags: flags,
+  );
 }
 
 RosterParsedRow _absorbPartner(RosterParsedRow row, RosterParsedRow second) {
@@ -354,6 +386,9 @@ RosterParsedRow _absorbPartner(RosterParsedRow row, RosterParsedRow second) {
     elo: merged.elo,
     eloSource: merged.eloSource,
     clearElo: merged.elo == null,
+    player1Elo: merged.player1Elo,
+    player2Elo: merged.player2Elo,
+    eloFlags: merged.eloFlags,
   );
 }
 
@@ -420,6 +455,9 @@ List<RosterParsedRow> pairConsecutiveRows(List<RosterParsedRow> rows) {
         elo: merged.elo,
         eloSource: merged.eloSource,
         clearElo: merged.elo == null,
+        player1Elo: merged.player1Elo,
+        player2Elo: merged.player2Elo,
+        eloFlags: merged.eloFlags,
       ),
     );
     index += 2;
