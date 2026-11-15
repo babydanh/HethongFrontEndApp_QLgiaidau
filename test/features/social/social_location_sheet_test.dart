@@ -73,13 +73,30 @@ const _noCenter = Region(
   provinceCode: '79',
 );
 
+const _thuDuc = Region(
+  code: '79-003',
+  name: 'Phường Thủ Đức',
+  provinceCode: '79',
+  latitude: 10.85,
+  longitude: 106.75,
+);
+const _dongHung = Region(
+  code: '79-004',
+  name: 'Phường Đông Hưng Thuận',
+  provinceCode: '79',
+  latitude: 10.86,
+  longitude: 106.62,
+);
+
 class _FakeRegionRepository implements IRegionRepository {
   @override
   Future<List<Region>> getProvinces() async => const [_hcm, _empty];
 
   @override
   Future<List<Region>> getWardsByProvince(String provinceCode) async =>
-      provinceCode == '79' ? const [_benNghe, _noCenter] : const [];
+      provinceCode == '79'
+      ? const [_benNghe, _noCenter, _thuDuc, _dongHung]
+      : const [];
 
   @override
   Future<List<Region>> searchRegions(String query, {int limit = 10}) async =>
@@ -112,6 +129,16 @@ const _venue = SocialPlace(
   venueId: 'venue-1',
   provinceCode: '79',
   wardCode: '79-001',
+);
+
+const _venueLong = SocialPlace(
+  name: 'Sân Đông Hưng',
+  formattedAddress: '3 Tô Ký',
+  latitude: 10.86,
+  longitude: 106.62,
+  venueId: 'venue-3',
+  provinceCode: '79',
+  wardCode: '79-004',
 );
 
 const _venueNoPin = SocialPlace(
@@ -156,8 +183,9 @@ Future<_Harness> _pump(
   _FakeLocationRepository repository, {
   bool open = true,
   SocialPlace? initial,
+  double width = 800,
 }) async {
-  tester.view.physicalSize = const Size(800, 2000);
+  tester.view.physicalSize = Size(width, 2000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final harness = _Harness()..latest = initial;
@@ -555,5 +583,113 @@ void main() {
     expect(_confirmEnabled(tester), isTrue);
     await _confirm(tester);
     expect(harness.latest?.venueId, 'venue-2');
+  });
+
+  testWidgets('TC-SOCIAL-INLINE-APP-21 region boxes stay enabled on a venue', (
+    tester,
+  ) async {
+    await _pump(tester, _FakeLocationRepository(), initial: _venue);
+
+    for (final key in ['social-inline-province', 'social-inline-ward']) {
+      expect(
+        tester.widget<DropdownMenu<Region>>(find.byKey(ValueKey(key))).enabled,
+        isTrue,
+      );
+    }
+    await _choose(tester, 'social-inline-ward', _benNghe.name);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TC-SOCIAL-INLINE-APP-22 changing the ward releases the venue', (
+    tester,
+  ) async {
+    final harness = await _pump(
+      tester,
+      _FakeLocationRepository(results: const [_venue]),
+    );
+    await _typeName(tester, 'Tao Đàn');
+    await tester.tap(find.text('Sân Tao Đàn'));
+    await tester.pumpAndSettle();
+    expect(_confirmEnabled(tester), isTrue);
+
+    await _choose(tester, 'social-inline-ward', _thuDuc.name);
+
+    // New-place mode: name kept, draft pin on the new ward, nothing confirmed.
+    final name = tester.widget<TextField>(
+      find.byKey(const ValueKey('social-inline-name')),
+    );
+    expect(name.controller?.text, 'Sân Tao Đàn');
+    expect(find.byTooltip('Xóa vị trí'), findsNothing);
+    expect(_map(tester).pin, const LatLng(10.85, 106.75));
+    expect(find.text(_pinRequired), findsOneWidget);
+    expect(_confirmEnabled(tester), isFalse);
+
+    await _tapMap(tester);
+    expect(_confirmEnabled(tester), isTrue);
+    await _confirm(tester);
+    expect(harness.latest?.venueId, isNull);
+    expect(harness.latest?.name, 'Sân Tao Đàn');
+  });
+
+  testWidgets('TC-SOCIAL-INLINE-APP-23 re-picking the same region keeps it', (
+    tester,
+  ) async {
+    await _pump(tester, _FakeLocationRepository(), initial: _venue);
+
+    await _choose(tester, 'social-inline-province', _hcm.name);
+    await _choose(tester, 'social-inline-ward', _benNghe.name);
+
+    expect(find.byTooltip('Xóa vị trí'), findsOneWidget);
+    expect(_confirmEnabled(tester), isTrue);
+    expect(_map(tester).pin, const LatLng(10.77, 106.69));
+    expect(_text(tester, 'social-inline-ward'), _benNghe.name);
+  });
+
+  testWidgets('TC-SOCIAL-INLINE-APP-24 region text fits at 360px width', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _FakeLocationRepository(),
+      initial: _venueLong,
+      width: 360,
+    );
+
+    // The test font (Ahem) is far wider than real text, so check the room the
+    // field gives instead: about 0.55em per glyph, as in a normal UI font.
+    final names = {
+      'social-inline-province': _hcm.name,
+      'social-inline-ward': _dongHung.name,
+    };
+    for (final entry in names.entries) {
+      final editable = tester
+          .state<EditableTextState>(
+            find.descendant(
+              of: find.byKey(ValueKey(entry.key)),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .renderEditable;
+      expect(
+        editable.size.width,
+        greaterThanOrEqualTo(entry.value.length * 13 * 0.55),
+        reason: entry.key,
+      );
+    }
+    expect(_text(tester, 'social-inline-ward'), _dongHung.name);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TC-SOCIAL-INLINE-APP-25 ward without centre keeps the map', (
+    tester,
+  ) async {
+    await _pump(tester, _FakeLocationRepository(), initial: _venue);
+
+    await _choose(tester, 'social-inline-ward', _noCenter.name);
+
+    expect(find.byTooltip('Xóa vị trí'), findsNothing);
+    expect(_map(tester).pin, const LatLng(10.77, 106.69));
+    expect(_confirmEnabled(tester), isFalse);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -363,7 +363,23 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
     });
   }
 
+  /// Region edited on a directory venue: keep the typed name, drop the venue.
+  void _releaseVenue() {
+    _pinGeneration++;
+    setState(() {
+      _venue = null;
+      _pinConfirmed = false;
+      _resolved = null;
+      _resolving = false;
+    });
+  }
+
   void _onProvinceSelected(Region? province) {
+    final venue = _venue;
+    if (venue != null) {
+      if (province?.code == venue.provinceCode) return;
+      _releaseVenue();
+    }
     final generation = ++_wardsGeneration;
     setState(() {
       _wards = const [];
@@ -381,12 +397,18 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
 
   /// Picking a ward only moves the map; the pin it drags along stays a draft.
   void _onWardSelected(Region? ward) {
+    final venue = _venue;
+    if (venue != null) {
+      if (ward?.code == venue.wardCode) return;
+      _releaseVenue();
+    }
     final lat = ward?.latitude;
     final lng = ward?.longitude;
     if (lat == null || lng == null) return;
     final center = LatLng(lat, lng);
     _pinGeneration++;
-    _mapController.move(center, 15);
+    // A released venue has no draft map yet: it mounts centred on `_pin`.
+    if (venue == null) _mapController.move(center, 15);
     setState(() {
       _pin = center;
       _pinConfirmed = false;
@@ -538,7 +560,8 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
     );
   }
 
-  /// Venue picked from the directory: read-only map on its pin and its region.
+  /// Venue picked from the directory: read-only map on its pin; its region can
+  /// still be changed, which releases the venue.
   List<Widget> _buildVenueArea(SocialPlace venue, AppLocalizations l10n) {
     return [
       Padding(
@@ -564,10 +587,8 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
           style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
         ),
       ),
-      if (venue.provinceCode != null) ...[
-        const SizedBox(height: 8),
-        _buildRegionRow(l10n, enabled: false),
-      ],
+      const SizedBox(height: 8),
+      _buildRegionRow(l10n),
     ];
   }
 
@@ -588,29 +609,24 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
     ];
   }
 
-  Widget _buildRegionRow(AppLocalizations l10n, {bool enabled = true}) {
-    return Row(
+  /// Stacked, not side by side: at ~360px a half-width box cuts the names.
+  Widget _buildRegionRow(AppLocalizations l10n) {
+    return Column(
       children: [
-        Expanded(
-          child: _regionMenu(
-            key: 'social-inline-province',
-            label: l10n.socialLocationInlineProvinceLabel,
-            controller: _provinceController,
-            items: _provinces,
-            onSelected: _onProvinceSelected,
-            enabled: enabled,
-          ),
+        _regionMenu(
+          key: 'social-inline-province',
+          label: l10n.socialLocationInlineProvinceLabel,
+          controller: _provinceController,
+          items: _provinces,
+          onSelected: _onProvinceSelected,
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _regionMenu(
-            key: 'social-inline-ward',
-            label: l10n.socialLocationInlineWardLabel,
-            controller: _wardController,
-            items: _wards,
-            onSelected: _onWardSelected,
-            enabled: enabled,
-          ),
+        const SizedBox(height: 8),
+        _regionMenu(
+          key: 'social-inline-ward',
+          label: l10n.socialLocationInlineWardLabel,
+          controller: _wardController,
+          items: _wards,
+          onSelected: _onWardSelected,
         ),
       ],
     );
@@ -646,11 +662,9 @@ class _SocialLocationSheetState extends ConsumerState<SocialLocationSheet> {
     required TextEditingController controller,
     required List<Region> items,
     required ValueChanged<Region?> onSelected,
-    bool enabled = true,
   }) {
     return DropdownMenu<Region>(
       key: ValueKey(key),
-      enabled: enabled,
       controller: controller,
       label: Text(label, style: const TextStyle(fontSize: 13)),
       textStyle: const TextStyle(fontSize: 13),
