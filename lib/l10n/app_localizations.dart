@@ -36594,6 +36594,114 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Sân có sẵn: vị trí lấy từ danh bạ'**
   String get socialLocationInlineVenueFromDirectory;
+
+  /// No description provided for @tournamentChatRoomName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng giải'**
+  String get tournamentChatRoomName;
+
+  /// No description provided for @tournamentChatTooltipOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào phòng giải'**
+  String get tournamentChatTooltipOpen;
+
+  /// No description provided for @tournamentChatTooltipClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem lại phòng giải'**
+  String get tournamentChatTooltipClosed;
+
+  /// No description provided for @tournamentChatTooltipKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC đã mời bạn ra khỏi phòng'**
+  String get tournamentChatTooltipKicked;
+
+  /// No description provided for @tournamentMenuTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm tuỳ chọn'**
+  String get tournamentMenuTooltip;
+
+  /// No description provided for @tournamentMenuFollow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi giải'**
+  String get tournamentMenuFollow;
+
+  /// No description provided for @tournamentMenuUnfollow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ theo dõi giải'**
+  String get tournamentMenuUnfollow;
+
+  /// No description provided for @tournamentMenuReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo giải'**
+  String get tournamentMenuReport;
+
+  /// No description provided for @chatRoomClosedBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng đã đóng, chỉ xem lại. Xoá hoàn toàn sau 12 tháng.'**
+  String get chatRoomClosedBanner;
+
+  /// No description provided for @chatRoomClosedSendError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng đã đóng, không gửi được tin nhắn.'**
+  String get chatRoomClosedSendError;
+
+  /// No description provided for @chatRoomKickedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC đã mời bạn ra khỏi phòng'**
+  String get chatRoomKickedNotice;
+
+  /// No description provided for @chatRoomKickedDetail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn không thể xem hoặc gửi tin trong phòng này.'**
+  String get chatRoomKickedDetail;
+
+  /// No description provided for @chatKickUserAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kick người này'**
+  String get chatKickUserAction;
+
+  /// No description provided for @chatKickConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời ra khỏi phòng?'**
+  String get chatKickConfirmTitle;
+
+  /// No description provided for @chatKickConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời {name} ra khỏi phòng? Họ không vào lại được cho đến khi bạn gỡ.'**
+  String chatKickConfirmBody(Object name);
+
+  /// No description provided for @chatKickConfirmAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời ra'**
+  String get chatKickConfirmAction;
+
+  /// No description provided for @chatKickDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã mời {name} ra khỏi phòng.'**
+  String chatKickDone(Object name);
+
+  /// No description provided for @chatKickFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kick được người này. Thử lại sau.'**
+  String get chatKickFailed;
 }
 
 class _AppLocalizationsDelegate

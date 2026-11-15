@@ -20366,4 +20366,65 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialLocationInlineVenueFromDirectory =>
       'Sân có sẵn: vị trí lấy từ danh bạ';
+
+  @override
+  String get tournamentChatRoomName => 'Phòng giải';
+
+  @override
+  String get tournamentChatTooltipOpen => 'Vào phòng giải';
+
+  @override
+  String get tournamentChatTooltipClosed => 'Xem lại phòng giải';
+
+  @override
+  String get tournamentChatTooltipKicked => 'BTC đã mời bạn ra khỏi phòng';
+
+  @override
+  String get tournamentMenuTooltip => 'Thêm tuỳ chọn';
+
+  @override
+  String get tournamentMenuFollow => 'Theo dõi giải';
+
+  @override
+  String get tournamentMenuUnfollow => 'Bỏ theo dõi giải';
+
+  @override
+  String get tournamentMenuReport => 'Báo cáo giải';
+
+  @override
+  String get chatRoomClosedBanner =>
+      'Phòng đã đóng, chỉ xem lại. Xoá hoàn toàn sau 12 tháng.';
+
+  @override
+  String get chatRoomClosedSendError =>
+      'Phòng đã đóng, không gửi được tin nhắn.';
+
+  @override
+  String get chatRoomKickedNotice => 'BTC đã mời bạn ra khỏi phòng';
+
+  @override
+  String get chatRoomKickedDetail =>
+      'Bạn không thể xem hoặc gửi tin trong phòng này.';
+
+  @override
+  String get chatKickUserAction => 'Kick người này';
+
+  @override
+  String get chatKickConfirmTitle => 'Mời ra khỏi phòng?';
+
+  @override
+  String chatKickConfirmBody(Object name) {
+    return 'Mời $name ra khỏi phòng? Họ không vào lại được cho đến khi bạn gỡ.';
+  }
+
+  @override
+  String get chatKickConfirmAction => 'Mời ra';
+
+  @override
+  String chatKickDone(Object name) {
+    return 'Đã mời $name ra khỏi phòng.';
+  }
+
+  @override
+  String get chatKickFailed => 'Không kick được người này. Thử lại sau.';
 }
