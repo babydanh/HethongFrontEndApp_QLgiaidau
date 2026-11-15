@@ -66,7 +66,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       body: profileAsync.when(
         data: (profile) => _buildBody(context, profile, colors),
         loading: () => const _ProfileShimmer(),
-        error: (err, _) => _buildError(context, colors, err.toString()),
+        error: (_, _) => _buildError(context, colors),
       ),
     );
   }
@@ -1273,11 +1273,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _buildError(
-    BuildContext context,
-    AppColorsExtension colors,
-    String message,
-  ) {
+  Widget _buildError(BuildContext context, AppColorsExtension colors) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -1293,12 +1289,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 fontWeight: FontWeight.w700,
                 color: colors.textPrimary,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: colors.textSecondary),
             ),
             const SizedBox(height: 20),
             FilledButton(
