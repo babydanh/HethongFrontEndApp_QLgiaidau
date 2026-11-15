@@ -23,6 +23,9 @@ class ChatSocketService {
   void Function(Map<String, dynamic>)? onUserStatus;
   void Function(Map<String, dynamic>)? onRoomRead;
   void Function(Map<String, dynamic>)? onRoomActivity;
+
+  /// The organizer removed this user from the room (`chat:room:kicked`).
+  void Function(Map<String, dynamic>)? onRoomKicked;
   void Function(bool)? onConnection;
 
   ChatSocketService(this.tokenManager);
@@ -143,6 +146,10 @@ class ChatSocketService {
       if (map.isNotEmpty) onRoomRead?.call(map);
     });
 
+    _socket!.on('chat:room:kicked', (data) {
+      onRoomKicked?.call(_asMap(data));
+    });
+
     _socket!.on('chat:room:created', (data) {
       final map = _asMap(data);
       if (map.isNotEmpty) onRoomActivity?.call(map);
@@ -206,6 +213,7 @@ class ChatSocketService {
     onUserStatus = null;
     onRoomRead = null;
     onRoomActivity = null;
+    onRoomKicked = null;
     onConnection = null;
     disconnect();
   }

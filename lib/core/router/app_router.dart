@@ -1000,6 +1000,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 roomAvatar: avatar,
                 roomType: type,
                 communityId: communityId,
+                readOnly: state.uri.queryParameters['readOnly'] == '1',
+                isRoomOrganizer: state.uri.queryParameters['organizer'] == '1',
               );
             },
           ),
