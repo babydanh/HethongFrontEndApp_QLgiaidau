@@ -18,14 +18,13 @@ Widget _host(Widget child) => MaterialApp(
 );
 
 void main() {
-  testWidgets('TC-FEEMODE-APP-06 DIRECT shows the fee with the direct note', (
+  testWidgets('TC-ROOM-A04 DIRECT shows the fee without the direct note line', (
     tester,
   ) async {
     await tester.pumpWidget(
       _host(
         TournamentRegisterBar(
           entryFee: 150000,
-          isDirectFee: true,
           registrationEnd: null,
           onRegister: () {},
         ),
@@ -33,7 +32,7 @@ void main() {
     );
 
     expect(find.text('150.000 đ'), findsOneWidget);
-    expect(find.text('Thanh toán trực tiếp cho BTC'), findsOneWidget);
+    expect(find.text('Thanh toán trực tiếp cho BTC'), findsNothing);
   });
 
   testWidgets('TC-FEEMODE-APP-07 PAYOS shows no direct note', (tester) async {
@@ -58,7 +57,6 @@ void main() {
       _host(
         TournamentRegisterBar(
           entryFee: 0,
-          isDirectFee: true,
           registrationEnd: null,
           onRegister: () {},
         ),

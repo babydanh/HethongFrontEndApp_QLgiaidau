@@ -15,11 +15,8 @@ class TournamentRegisterBar extends StatelessWidget {
     required this.entryFee,
     required this.registrationEnd,
     required this.onRegister,
-    this.isDirectFee = false,
   });
 
-  /// DIRECT fee collection: the fee is shown as information with a note.
-  final bool isDirectFee;
   final double? entryFee;
   final DateTime? registrationEnd;
   final VoidCallback onRegister;
@@ -54,9 +51,6 @@ class TournamentRegisterBar extends StatelessWidget {
                     _Fact(
                       label: l10n.tournamentManagementKpiFee,
                       value: feeText,
-                      note: isDirectFee && feeText != l10n.freePrice
-                          ? l10n.feeDirectNote
-                          : null,
                     ),
                     if (end != null)
                       _Fact(
@@ -94,11 +88,10 @@ class TournamentRegisterBar extends StatelessWidget {
 }
 
 class _Fact extends StatelessWidget {
-  const _Fact({required this.label, required this.value, this.note});
+  const _Fact({required this.label, required this.value});
 
   final String label;
   final String value;
-  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -127,13 +120,6 @@ class _Fact extends StatelessWidget {
             color: colors.textPrimary,
           ),
         ),
-        if (note != null)
-          Text(
-            note!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: colors.textMuted),
-          ),
       ],
     );
   }
