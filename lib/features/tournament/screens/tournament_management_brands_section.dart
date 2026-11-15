@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/pending_uploads.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -29,15 +32,28 @@ class _TournamentManagementBrandsSectionState
   bool _isBusy = false;
   String? _error;
   late Future<List<String>> _galleryFuture;
+  // Images uploaded in this session and not saved yet. The logo/banner loaded
+  // from widget.tournament are saved images and are never tracked here.
+  late final PendingUploads _pendingUploads;
 
   @override
   void initState() {
     super.initState();
+    _pendingUploads = PendingUploads(
+      ref.read(communitySocialRepositoryProvider).deleteUploadedImage,
+    );
     _galleryFuture = ref
         .read(tournamentManagementRepositoryProvider)
         .getGallery(widget.tournament.id);
     _logoUrl = widget.tournament.logoUrl;
     _bannerUrl = widget.tournament.bannerUrl;
+  }
+
+  @override
+  void dispose() {
+    // Fire and forget: no await, no ref/context use after dispose.
+    unawaited(_pendingUploads.discardExcept(const []));
+    super.dispose();
   }
 
   void _reload() {
@@ -171,10 +187,13 @@ class _TournamentManagementBrandsSectionState
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(await picked.readAsBytes(), picked.name);
+      _pendingUploads.track(isLogo ? 'logo' : 'banner', url);
       await ref.read(tournamentRepositoryProvider).update(
         widget.tournament.id,
         {isLogo ? 'logoUrl' : 'bannerUrl': url},
       );
+      // Saved: delete uploaded images that are no longer used.
+      unawaited(_pendingUploads.discardExcept([url]));
       setState(() {
         if (isLogo) {
           _logoUrl = url;
@@ -215,9 +234,12 @@ class _TournamentManagementBrandsSectionState
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(await picked.readAsBytes(), picked.name);
+      _pendingUploads.track('gallery:$url', url);
       await ref
           .read(tournamentManagementRepositoryProvider)
           .addGalleryImage(widget.tournament.id, url);
+      // Saved: delete uploaded images that are no longer used.
+      unawaited(_pendingUploads.discardExcept([url]));
       if (!mounted) return;
       _reload();
       ScaffoldMessenger.of(context).showSnackBar(
