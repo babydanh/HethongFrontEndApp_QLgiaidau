@@ -460,5 +460,34 @@ void main() {
         throwsA(isA<FormatException>()),
       );
     });
+
+    test('TC-UPLOAD-CLEAN-APP-07 deleteUploadedImage sends DELETE with the '
+        'url in the body', () async {
+      final (repo, adapter) = _setup({
+        'DELETE /upload/image': const FakeReply(200, {
+          'data': {'result': 'ok'},
+        }),
+      });
+
+      await repo.deleteUploadedImage('https://cdn/a.png');
+
+      final request = adapter.requests.single;
+      expect(request.method, 'DELETE');
+      expect(request.path, '/upload/image');
+      expect(request.body, {'url': 'https://cdn/a.png'});
+    });
+
+    test('TC-UPLOAD-CLEAN-APP-08 deleteUploadedImage swallows server and '
+        'network errors', () async {
+      final (forbidden, _) = _setup({
+        'DELETE /upload/image': const FakeReply(403, {'message': 'no'}),
+      });
+      final (offline, _) = _setup({
+        'DELETE /upload/image': const FakeReply.networkError(),
+      });
+
+      await forbidden.deleteUploadedImage('https://cdn/a.png');
+      await offline.deleteUploadedImage('https://cdn/a.png');
+    });
   });
 }

@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/pending_uploads.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -40,6 +41,8 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   bool _isUploadingLogo = false;
   bool _isUploadingBanner = false;
   bool _isLoading = false;
+  // Images uploaded in this session and not saved yet (deleted when dropped).
+  late final PendingUploads _pendingUploads;
 
   // Recurring cron tournament slots
   bool _enableRecurring = false;
@@ -48,7 +51,17 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _pendingUploads = PendingUploads(
+      ref.read(communitySocialRepositoryProvider).deleteUploadedImage,
+    );
+  }
+
+  @override
   void dispose() {
+    // Fire and forget: no await, no ref/context use after dispose.
+    unawaited(_pendingUploads.discardExcept(const []));
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _questionCtrl.dispose();
@@ -103,6 +116,13 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       if (clubId.isEmpty) {
         throw const FormatException('Phản hồi tạo CLB không có mã CLB.');
       }
+      // Saved: delete uploaded images that are no longer used.
+      unawaited(
+        _pendingUploads.discardExcept([
+          ?_logoUrl,
+          ?_bannerUrl,
+        ]),
+      );
       final clubStatus =
           (clubData is Map ? clubData['status'] : null)
               ?.toString()
@@ -357,7 +377,12 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(uploadBytes, banner ? picked.name : 'club_logo.png');
-      if (!mounted) return;
+      _pendingUploads.track(banner ? 'banner' : 'logo', url);
+      if (!mounted) {
+        // Left the form while uploading: the image can never be saved.
+        unawaited(_pendingUploads.discardExcept(const []));
+        return;
+      }
       setState(() {
         if (banner) {
           _bannerUrl = url;
@@ -618,6 +643,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         if (url != null && !loading)
           TextButton(
             onPressed: () => setState(() {
+              _pendingUploads.forget(circle ? 'logo' : 'banner');
               if (circle) {
                 _logoUrl = null;
               } else {

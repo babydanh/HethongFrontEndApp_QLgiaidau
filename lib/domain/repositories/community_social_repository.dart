@@ -90,4 +90,7 @@ abstract class ICommunitySocialRepository {
   });
 
   Future<String> uploadImage(List<int> bytes, String fileName);
+
+  /// Best-effort delete of an image this user uploaded; never throws.
+  Future<void> deleteUploadedImage(String url);
 }

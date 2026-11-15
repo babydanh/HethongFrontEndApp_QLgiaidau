@@ -393,6 +393,15 @@ class ApiCommunitySocialRepository implements ICommunitySocialRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> deleteUploadedImage(String url) async {
+    try {
+      await _dioClient.dio.delete('/upload/image', data: {'url': url});
+    } catch (error, stack) {
+      _log.error('Không thể xoá ảnh tạm đã tải lên', error, stack);
+    }
+  }
 }
 
 Map<String, dynamic> _asMap(Object? value) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/pending_uploads.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -234,6 +237,8 @@ class _CreatePublicQuickTournamentScreenState
   String? _logoUrl;
   String? _bannerUrl;
   bool _isUploadingBrand = false;
+  // Images uploaded in this session and not saved yet (deleted when dropped).
+  late final PendingUploads _pendingUploads;
 
   AppLocalizations get l10n => AppLocalizations.of(context)!;
 
@@ -242,6 +247,9 @@ class _CreatePublicQuickTournamentScreenState
   @override
   void initState() {
     super.initState();
+    _pendingUploads = PendingUploads(
+      ref.read(communitySocialRepositoryProvider).deleteUploadedImage,
+    );
     _applyScheduleDefaults();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFeePolicy());
     WidgetsBinding.instance.addPostFrameCallback(
@@ -376,6 +384,8 @@ class _CreatePublicQuickTournamentScreenState
 
   @override
   void dispose() {
+    // Fire and forget: no await, no ref/context use after dispose.
+    unawaited(_pendingUploads.discardExcept(const []));
     _nameController.dispose();
     _maxTeamsController.dispose();
     _venueNameController.dispose();
@@ -681,6 +691,13 @@ class _CreatePublicQuickTournamentScreenState
 
       final result = LiteTournamentCreateResult.fromJson(dataJson);
       _log.info('Tạo giải nhanh thành công ID: ${result.id}');
+      // Saved: delete uploaded images that are no longer used.
+      unawaited(
+        _pendingUploads.discardExcept([
+          ?_logoUrl,
+          ?_bannerUrl,
+        ]),
+      );
 
       if (mounted) {
         // Tự động điều hướng thẳng vào trang quản lý giải đấu ngay khi tạo thành công
@@ -2233,6 +2250,9 @@ class _CreatePublicQuickTournamentScreenState
                           child: InkWell(
                             customBorder: const CircleBorder(),
                             onTap: () => setState(() {
+                              _pendingUploads.forget(
+                                isBanner ? 'banner' : 'logo',
+                              );
                               if (isBanner) {
                                 _bannerUrl = null;
                               } else {
@@ -2270,7 +2290,12 @@ class _CreatePublicQuickTournamentScreenState
       final uploaded = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(await picked.readAsBytes(), picked.name);
-      if (!mounted) return;
+      _pendingUploads.track(isBanner ? 'banner' : 'logo', uploaded);
+      if (!mounted) {
+        // Left the form while uploading: the image can never be saved.
+        unawaited(_pendingUploads.discardExcept(const []));
+        return;
+      }
       setState(() {
         if (isBanner) {
           _bannerUrl = uploaded;
