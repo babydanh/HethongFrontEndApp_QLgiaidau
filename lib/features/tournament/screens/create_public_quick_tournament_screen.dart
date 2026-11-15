@@ -175,7 +175,7 @@ class _CreatePublicQuickTournamentScreenState
   String _description = '';
   final _maxTeamsController = TextEditingController(text: '16');
   final _entryFeeController = TextEditingController(text: '0');
-  final _advancedTileController = ExpansionTileController();
+  final _advancedTileController = ExpansibleController();
   final _maxCombinedEloController = TextEditingController();
   final _maxTeammateGapController = TextEditingController();
   final _venueNameController = TextEditingController();
