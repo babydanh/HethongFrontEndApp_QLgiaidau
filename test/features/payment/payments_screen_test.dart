@@ -313,7 +313,13 @@ void main() {
         await _pump(tester, [
           paymentRepositoryProvider.overrideWithValue(repo),
         ]);
-
+        // DioClient tự thử lại GET lỗi mạng 2 lần (350ms + 700ms) trước khi báo lỗi;
+        // adapter giả cần một nhịp async thật rồi chờ thêm cho đủ thời gian thử lại.
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await _settle(tester);
+        await _settle(tester);
         expect(find.textContaining(l10n.payments_loadError), findsOneWidget);
         expect(find.text('Giải Cầu Lông Hè'), findsNothing);
 
@@ -343,7 +349,6 @@ void main() {
     // lỗi có nút Thử lại (nhánh error của màn không bao giờ chạy).
     testWidgets(
       'BUG-PAY-01 mất mạng khi tải lịch sử phải hiện khung lỗi chứ không phải danh sách rỗng',
-      skip: true,
       (tester) async {
         final adapter = FakeApiAdapter({
           'GET /payments/me': const FakeReply.networkError(),
@@ -351,7 +356,13 @@ void main() {
         await _pump(tester, [
           dioClientProvider.overrideWithValue(fakeDioClient(adapter)),
         ]);
-
+        // DioClient tự thử lại GET lỗi mạng 2 lần (350ms + 700ms) trước khi báo lỗi;
+        // adapter giả cần một nhịp async thật rồi chờ thêm cho đủ thời gian thử lại.
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await _settle(tester);
+        await _settle(tester);
         expect(find.textContaining(l10n.payments_loadError), findsOneWidget);
         expect(find.text(l10n.payments_emptyAll), findsNothing);
       },
