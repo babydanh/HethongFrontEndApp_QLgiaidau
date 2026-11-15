@@ -122,9 +122,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Xác thực token
   Future<bool> validateToken(String tokenCode) async {
-    _log.info(
-      'Bắt đầu xác thực token: ${tokenCode.substring(0, 3)}*** via NestJS API',
-    );
+    final tokenPrefix = tokenCode.length < 3 ? '' : tokenCode.substring(0, 3);
+    _log.info('Bắt đầu xác thực token: $tokenPrefix*** via NestJS API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
