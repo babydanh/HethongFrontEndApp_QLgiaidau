@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.d
 import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_editor_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_ready_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ Widget _host(Widget child, {double width = 320}) => MaterialApp(
 Future<void> _pumpPanel(
   WidgetTester tester,
   _FakeRepo repo, {
-  ValueChanged<String>? onCreated,
+  Future<void> Function(CreatedFacebookLive live)? onCreated,
   double width = 320,
 }) async {
   await tester.pumpWidget(
@@ -80,11 +81,31 @@ Future<void> _pumpPanel(
       FacebookLivePanel(
         tournamentId: 't1',
         repository: repo,
-        onCreated: onCreated ?? (_) {},
+        onCreated: onCreated ?? (_) async {},
       ),
       width: width,
     ),
   );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpReady(WidgetTester tester) async {
+  await tester.pumpWidget(
+    _host(
+      Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () => FacebookLiveReadySheet.show(
+            context,
+            live: _live,
+            cameraName: 'Camera A',
+            launchLink: (_) async => true,
+          ),
+          child: const Text('open'),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }
 
@@ -172,16 +193,16 @@ void main() {
   testWidgets('TC-FBPAGE-APP-02 tournament without a club can still create a live', (
     tester,
   ) async {
-    final filled = <String>[];
+    final filled = <CreatedFacebookLive>[];
     await _pumpPanel(
       tester,
       _FakeRepo(hasCommunity: false),
-      onCreated: filled.add,
+      onCreated: (live) async => filled.add(live),
     );
     expect(tester.widget<FilledButton>(_create).onPressed, isNotNull);
     await tester.tap(_create);
     await tester.pumpAndSettle();
-    expect(filled, [_live.watchUrl]);
+    expect(filled, [_live]);
   });
 
   testWidgets('TC-FBPAGE-APP-03 expired token tells the user to contact an '
@@ -200,22 +221,28 @@ void main() {
     tester,
   ) async {
     final repo = _FakeRepo()..gate = Completer();
-    final filled = <String>[];
-    await _pumpPanel(tester, repo, onCreated: filled.add);
+    final filled = <CreatedFacebookLive>[];
+    await _pumpPanel(
+      tester,
+      repo,
+      onCreated: (live) async => filled.add(live),
+    );
     await tester.tap(_create);
     await tester.pump();
     expect(tester.widget<FilledButton>(_create).onPressed, isNull);
-    expect(find.text('Working...'), findsOneWidget);
+    expect(find.text('Creating camera...'), findsOneWidget);
     await tester.tap(_create, warnIfMissed: false);
     await tester.pump();
     expect(repo.createCalls, 1);
     repo.gate!.complete(_live);
     await tester.pumpAndSettle();
     expect(repo.createCalls, 1);
-    expect(filled, [_live.watchUrl]);
+    expect(filled, [_live]);
   });
 
-  testWidgets('TC-CAMFB-APP-07 key block: masked, toggle, copy', (tester) async {
+  testWidgets('TC-CAMFB-APP-07 ready sheet key block: masked, toggle, copy', (
+    tester,
+  ) async {
     final clip = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -232,9 +259,7 @@ void main() {
         null,
       ),
     );
-    await _pumpPanel(tester, _FakeRepo());
-    await tester.tap(_create);
-    await tester.pumpAndSettle();
+    await _pumpReady(tester);
 
     EditableText field(String key) => tester.widget<EditableText>(
       find.descendant(
@@ -255,7 +280,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('fb-live-key-copy')));
     await tester.pump();
     expect(clip, [_live.rtmpUrl, _live.streamKey]);
-    expect(find.textContaining('Paste these 2 lines'), findsOneWidget);
   });
 
   testWidgets('TC-CAMFB-APP-08 failure shows mapped message, retry works', (
@@ -276,18 +300,19 @@ void main() {
   testWidgets('TC-CAMFB-APP-09 no overflow at 320dp with key shown', (
     tester,
   ) async {
-    await _pumpPanel(tester, _FakeRepo(), width: 320);
-    await tester.tap(_create);
-    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await _pumpReady(tester);
     await tester.tap(find.byKey(const ValueKey('fb-live-key-toggle')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('TC-CAMFB-APP-10 sheet fills the link and previews it', (
+  testWidgets('TC-CAMFB-APP-10 pasted link still previews and saves as before', (
     tester,
   ) async {
-    final repo = _FakeRepo();
+    CameraEditorValue? saved;
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
@@ -300,9 +325,9 @@ void main() {
               onPressed: () => CameraEditorSheet.show(
                 context,
                 courts: const <TournamentCourtRef>[],
-                onSubmit: (_) async {},
+                onSubmit: (value) async => saved = value,
                 facebookLiveTournamentId: 't1',
-                facebookLiveRepository: repo,
+                facebookLiveRepository: _FakeRepo(),
                 previewBuilder: (context, embed) =>
                     Text(embed.embedUrl!, key: const ValueKey('preview')),
               ),
@@ -317,16 +342,20 @@ void main() {
     expect(find.byKey(const ValueKey('fb-live-panel')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('camera-source-live')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(_create);
-    await tester.tap(_create);
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const ValueKey('camera-live-link')))
-          .controller!
-          .text,
+    await tester.enterText(
+      find.byKey(const ValueKey('camera-editor-name')),
+      'Camera A',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('camera-live-link')),
       _live.watchUrl,
     );
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('preview')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('camera-editor-submit')));
+    await tester.pumpAndSettle();
+    expect(saved?.mode, 'PULL');
+    expect(saved?.playbackUrl, _live.watchUrl);
+    expect(saved?.facebookLive, isNull);
   });
 }

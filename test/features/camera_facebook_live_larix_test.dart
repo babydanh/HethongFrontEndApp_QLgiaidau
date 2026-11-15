@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/larix_link.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_ready_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,19 +18,6 @@ const _live = CreatedFacebookLive(
   streamKey: _key,
 );
 
-class _Repo implements IFacebookCameraLiveRepository {
-  @override
-  Future<FacebookLiveConnection> getConnection(String tournamentId) async =>
-      const FacebookLiveConnection(
-        communityId: 'c1',
-        connected: true,
-        pageName: null,
-      );
-
-  @override
-  Future<CreatedFacebookLive> createLive(String tournamentId) async => _live;
-}
-
 Future<void> _pumpCreated(
   WidgetTester tester,
   Future<bool> Function(Uri uri) launchLink,
@@ -41,23 +28,22 @@ Future<void> _pumpCreated(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: SizedBox(
-            width: 320,
-            child: FacebookLivePanel(
-              tournamentId: 't1',
-              repository: _Repo(),
-              onCreated: (_) {},
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: ElevatedButton(
+            onPressed: () => FacebookLiveReadySheet.show(
+              context,
+              live: _live,
+              cameraName: 'Camera A',
               launchLink: launchLink,
             ),
+            child: const Text('open'),
           ),
         ),
       ),
     ),
   );
-  await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const ValueKey('fb-live-create')));
+  await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }
 
@@ -88,7 +74,7 @@ void main() {
     });
   });
 
-  group('FacebookLivePanel Larix button', () {
+  group('FacebookLiveReadySheet Larix button', () {
     testWidgets('TC-LARIX-APP-04 tap opens the Larix link once, target >= 48dp', (
       tester,
     ) async {
