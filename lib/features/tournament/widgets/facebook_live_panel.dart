@@ -1,9 +1,14 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/larix_link.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<bool> _launchExternal(Uri uri) =>
+    launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// "Tạo live trên fanpage Facebook" trong form tạo camera: nút Tạo live (fanpage
 /// chung của hệ thống) rồi khối khoá phát. Khoá phát chỉ nằm trong state của widget này.
@@ -14,6 +19,7 @@ class FacebookLivePanel extends StatefulWidget {
     required this.repository,
     required this.onCreated,
     this.enabled = true,
+    this.launchLink = _launchExternal,
   });
 
   final String tournamentId;
@@ -23,6 +29,9 @@ class FacebookLivePanel extends StatefulWidget {
   final ValueChanged<String> onCreated;
   final bool enabled;
 
+  /// Mở link ngoài app (Larix); tách ra để test không gọi plugin thật.
+  final Future<bool> Function(Uri uri) launchLink;
+
   @override
   State<FacebookLivePanel> createState() => _FacebookLivePanelState();
 }
@@ -31,6 +40,7 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
   FacebookLiveConnection? _connection;
   bool _loadFailed = false;
   bool _busy = false;
+  bool _launching = false;
   FacebookLiveError? _error;
   CreatedFacebookLive? _live;
 
@@ -77,6 +87,29 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
     widget.onCreated(live.watchUrl);
   });
 
+  /// Larix chưa cài (hoặc không mở được) thì báo cách xử lý thay vì im lặng.
+  Future<void> _openLarix(String link) async {
+    if (_launching) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final missing = AppLocalizations.of(
+      context,
+    )!.tournamentCameraFbLarixMissing;
+    setState(() => _launching = true);
+    var opened = false;
+    try {
+      opened = await widget.launchLink(Uri.parse(link));
+    } on Object {
+      opened = false;
+    } finally {
+      if (mounted) setState(() => _launching = false);
+    }
+    if (!opened) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(missing)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -85,6 +118,9 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
     final connected = connection?.connected == true;
     final canTap = widget.enabled && !_busy;
     final live = _live;
+    final larixLink = live == null
+        ? null
+        : buildLarixSetupUrl(live.rtmpUrl, live.streamKey, 'SportO Live');
     return Container(
       key: const ValueKey('fb-live-panel'),
       padding: const EdgeInsets.all(12),
@@ -195,6 +231,23 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
               l10n.tournamentCameraFbKeyWarning,
               style: TextStyle(color: colors.textSecondary),
             ),
+            if (larixLink != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.tournamentCameraFbLarixHint,
+                style: TextStyle(color: colors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const ValueKey('fb-live-larix-open'),
+                onPressed: _launching ? null : () => _openLarix(larixLink),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                ),
+                icon: const Icon(Icons.smartphone_outlined),
+                label: Text(l10n.tournamentCameraFbLarixOpen),
+              ),
+            ],
           ],
         ],
       ),
