@@ -586,7 +586,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-G-15 [BUG-PERM-01] phân quyền âm: VĐV không phải BTC mở màn quản lý giải thì bị chặn',
+    'TC-MULTI-G-15 phân quyền âm: VĐV không phải BTC mở màn quản lý giải thì bị chặn',
     (tester) async {
       _tolerateOverflow();
       final d = await _tourD;
@@ -604,8 +604,6 @@ void main() {
       await shooter.snap('vdv-bi-chan-man-quan-ly');
       await leaveSocialSession(tester, container);
     },
-    // SKIP BUG-PERM-01: VĐV không phải BTC mở /organizer/tournaments/:id/manage vẫn ở nguyên màn, không bị chuyển hướng và không có chữ báo thiếu quyền (app_router.dart:415)
-    skip: true,
     timeout: testTimeout,
   );
 }

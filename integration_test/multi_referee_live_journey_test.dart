@@ -282,7 +282,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-A-03 trọng tài mở route /referee/invites thì ở lại màn Lời mời trọng tài (SKIP BUG-REF-01)',
+    'TC-MULTI-A-03 trọng tài mở route /referee/invites thì ở lại màn Lời mời trọng tài',
     (tester) async {
       tolerateKnownProductOverflow();
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-A-03');
@@ -302,8 +302,6 @@ void main() {
       await pumpUntil(tester, find.text('Lời mời trọng tài'));
       await leaveSocialSession(tester, container);
     },
-    // BUG-REF-01: router đẩy /referee/invites về /viewer rồi /home cho tài khoản vai trò viewer (app_router.dart:164-166).
-    skip: true,
   );
 
   testWidgets(
@@ -696,7 +694,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-A-18 [phân quyền âm] tài khoản không phải BTC mở màn vận hành /ops của giải thì bị chặn (SKIP BUG-PERM-02)',
+    'TC-MULTI-A-18 [phân quyền âm] tài khoản không phải BTC mở màn vận hành /ops của giải thì bị chặn',
     (tester) async {
       tolerateKnownProductOverflow();
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-A-18');
@@ -711,8 +709,6 @@ void main() {
       await shooter.snap('ops-bi-chan');
       await leaveSocialSession(tester, container);
     },
-    // BUG-PERM-02: người không phải BTC mở /ops vẫn thấy cả màn vận hành (các tab Tổng quan, Trận đấu, Camera), chỉ các khối con gặp 403.
-    skip: true,
   );
 
   testWidgets(

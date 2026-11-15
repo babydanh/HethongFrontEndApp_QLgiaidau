@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -684,18 +685,39 @@ class _AdminClubsScreenState extends ConsumerState<AdminClubsScreen> {
   }
 }
 
+// Backend giới hạn `limit` tối đa 50 cho GET /communities: vượt là 400.
+const _adminClubsPageSize = 50;
+const _adminClubsMaxPages = 40;
+
+/// Lấy tất cả CLB (admin) theo từng trang bằng cursor.
+@visibleForTesting
+Future<List<Community>> fetchAllAdminClubs(Dio dio) async {
+  final clubs = <Community>[];
+  String? cursor;
+  for (var page = 0; page < _adminClubsMaxPages; page++) {
+    final response = await dio.get(
+      '/communities',
+      queryParameters: {
+        'limit': _adminClubsPageSize,
+        'all': true,
+        if (cursor != null) 'cursor': cursor,
+      },
+    );
+    if (response.statusCode != 200) break;
+    final body = response.data;
+    final data = body is Map ? body['data'] as List<dynamic>? ?? [] : const [];
+    clubs.addAll(
+      data.map((e) => Community.fromJson(e as Map<String, dynamic>)),
+    );
+    final meta = body is Map ? body['meta'] : null;
+    final next = meta is Map ? meta['nextCursor']?.toString() : null;
+    if (next == null || next.isEmpty || next == cursor) break;
+    cursor = next;
+  }
+  return clubs;
+}
+
 // Provider: lấy tất cả CLB (admin)
 final _adminClubsProvider = FutureProvider<List<Community>>((ref) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get(
-    '/communities',
-    queryParameters: {'limit': 200, 'all': true},
-  );
-  if (response.statusCode == 200) {
-    final data = response.data['data'] as List<dynamic>? ?? [];
-    return data
-        .map((e) => Community.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-  return [];
+  return fetchAllAdminClubs(ref.read(dioProvider));
 });

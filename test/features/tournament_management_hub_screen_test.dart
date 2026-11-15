@@ -31,6 +31,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_manage_access_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:dio/dio.dart';
@@ -785,6 +786,9 @@ void main() {
               const UserProfile(id: 'admin-1', role: 'ADMIN', roles: ['ADMIN']),
         ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
+        tournamentManageAccessProvider(
+          'tournament-1',
+        ).overrideWith((ref) async => true),
         tournamentProvider('tournament-1').overrideWith(
           (ref) => Stream.value(_tournament('in_progress', quick: true)),
         ),
@@ -878,6 +882,9 @@ void main() {
               const UserProfile(id: 'admin-1', role: 'ADMIN', roles: ['ADMIN']),
         ),
         authProvider.overrideWith(_AuthenticatedAdmin.new),
+        tournamentManageAccessProvider(
+          'tournament-1',
+        ).overrideWith((ref) async => true),
         tournamentProvider(
           'tournament-1',
         ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),

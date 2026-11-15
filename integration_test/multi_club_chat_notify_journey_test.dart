@@ -580,7 +580,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-C-17 phân quyền âm trên giao diện: thành viên thường mở thẳng /club/:id/manage phải bị chặn (SKIP BUG-CLUB-02)',
+    'TC-MULTI-C-17 phân quyền âm trên giao diện: thành viên thường mở thẳng /club/:id/manage phải bị chặn',
     (tester) async {
       final shooter = shooterOf(tester, '17');
       final container = await signInAs(tester, actor('member'));
@@ -588,8 +588,6 @@ void main() {
       await shooter.snap('thanh-vien-mo-manage');
       await _leave(tester, container);
     },
-    // BUG-CLUB-02: màn Điều phối không kiểm quyền, router chỉ truyền extra isOwner (app_router.dart:668-673).
-    skip: true,
   );
 
   testWidgets(
