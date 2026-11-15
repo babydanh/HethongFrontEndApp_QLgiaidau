@@ -290,14 +290,13 @@ void main() {
       final router = container.read(routerProvider);
       router.go('/home');
       await socialWait(tester);
-      router.push('/referee/invites');
+      router.go('/referee/invites');
       await socialWait(tester, const Duration(seconds: 3));
       await shooter.snap('sau-khi-mo-loi-moi');
       expect(
         currentPath(tester),
         '/referee/invites',
-        reason:
-            'Trọng tài (JWT là PLAYER, vai trò app là viewer) phải ở màn lời mời, không bị đẩy về /viewer hay /home',
+        reason: 'Trọng tài (JWT là PLAYER, vai trò app là viewer) phải ở màn lời mời, không bị đẩy về /viewer hay /home',
       );
       await pumpUntil(tester, find.text('Lời mời trọng tài'));
       await leaveSocialSession(tester, container);
