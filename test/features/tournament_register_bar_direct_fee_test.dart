@@ -18,7 +18,7 @@ Widget _host(Widget child) => MaterialApp(
 );
 
 void main() {
-  testWidgets('TC-ROOM-A04 DIRECT shows the fee without the direct note line', (
+  testWidgets('TC-ROOM-A12 DIRECT shows the fee without the direct note line', (
     tester,
   ) async {
     await tester.pumpWidget(

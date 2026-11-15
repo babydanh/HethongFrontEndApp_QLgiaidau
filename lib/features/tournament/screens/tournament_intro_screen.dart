@@ -19,7 +19,9 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/intro_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_merged_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_chat_entry.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_register_bar.dart';
+import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
@@ -52,6 +54,8 @@ _MatchSummary _summarizeMatches(List<MatchModel>? matches) {
   }
   return (liveCount: liveCount, hasCompleted: hasCompleted);
 }
+
+enum _TournamentMenuAction { follow, report }
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -1111,17 +1115,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       // User requirement: Khi cuộn xuống qua banner thì hiện header với nút quay lại thôi, KHÔNG CẦN HIỆN TÊN GIẢI
       title: null,
       actions: [
-        IconButton(
-          icon: Icon(
-            isFollowing
-                ? Icons.bookmark_rounded
-                : Icons.bookmark_border_rounded,
-            color: isFollowing ? AppTheme.primary : currentIconColor,
-            size: 22,
-            shadows: isFollowing ? null : iconShadows,
-          ),
-          splashRadius: 20,
-          onPressed: () => _toggleFollow(tournament, isFollowing),
+        TournamentChatEntry(
+          tournamentId: tournament.id,
+          iconShadows: iconShadows,
         ),
         IconButton(
           icon: Icon(
@@ -1133,6 +1129,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           splashRadius: 20,
           onPressed: () => _shareTournament(tournament),
         ),
+        _buildMoreMenu(tournament, isFollowing, currentIconColor, iconShadows),
         if (canManage)
           IconButton(
             tooltip: AppLocalizations.of(context)!.managementTitle,
@@ -1202,6 +1199,76 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 ],
               ),
             ),
+    );
+  }
+
+  /// Follow and report live in the ⋮ menu (plan 6.4, option 1). Items are 48px
+  /// high so they stay easy to hit.
+  Widget _buildMoreMenu(
+    Tournament tournament,
+    bool isFollowing,
+    Color iconColor,
+    List<Shadow>? iconShadows,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return PopupMenuButton<_TournamentMenuAction>(
+      tooltip: l10n.tournamentMenuTooltip,
+      icon: Icon(
+        Icons.more_vert_rounded,
+        color: iconColor,
+        size: 22,
+        shadows: iconShadows,
+      ),
+      onSelected: (action) => switch (action) {
+        _TournamentMenuAction.follow => _toggleFollow(tournament, isFollowing),
+        _TournamentMenuAction.report => _reportTournament(tournament),
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: _TournamentMenuAction.follow,
+          height: 48,
+          child: Row(
+            children: [
+              Icon(
+                isFollowing
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+                color: isFollowing ? AppTheme.primary : null,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isFollowing
+                    ? l10n.tournamentMenuUnfollow
+                    : l10n.tournamentMenuFollow,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: _TournamentMenuAction.report,
+          height: 48,
+          child: Row(
+            children: [
+              const Icon(Icons.flag_outlined, size: 20),
+              const SizedBox(width: 12),
+              Text(l10n.tournamentMenuReport),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _reportTournament(Tournament tournament) async {
+    if (!ref.read(authProvider).isAuthenticated) {
+      context.push('/login');
+      return;
+    }
+    await ReportSheet.show(
+      context,
+      targetId: tournament.id,
+      targetType: 'tournament',
     );
   }
 
