@@ -41,6 +41,7 @@ jobs:
         env:
           APP_API_KEY: ${{ secrets.APP_API_KEY }}
           API_BASE_URL: ${{ secrets.APP_API_BASE_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
           set -euo pipefail
           if [ -z "${APP_API_KEY}" ]; then
@@ -50,6 +51,13 @@ jobs:
           api_base_url="${API_BASE_URL:-https://sporto.asia/api/v1}"
           printf 'API_BASE_URL=%s\nAPP_API_KEY=%s\n' "$api_base_url" "$APP_API_KEY" > .env
           test -s .env
+          # Compile-time defines for the release build (read by
+          # String.fromEnvironment in lib/main.dart). Without SENTRY_DSN the app
+          # skips Sentry entirely, so warn loudly instead of failing the deploy.
+          if [ -z "${SENTRY_DSN:-}" ]; then
+            echo "::warning::Secret SENTRY_DSN is not set: this build will not report errors"
+          fi
+          python3 -c "import json, os; json.dump({'SENTRY_DSN': os.environ.get('SENTRY_DSN', '').strip()}, open('ci_defines.json', 'w'))"
           curl --fail --silent --show-error --max-time 15 \
             -H "x-app-key: ${APP_API_KEY}" \
             "${api_base_url}/categories" > /dev/null
@@ -83,7 +91,7 @@ jobs:
           if [ -n "${{ github.event.inputs.build_number }}" ]; then
             BUILD_ARGS="--build-number=${{ github.event.inputs.build_number }}"
           fi
-          flutter build ios --release --no-codesign $BUILD_ARGS
+          flutter build ios --release --no-codesign --dart-define-from-file=ci_defines.json $BUILD_ARGS
 
       # 5. Cài CocoaPods
       - name: Install CocoaPods
@@ -142,7 +150,7 @@ jobs:
           if [ -n "${{ github.event.inputs.build_number }}" ]; then
             BUILD_ARGS="--build-number=${{ github.event.inputs.build_number }}"
           fi
-          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist $BUILD_ARGS; then
+          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --dart-define-from-file=ci_defines.json $BUILD_ARGS; then
             echo "✓ Flutter build ipa succeeded!"
             mkdir -p ios/build/ipa
             cp build/ios/ipa/*.ipa ios/build/ipa/ || true
@@ -169,6 +177,33 @@ jobs:
                        -authenticationKeyIssuerID "$API_ISSUER_ID" \
                        -allowProvisioningUpdates
           fi
+
+      # 7.1 Upload dSYMs to Rustrak so native iOS crashes resolve to function
+      # names. Best effort: a failed upload must never block the App Store upload.
+      # Needs secret SENTRY_AUTH_TOKEN (Rustrak: Settings > API Tokens) and
+      # repository variable SENTRY_PROJECT (the Rustrak project slug).
+      - name: Upload dSYMs to Rustrak
+        continue-on-error: true
+        env:
+          SENTRY_URL: https://loi.sporto.asia
+          SENTRY_ORG: rustrak
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SENTRY_AUTH_TOKEN:-}" ] || [ -z "${SENTRY_PROJECT:-}" ]; then
+            echo "::warning::SENTRY_AUTH_TOKEN secret or SENTRY_PROJECT variable is missing: dSYMs not uploaded"
+            exit 0
+          fi
+          dsym_dir=""
+          for d in build/ios/archive/Runner.xcarchive/dSYMs ios/build/Runner.xcarchive/dSYMs; do
+            if [ -d "$d" ]; then dsym_dir="$d"; break; fi
+          done
+          if [ -z "$dsym_dir" ]; then
+            echo "::warning::No dSYMs directory found: nothing uploaded"
+            exit 0
+          fi
+          npx --yes @sentry/cli@2.58.6 debug-files upload --include-sources "$dsym_dir"
 
       # 8. Upload lên App Store Connect via native xcrun altool
       - name: Upload to App Store
