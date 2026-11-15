@@ -221,7 +221,6 @@ void main() {
   // (màn Đã gửi không có Form) nên ném lỗi null-check, không gửi lại được.
   testWidgets(
     'BUG-FORGOT-01 hết 120 giây nút gửi lại mở khoá và bấm sẽ gọi API lần hai',
-    skip: true,
     (tester) async {
       final adapter = await _pump(tester, {
         _forgotRoute: const FakeReply(200, {}),
