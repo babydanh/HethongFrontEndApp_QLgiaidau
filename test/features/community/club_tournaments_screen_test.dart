@@ -628,10 +628,6 @@ void main() {
 
         expect(find.text('Không thể tải danh sách giải đấu.'), findsOneWidget);
       },
-      // BUG-CLBTOUR-01: lỗi chỉ hiển thị khi danh sách trống
-      // (club_tournaments_screen.dart:155); chuyển trang lỗi thì im lặng,
-      // người dùng thấy trang cũ và không biết vì sao Sau không chạy.
-      skip: true,
     );
   });
 }

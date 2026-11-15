@@ -75,100 +75,118 @@ import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.da
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manager_guard.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_detail_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 
+const _guestBlockedPaths = [
+  '/chat',
+  '/club-create',
+  '/club/create',
+  '/club-invites',
+];
+
+/// Redirect rules by auth state; pure so it can be unit-tested.
+@visibleForTesting
+String? appRedirect(AuthState auth, String currentPath) {
+  final isAuth = auth.status == AuthStatus.authenticated;
+  final isPublicRegistrationRoute =
+      currentPath.startsWith('/register/') ||
+      currentPath.startsWith('/join/') ||
+      currentPath == '/join-team' ||
+      currentPath.startsWith('/lite-join/');
+
+  // Splash screen & Login screen — luôn cho phép
+  if (currentPath == '/' ||
+      currentPath == '/login' ||
+      currentPath == '/login-loading' ||
+      currentPath == '/forgot-password' ||
+      currentPath == '/reset-password') {
+    return null;
+  }
+
+  // Chưa auth nhưng cố truy cập referee hoặc admin
+  if (!isAuth &&
+      (currentPath.startsWith('/referee') ||
+          currentPath.startsWith('/admin') ||
+          currentPath.startsWith('/organizer/tournaments'))) {
+    return '/login';
+  }
+
+  // Các màn cần đăng nhập nhưng trùng tiền tố với allowlist công khai bên dưới
+  // (/club, /chat): chặn trước khi allowlist cho qua.
+  if (!isAuth && _guestBlockedPaths.any(currentPath.startsWith)) {
+    return '/login';
+  }
+
+  // Camera pairing is an operator-only flow; it must not inherit the public live-viewer allowlist.
+  if (!isAuth && currentPath.startsWith('/live/device-pairing')) {
+    return '/login';
+  }
+
+  // Chưa auth thì mặc định về /home (cho phép truy cập các trang công khai)
+  if (!isAuth &&
+      currentPath != '/home' &&
+      currentPath != '/login-loading' &&
+      currentPath != '/forgot-password' &&
+      currentPath != '/reset-password' &&
+      currentPath != '/scan-qr' &&
+      !currentPath.startsWith('/profile') &&
+      !currentPath.startsWith('/intro') &&
+      currentPath != '/club' &&
+      !currentPath.startsWith('/club/') &&
+      !currentPath.startsWith('/communities') &&
+      !currentPath.startsWith('/tournament') &&
+      !currentPath.startsWith('/tournaments') &&
+      !currentPath.startsWith('/live-matches') &&
+      !currentPath.startsWith('/live') &&
+      !currentPath.startsWith('/matches') &&
+      !currentPath.startsWith('/user') &&
+      !currentPath.startsWith('/series') &&
+      !currentPath.startsWith('/social/') &&
+      !currentPath.startsWith('/rankings') &&
+      !isPublicRegistrationRoute) {
+    return '/home';
+  }
+
+  // Đã auth và ở /login -> về /home
+  if (isAuth && currentPath == '/login') {
+    return '/home';
+  }
+
+  // Kiểm tra quyền truy cập route
+  if (isAuth) {
+    final hasTournament =
+        auth.tournamentId != null && auth.tournamentId!.isNotEmpty;
+    if ((currentPath == '/referee' || currentPath == '/viewer') &&
+        !hasTournament) {
+      return '/home';
+    }
+
+    if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
+      return auth.role == UserRole.referee ? '/referee' : '/viewer';
+    }
+    // OP access is tournament-scoped. Authenticated users may enter the
+    // workspace so the protected API can verify owner/co-organizer access;
+    // non-managers must receive a fail-closed 403 state from the screen.
+    if (currentPath.startsWith('/referee') &&
+        !currentPath.startsWith('/referee/invites') &&
+        auth.role == UserRole.viewer) {
+      return '/viewer';
+    }
+  }
+
+  return null;
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/',
-    redirect: (context, state) {
-      final auth = ref.read(authProvider);
-      final isAuth = auth.status == AuthStatus.authenticated;
-      final currentPath = state.matchedLocation;
-      final isPublicRegistrationRoute =
-          currentPath.startsWith('/register/') ||
-          currentPath.startsWith('/join/') ||
-          currentPath == '/join-team' ||
-          currentPath.startsWith('/lite-join/');
-
-      // Splash screen & Login screen — luôn cho phép
-      if (currentPath == '/' ||
-          currentPath == '/login' ||
-          currentPath == '/login-loading' ||
-          currentPath == '/forgot-password' ||
-          currentPath == '/reset-password') {
-        return null;
-      }
-
-      // Chưa auth nhưng cố truy cập referee hoặc admin
-      if (!isAuth &&
-          (currentPath.startsWith('/referee') ||
-              currentPath.startsWith('/admin') ||
-              currentPath.startsWith('/organizer/tournaments'))) {
-        return '/login';
-      }
-
-      // Camera pairing is an operator-only flow; it must not inherit the public live-viewer allowlist.
-      if (!isAuth && currentPath.startsWith('/live/device-pairing')) {
-        return '/login';
-      }
-
-      // Chưa auth thì mặc định về /home (cho phép truy cập các trang công khai)
-      if (!isAuth &&
-          currentPath != '/home' &&
-          currentPath != '/login-loading' &&
-          currentPath != '/forgot-password' &&
-          currentPath != '/reset-password' &&
-          currentPath != '/scan-qr' &&
-          !currentPath.startsWith('/profile') &&
-          !currentPath.startsWith('/intro') &&
-          !currentPath.startsWith('/club') &&
-          !currentPath.startsWith('/communities') &&
-          !currentPath.startsWith('/tournament') &&
-          !currentPath.startsWith('/tournaments') &&
-          !currentPath.startsWith('/live-matches') &&
-          !currentPath.startsWith('/live') &&
-          !currentPath.startsWith('/matches') &&
-          !currentPath.startsWith('/chat') &&
-          !currentPath.startsWith('/user') &&
-          !currentPath.startsWith('/series') &&
-          !currentPath.startsWith('/social/') &&
-          !currentPath.startsWith('/rankings') &&
-          !isPublicRegistrationRoute) {
-        return '/home';
-      }
-
-      // Đã auth và ở /login -> về /home
-      if (isAuth && currentPath == '/login') {
-        return '/home';
-      }
-
-      // Kiểm tra quyền truy cập route
-      if (isAuth) {
-        final hasTournament =
-            auth.tournamentId != null && auth.tournamentId!.isNotEmpty;
-        if ((currentPath == '/referee' || currentPath == '/viewer') &&
-            !hasTournament) {
-          return '/home';
-        }
-
-        if (currentPath.startsWith('/admin') && auth.role != UserRole.admin) {
-          return auth.role == UserRole.referee ? '/referee' : '/viewer';
-        }
-        // OP access is tournament-scoped. Authenticated users may enter the
-        // workspace so the protected API can verify owner/co-organizer access;
-        // non-managers must receive a fail-closed 403 state from the screen.
-        if (currentPath.startsWith('/referee') &&
-            auth.role == UserRole.viewer) {
-          return '/viewer';
-        }
-      }
-
-      return null;
-    },
+    redirect: (context, state) =>
+        appRedirect(ref.read(authProvider), state.matchedLocation),
     routes: [
       // ─── Splash ───
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
@@ -380,10 +398,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/organizer/tournaments/:id/ops',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return OrganizerOpsScreen(
+          return TournamentManagerGuard(
             tournamentId: id,
-            initialDivisionId: state.uri.queryParameters['divisionId'],
-            initialFocusMatchId: state.uri.queryParameters['focusMatchId'],
+            child: OrganizerOpsScreen(
+              tournamentId: id,
+              initialDivisionId: state.uri.queryParameters['divisionId'],
+              initialFocusMatchId: state.uri.queryParameters['focusMatchId'],
+            ),
           );
         },
         routes: [
@@ -415,11 +436,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/organizer/tournaments/:id/manage',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return TournamentManagementDispatcher(
+          return TournamentManagerGuard(
             tournamentId: id,
-            actionRouteBase: '/organizer/tournaments/$id/manage',
-            opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
-            liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
+            child: TournamentManagementDispatcher(
+              tournamentId: id,
+              actionRouteBase: '/organizer/tournaments/$id/manage',
+              opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
+              liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
+            ),
           );
         },
         routes: [

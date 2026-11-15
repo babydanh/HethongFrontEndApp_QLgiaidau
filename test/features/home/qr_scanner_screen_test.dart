@@ -519,7 +519,6 @@ void main() {
         expect(find.text(l10n.qrScannerVerifying), findsNothing);
         expect(find.text(l10n.authTokenInvalid), findsOneWidget);
       },
-      skip: true,
     );
   });
 }

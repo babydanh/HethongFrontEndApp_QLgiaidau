@@ -94,10 +94,17 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
       }
     } catch (err) {
       if (mounted) {
+        const message = 'Không thể tải danh sách giải đấu.';
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Không thể tải danh sách giải đấu.';
+          _errorMessage = message;
         });
+        // Khung lỗi chỉ hiện khi danh sách trống: đang xem trang cũ thì báo bằng SnackBar.
+        if ((_pageTournaments[_currentPageIndex] ?? const []).isNotEmpty) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text(message)));
+        }
       }
     }
   }

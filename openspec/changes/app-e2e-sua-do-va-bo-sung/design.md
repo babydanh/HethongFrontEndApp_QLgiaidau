@@ -58,3 +58,23 @@ Tất cả 8 file đều là test lỗi thời (giao diện hoặc Backend đổ
 
 - **Sửa lỗi quyền trong `lib/`** (BUG-CLUB-02, BUG-PERM-01, BUG-PERM-03/04...): change này chỉ viết test. Hệ thống từ chối việc giao agent sửa `lib/` cho BUG-PERM-01 nên tôi không làm (và dừng luôn việc sửa BUG-CLUB-02); các ca vẫn `skip` mang mã BUG. Cần người dùng cho phép rõ ràng rồi sửa theo TDD đỏ→xanh.
 - **Hai trailer `Co-Authored-By`** nằm trong lịch sử các nhánh con (agent làm theo chỉ dẫn attribution). Gộp bằng squash để không đưa trailer vào `main`.
+
+### Vòng sửa lỗi App (nhánh app-sua-bug-e2e, đưa bộ test lên main rồi sửa)
+
+| Mã | Kết quả | Chỗ sửa / lý do còn skip | Kiểm |
+|---|---|---|---|
+| BUG-PERM-01, BUG-PERM-02 | Đã sửa | `TournamentManagerGuard` bọc `/organizer/tournaments/:id/manage` và `/ops` (`app_router.dart`), báo thiếu quyền khi 401/403 | widget + `app_redirect_test`; cloud H-17, H-19, B-14, B-17, G-15 xanh |
+| BUG-CLUB-02 | Đã sửa | `club_management_screen.dart` đọc quyền từ `communityDetailProvider` thay vì `extra` của router | widget; cloud C-17 xanh |
+| BUG-GUEST-01 | Đã sửa | khách vào `/chat`, `/club-create`, `/club-invites` về `/login` (`appRedirect`) | cloud E-19 xanh |
+| BUG-ADMIN-03 | Đã sửa | `admin_clubs_screen.dart` phân trang `limit=50` theo cursor | cloud E-07, E-08 xanh |
+| BUG-REF-01 (router) | Đã sửa | `/referee/invites` không còn bị đẩy về `/viewer`; A-03 mở bằng `go` vì `currentConfiguration.uri` không phản ánh `push` | cloud A-03 xanh |
+| BUG-CHAT-01 | Đã sửa | `chat_socket_service.dart` `dispose()` gỡ callback trước `disconnect()` | unit + cloud C-20 xanh |
+| BUG-SESSDETAIL-01/02/03 | Đã sửa | `club_match_sessions_screen.dart` | 3 ca widget đỏ rồi xanh |
+| BUG-FILTER-01 | Đã sửa | `api_tournament_repository.dart:750` gửi `REGISTRATION_OPEN` | contract test + cloud G-02 xanh |
+| BUG-FORGOT-01, PAY-01, QUICKCREATE-01, QR-01, PROFILE-01, SEARCH-01, CLBTOUR-01, NOTE-CHAT-ERR-01 | Đã sửa | xem commit nhóm widget | ca widget `skip` đã gỡ, xanh |
+| BUG-CHAT-02 | Đã sửa (test không đỏ) | thêm `AlwaysScrollableScrollPhysics` | ca xanh cả trước lẫn sau |
+| BUG-ADMIN-01 | Còn, giữ skip | `/admin` về `/home` có chủ ý, app không có dashboard admin: cần quyết định nghiệp vụ | |
+| BUG-F-02 | Còn, giữ skip | App làm mới đúng (test canh `ops_roster_refresh_test`); nghi Backend `/manage/participants` trễ/cache | |
+| BUG-SOCIAL-D-02, BUG-PERM-03/04, BUG-FOLLOW-01, BUG-ADMIN-04, BUG-F-01, BUG-REF-01 (Backend) | Backend, không sửa | ghi trong `~/bug-be-tu-app.md` | |
+
+Rủi ro chưa kiểm: guard dùng `/tournaments/:id/manage/participants` làm phép thử quyền, vai trò quản lý khác bị 403 ở endpoint này sẽ bị chặn nhầm.

@@ -18,7 +18,7 @@ class PaymentRepository {
       return [];
     } catch (e, stack) {
       _log.error('Error fetching payments', e, stack);
-      return [];
+      rethrow;
     }
   }
 

@@ -611,7 +611,7 @@ void main() {
   // ------------------------------------------------------- Phân quyền âm (VĐV)
 
   testWidgets(
-    'TC-MULTI-B-14 [BUG-PERM-01] phân quyền âm: VĐV mở /organizer/tournaments/:id/manage của giải người khác thì bị chặn',
+    'TC-MULTI-B-14 phân quyền âm: VĐV mở /organizer/tournaments/:id/manage của giải người khác thì bị chặn',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-14');
       final container = await _signIn(tester, actor('player'));
@@ -624,8 +624,6 @@ void main() {
       await snap.snap('man-quan-ly-bi-chan');
       await leaveSocialSession(tester, container);
     },
-    // BUG-PERM-01: VĐV không phải BTC mở được màn quản lý của giải công khai, không báo thiếu quyền.
-    skip: true,
   );
 
   testWidgets(
@@ -675,7 +673,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-B-17 [BUG-PERM-02] phân quyền âm: VĐV mở màn vận hành /organizer/tournaments/:id/ops thì bị chặn',
+    'TC-MULTI-B-17 phân quyền âm: VĐV mở màn vận hành /organizer/tournaments/:id/ops thì bị chặn',
     (tester) async {
       final snap = SocialShooter(tester, binding, 'TC-MULTI-B-17');
       final container = await _signIn(tester, actor('player'));
@@ -687,8 +685,6 @@ void main() {
       await snap.snap('ops-bi-chan');
       await leaveSocialSession(tester, container);
     },
-    // BUG-PERM-02: màn ops của VĐV: Backend 403 nhưng màn không báo thiếu quyền, gọi lại API liên tục.
-    skip: true,
   );
 
   testWidgets(

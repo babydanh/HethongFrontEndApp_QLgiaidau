@@ -2247,6 +2247,7 @@
   "chatScreenStartConversation": "Bắt đầu cuộc trò chuyện",
   "chatScreenNoSearchResults": "Không tìm thấy cuộc trò chuyện phù hợp.",
   "chatScreenNoConversations": "Chưa có cuộc trò chuyện nào.",
+  "chatScreenLoadError": "Không tải được danh sách trò chuyện.",
   "chatScreenAiGreeting": "Xin chào! Mình là trợ lý AI Sporto. Bạn có thể hỏi về luật thi đấu, cách tính điểm ELO, hay cách đăng ký tham gia các giải đấu!",
   "chatScreenAiPromptRegistration": "Cách đăng ký giải đấu?",
   "chatScreenAiPromptElo": "Hệ số ELO tính thế nào?",

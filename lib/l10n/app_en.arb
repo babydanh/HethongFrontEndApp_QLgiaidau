@@ -2241,6 +2241,7 @@
   "chatScreenStartConversation": "Start a conversation",
   "chatScreenNoSearchResults": "No matching conversations found.",
   "chatScreenNoConversations": "No conversations yet.",
+  "chatScreenLoadError": "Could not load conversations.",
   "chatScreenAiGreeting": "Hello! I am Sporto AI assistant. You can ask about competition rules, ELO calculations, or how to join tournaments!",
   "chatScreenAiPromptRegistration": "How do I join a tournament?",
   "chatScreenAiPromptElo": "How is ELO calculated?",

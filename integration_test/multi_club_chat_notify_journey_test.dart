@@ -580,7 +580,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-C-17 phân quyền âm trên giao diện: thành viên thường mở thẳng /club/:id/manage phải bị chặn (SKIP BUG-CLUB-02)',
+    'TC-MULTI-C-17 phân quyền âm trên giao diện: thành viên thường mở thẳng /club/:id/manage phải bị chặn',
     (tester) async {
       final shooter = shooterOf(tester, '17');
       final container = await signInAs(tester, actor('member'));
@@ -588,8 +588,6 @@ void main() {
       await shooter.snap('thanh-vien-mo-manage');
       await _leave(tester, container);
     },
-    // BUG-CLUB-02: màn Điều phối không kiểm quyền, router chỉ truyền extra isOwner (app_router.dart:668-673).
-    skip: true,
   );
 
   testWidgets(
@@ -645,10 +643,8 @@ void main() {
     },
   );
 
-  // BUG-CHAT-01: nếu đỏ vì lỗi sản phẩm thì thêm
-  // skip: 'BUG-CHAT-01: ChatDetailScreen gọi setState sau dispose khi socket đóng'.
   testWidgets(
-    'TC-MULTI-C-20 thoát màn chat khi socket đóng: không ném lỗi setState sau dispose (SKIP BUG-CHAT-01)',
+    'TC-MULTI-C-20 thoát màn chat khi socket đóng: không ném lỗi setState sau dispose',
     (tester) async {
       final shooter = shooterOf(tester, '20');
       final roomId = await _clubRoomId(
@@ -674,9 +670,6 @@ void main() {
         reason: 'thoát màn chat không được ném lỗi: $error',
       );
     },
-    // BUG-CHAT-01: ChatDetailScreen gọi setState sau dispose khi socket đóng (chat_detail_screen.dart:164-173).
-    // Đã tái hiện trên cloud (run 43584781106): _AssertionError lifecycleState defunct. Gỡ skip khi sửa.
-    skip: true,
   );
 }
 

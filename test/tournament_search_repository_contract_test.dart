@@ -99,6 +99,18 @@ void main() {
     expect(requests.single.queryParameters.keys, isNot(contains('sport')));
   });
 
+  test(
+    'registration filter asks for tournaments with status REGISTRATION_OPEN',
+    () async {
+      await repository.getPublicTournamentsPaged(
+        status: 'registration',
+        rethrowOnError: true,
+      );
+
+      expect(requests.single.queryParameters['status'], 'REGISTRATION_OPEN');
+    },
+  );
+
   test('completed filter returns only completed tournaments', () async {
     dio.interceptors.clear();
     dio.interceptors.add(

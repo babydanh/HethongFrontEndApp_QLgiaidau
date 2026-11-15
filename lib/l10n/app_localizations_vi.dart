@@ -5627,6 +5627,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatScreenNoConversations => 'Chưa có cuộc trò chuyện nào.';
 
   @override
+  String get chatScreenLoadError => 'Không tải được danh sách trò chuyện.';
+
+  @override
   String get chatScreenAiGreeting =>
       'Xin chào! Mình là trợ lý AI Sporto. Bạn có thể hỏi về luật thi đấu, cách tính điểm ELO, hay cách đăng ký tham gia các giải đấu!';
 

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
@@ -84,8 +85,9 @@ class _ClubMatchSessionsScreenState
       ),
     );
     if (created == true && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
     }
   }
 
@@ -177,6 +179,8 @@ class _ClubMatchSessionDetailPageState
     extends ConsumerState<ClubMatchSessionDetailPage> {
   StreamSubscription<Map<String, dynamic>>? _sessionMatchSubscription;
   Timer? _sessionRefreshTimer;
+  // Giữ tham chiếu từ initState: dispose() không được gọi ref.read (BUG-SESSDETAIL-01).
+  late final MatchSocketService _matchSocket;
   bool _sessionRefreshScheduled = false;
   int _currentPage = 1;
   static const int _slotsPerPage = 16;
@@ -185,11 +189,12 @@ class _ClubMatchSessionDetailPageState
   @override
   void initState() {
     super.initState();
+    _matchSocket = ref.read(matchSocketServiceProvider);
     unawaited(_connectSessionSocket());
   }
 
   Future<void> _connectSessionSocket() async {
-    final socket = ref.read(matchSocketServiceProvider);
+    final socket = _matchSocket;
     await socket.connect(null, joinMatch: false);
     if (!mounted) return;
 
@@ -223,13 +228,15 @@ class _ClubMatchSessionDetailPageState
       _sessionRefreshScheduled = false;
       if (mounted) ref.invalidate(clubSessionDetailProvider(session.id));
     });
+    // addPostFrameCallback không tự xin khung hình (BUG-SESSDETAIL-03).
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   @override
   void dispose() {
     _sessionMatchSubscription?.cancel();
     _sessionRefreshTimer?.cancel();
-    ref.read(matchSocketServiceProvider).leaveClubMatchSession(session.id);
+    _matchSocket.leaveClubMatchSession(session.id);
     super.dispose();
   }
 
@@ -244,8 +251,9 @@ class _ClubMatchSessionDetailPageState
       await action();
       _scheduleSessionDetailRefresh();
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(success)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(success)));
       }
     } catch (error) {
       if (error is DioException && error.response?.statusCode == 409) {
@@ -349,35 +357,10 @@ class _ClubMatchSessionDetailPageState
     WidgetRef ref,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.clubMatchSessionCreateMock),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 255,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            hintText: l10n.clubMatchSessionMockNameHint,
-          ),
-          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: Text(l10n.clubMatchSessionCreateMock),
-          ),
-        ],
-      ),
+      builder: (_) => const _MockParticipantNameDialog(),
     );
-    controller.dispose();
     if (name == null || name.isEmpty || !context.mounted) return;
     await _mutation(
       context,
@@ -1651,8 +1634,9 @@ class _ClubMatchSessionDetailPageState
           const SizedBox(height: 16),
           Text(
             l10n.clubMatchSessionParticipants,
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           if (stats.isEmpty)
@@ -1719,8 +1703,9 @@ class _SessionSectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             '$title ($count)',
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
         ...?(action == null ? null : <Widget>[action!]),
@@ -2237,5 +2222,54 @@ class _ClubSessionMatchScoringEntry extends ConsumerWidget {
     // this avoids a blank tap while the dedicated social endpoint responds.
     final match = matchAsync.value ?? initialMatch;
     return OfficialScorePage(tournamentId: '', matchId: matchId, match: match);
+  }
+}
+
+/// Hộp thoại nhập tên VĐV ảo. Controller thuộc State của hộp thoại nên chỉ
+/// dispose khi hộp thoại đã gỡ hẳn, sau animation đóng (BUG-SESSDETAIL-02).
+class _MockParticipantNameDialog extends StatefulWidget {
+  const _MockParticipantNameDialog();
+
+  @override
+  State<_MockParticipantNameDialog> createState() =>
+      _MockParticipantNameDialogState();
+}
+
+class _MockParticipantNameDialogState
+    extends State<_MockParticipantNameDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.clubMatchSessionCreateMock),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        maxLength: 255,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(
+          hintText: l10n.clubMatchSessionMockNameHint,
+        ),
+        onSubmitted: (value) => Navigator.pop(context, value.trim()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: Text(l10n.clubMatchSessionCreateMock),
+        ),
+      ],
+    );
   }
 }

@@ -234,7 +234,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-MULTI-E-07 BUG-ADMIN-03 admin thấy CLB mới trong Quản lý CLB, CLB đang hoạt động nên không có nút Duyệt',
+    'TC-MULTI-E-07 admin thấy CLB mới trong Quản lý CLB, CLB đang hoạt động nên không có nút Duyệt',
     (tester) async {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-E-07');
       final owner = (await _actors())['clubOwner']!;
@@ -254,12 +254,10 @@ void main() {
       expect(find.text('Vô hiệu'), findsOneWidget);
       await leaveSocialSession(tester, container);
     },
-    skip:
-        _skipKnownBugs, // BUG-ADMIN-03: GET /communities?limit=200 bị Backend 400 (tối đa 50), Quản lý CLB luôn báo lỗi tải
   );
 
   testWidgets(
-    'TC-MULTI-E-08 BUG-ADMIN-03 admin vô hiệu CLB: bắt buộc nhập lý do, sau đó CLB bị từ chối',
+    'TC-MULTI-E-08 admin vô hiệu CLB: bắt buộc nhập lý do, sau đó CLB bị từ chối',
     (tester) async {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-E-08');
       final owner = (await _actors())['clubOwner']!;
@@ -303,7 +301,6 @@ void main() {
       expect(await _communityStatus(clubId, owner.token), 'REJECTED');
       await leaveSocialSession(tester, container);
     },
-    skip: _skipKnownBugs, // BUG-ADMIN-03
   );
 
   testWidgets(
@@ -475,7 +472,7 @@ void main() {
     );
 
     testWidgets(
-      'TC-MULTI-E-19 BUG-GUEST-01 phân quyền âm: khách mở /chat, /club-create, /club-invites phải bị đưa về đăng nhập',
+      'TC-MULTI-E-19 phân quyền âm: khách mở /chat, /club-create, /club-invites phải bị đưa về đăng nhập',
       (tester) async {
         final shooter = SocialShooter(tester, binding, 'TC-MULTI-E-19');
         final container = await _guestApp(tester);
@@ -485,8 +482,6 @@ void main() {
         }
         await leaveSocialSession(tester, container);
       },
-      skip:
-          _skipKnownBugs, // BUG-GUEST-01: allowlist startsWith cho khách vào /chat, /club-create, /club-invites (app_router.dart:125-140)
     );
   });
 

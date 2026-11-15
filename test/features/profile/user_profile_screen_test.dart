@@ -243,7 +243,6 @@ void main() {
         expect(find.textContaining('Bad state'), findsNothing);
         expect(find.textContaining('socket closed'), findsNothing);
       },
-      skip: true,
     );
   });
 

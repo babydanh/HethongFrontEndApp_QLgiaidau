@@ -35,6 +35,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   List<ChatRoomModel> _rooms = [];
   bool _isLoadingRooms = true;
+  bool _roomsLoadFailed = false;
   String _searchQuery = '';
 
   // AI Chat State
@@ -137,9 +138,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ChatRoomModel.fromJson(json, currentUserId: currentUserId),
             )
             .toList();
-        setState(() => _rooms = _reconcileRooms(items));
+        setState(() {
+          _rooms = _reconcileRooms(items);
+          _roomsLoadFailed = false;
+        });
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      debugPrint('ChatScreen: lỗi tải phòng chat: $e\n$stack');
+      // Làm mới yên lặng (timer/socket) thất bại thì giữ danh sách cũ, không báo lỗi.
+      if (!quiet && mounted) setState(() => _roomsLoadFailed = true);
+    }
     if (!quiet && mounted) setState(() => _isLoadingRooms = false);
   }
 
@@ -388,6 +396,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       ? const ScrollFreeSkeleton(
                           child: ListPageSkeleton(itemCount: 8),
                         )
+                      : _roomsLoadFailed && _rooms.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                size: 52,
+                                color: colors.error,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                l10n.chatScreenLoadError,
+                                style: TextStyle(
+                                  color: colors.textMuted,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: _loadRooms,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(l10n.infoRetry),
+                              ),
+                            ],
+                          ),
+                        )
                       : filteredRooms.isEmpty
                       ? Center(
                           child: Column(
@@ -412,6 +447,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           ),
                         )
                       : ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: filteredRooms.length,
                           separatorBuilder: (_, _) => Divider(
                             height: 1,
