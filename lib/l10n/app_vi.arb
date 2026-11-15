@@ -8065,5 +8065,12 @@
   "rosterListResetConfirm": "Ghép lại",
   "rosterListCancel": "Hủy",
   "rosterListLinked": "Đã liên kết tài khoản",
-  "rosterListNoAccount": "Chưa có tài khoản"
+  "rosterListNoAccount": "Chưa có tài khoản",
+  "socialLocationInlineNameLabel": "Địa điểm",
+  "socialLocationInlineProvinceLabel": "Tỉnh / Thành phố",
+  "socialLocationInlineWardLabel": "Phường / Xã",
+  "socialLocationInlinePinRequired": "Kéo ghim đến đúng sân",
+  "socialLocationInlineMyLocation": "Vị trí của tôi",
+  "socialLocationInlineMyLocationError": "Không lấy được vị trí hiện tại.",
+  "socialLocationInlineVenueFromDirectory": "Sân có sẵn: vị trí lấy từ danh bạ"
 }

@@ -36516,6 +36516,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có tài khoản'**
   String get rosterListNoAccount;
+
+  /// No description provided for @socialLocationInlineNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get socialLocationInlineNameLabel;
+
+  /// No description provided for @socialLocationInlineProvinceLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉnh / Thành phố'**
+  String get socialLocationInlineProvinceLabel;
+
+  /// No description provided for @socialLocationInlineWardLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phường / Xã'**
+  String get socialLocationInlineWardLabel;
+
+  /// No description provided for @socialLocationInlinePinRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo ghim đến đúng sân'**
+  String get socialLocationInlinePinRequired;
+
+  /// No description provided for @socialLocationInlineMyLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí của tôi'**
+  String get socialLocationInlineMyLocation;
+
+  /// No description provided for @socialLocationInlineMyLocationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lấy được vị trí hiện tại.'**
+  String get socialLocationInlineMyLocationError;
+
+  /// No description provided for @socialLocationInlineVenueFromDirectory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân có sẵn: vị trí lấy từ danh bạ'**
+  String get socialLocationInlineVenueFromDirectory;
 }
 
 class _AppLocalizationsDelegate

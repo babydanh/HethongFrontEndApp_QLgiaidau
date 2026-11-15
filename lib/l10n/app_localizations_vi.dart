@@ -20317,4 +20317,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rosterListNoAccount => 'Chưa có tài khoản';
+
+  @override
+  String get socialLocationInlineNameLabel => 'Địa điểm';
+
+  @override
+  String get socialLocationInlineProvinceLabel => 'Tỉnh / Thành phố';
+
+  @override
+  String get socialLocationInlineWardLabel => 'Phường / Xã';
+
+  @override
+  String get socialLocationInlinePinRequired => 'Kéo ghim đến đúng sân';
+
+  @override
+  String get socialLocationInlineMyLocation => 'Vị trí của tôi';
+
+  @override
+  String get socialLocationInlineMyLocationError =>
+      'Không lấy được vị trí hiện tại.';
+
+  @override
+  String get socialLocationInlineVenueFromDirectory =>
+      'Sân có sẵn: vị trí lấy từ danh bạ';
 }

@@ -8037,5 +8037,12 @@
   "rosterListResetConfirm": "Re-map",
   "rosterListCancel": "Cancel",
   "rosterListLinked": "Account linked",
-  "rosterListNoAccount": "No account yet"
+  "rosterListNoAccount": "No account yet",
+  "socialLocationInlineNameLabel": "Place",
+  "socialLocationInlineProvinceLabel": "Province / City",
+  "socialLocationInlineWardLabel": "Ward / Commune",
+  "socialLocationInlinePinRequired": "Drag the pin to the right venue",
+  "socialLocationInlineMyLocation": "My location",
+  "socialLocationInlineMyLocationError": "Could not get your current location.",
+  "socialLocationInlineVenueFromDirectory": "Existing venue: location comes from the directory"
 }

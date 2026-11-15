@@ -11,9 +11,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/venue_text_hint.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
@@ -21,7 +20,6 @@ import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/so
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
-import 'package:latlong2/latlong.dart';
 
 /// Body cho `PATCH /social-sessions/:id`, chỉ gồm field mà
 /// `UpdateSocialSessionDto` chấp nhận.
@@ -565,14 +563,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   }
 
   Future<void> _chooseLocation() async {
-    final location = ref.read(userLocationProvider);
-    final initialCenter = location.hasPosition
-        ? LatLng(location.latitude!, location.longitude!)
-        : const LatLng(10.7769, 106.7009);
-    final selected = await SocialLocationFlow.show(
+    // The sheet starts its draft pin from the user's GPS fix (or central HCMC).
+    final selected = await SocialLocationSheet.show(
       context,
       initialPlace: _selectedPlace,
-      initialCenter: initialCenter,
       categoryId: _selectedCategoryId(),
     );
     if (selected != null && mounted) {

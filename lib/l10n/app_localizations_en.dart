@@ -20402,4 +20402,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rosterListNoAccount => 'No account yet';
+
+  @override
+  String get socialLocationInlineNameLabel => 'Place';
+
+  @override
+  String get socialLocationInlineProvinceLabel => 'Province / City';
+
+  @override
+  String get socialLocationInlineWardLabel => 'Ward / Commune';
+
+  @override
+  String get socialLocationInlinePinRequired =>
+      'Drag the pin to the right venue';
+
+  @override
+  String get socialLocationInlineMyLocation => 'My location';
+
+  @override
+  String get socialLocationInlineMyLocationError =>
+      'Could not get your current location.';
+
+  @override
+  String get socialLocationInlineVenueFromDirectory =>
+      'Existing venue: location comes from the directory';
 }

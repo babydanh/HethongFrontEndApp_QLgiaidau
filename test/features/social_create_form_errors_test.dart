@@ -105,6 +105,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(rowError, findsOneWidget);
+      // TC-SOCIAL-INLINE-APP-10: a failed submit marks the row, it does not
+      // open the location sheet by itself.
+      expect(find.byType(BottomSheet), findsNothing);
     },
   );
 }
