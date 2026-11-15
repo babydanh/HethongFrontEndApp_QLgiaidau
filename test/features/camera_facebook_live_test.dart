@@ -141,6 +141,25 @@ void main() {
     expect(map(StateError('x')), FacebookLiveError.generic);
   });
 
+  test('TC-FBONE-APP-01 maps FACEBOOK_PAGE_NOT_ELIGIBLE, tells 100 followers', () {
+    final error = facebookLiveError(
+      _dioError(400, {'code': 'FACEBOOK_PAGE_NOT_ELIGIBLE'}),
+    );
+    expect(error, FacebookLiveError.pageNotEligible);
+    expect(
+      facebookLiveErrorText(lookupAppLocalizations(const Locale('en')), error),
+      contains('100 followers'),
+    );
+    expect(
+      facebookLiveErrorText(lookupAppLocalizations(const Locale('vi')), error),
+      contains('100 người theo dõi'),
+    );
+    expect(
+      facebookLiveDefaultCameraName(DateTime(2026, 11, 15, 9, 5)),
+      'Live Facebook 09:05',
+    );
+  });
+
   testWidgets('TC-FBPAGE-APP-01 shared page not configured: no Connect or Create, '
       'tells the user to contact an administrator', (tester) async {
     await _pumpPanel(tester, _FakeRepo(connected: false));

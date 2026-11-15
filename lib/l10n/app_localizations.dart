@@ -33181,6 +33181,42 @@ abstract class AppLocalizations {
   /// **'Tạo live'**
   String get tournamentCameraFbCreate;
 
+  /// No description provided for @tournamentCameraFbCreateCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo camera live Facebook'**
+  String get tournamentCameraFbCreateCamera;
+
+  /// No description provided for @tournamentCameraFbCreatingCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo camera...'**
+  String get tournamentCameraFbCreatingCamera;
+
+  /// No description provided for @tournamentCameraFbErrorPageNotEligible.
+  ///
+  /// In vi, this message translates to:
+  /// **'Fanpage cần ít nhất 100 người theo dõi để tạo live, hãy liên hệ quản trị viên.'**
+  String get tournamentCameraFbErrorPageNotEligible;
+
+  /// No description provided for @tournamentCameraFbReadyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera đã sẵn sàng'**
+  String get tournamentCameraFbReadyTitle;
+
+  /// No description provided for @tournamentCameraFbReadyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera đã được tạo. Phát bằng điện thoại này qua Larix, quét mã QR bằng Larix ở máy khác, hoặc dán 2 dòng dưới vào OBS rồi bấm Bắt đầu phát. Giữ kín khoá phát; khung xem trước có thể trống đến khi bạn bắt đầu phát.'**
+  String get tournamentCameraFbReadyHint;
+
+  /// No description provided for @tournamentCameraFbReadyDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get tournamentCameraFbReadyDone;
+
   /// No description provided for @tournamentCameraFbWorking.
   ///
   /// In vi, this message translates to:
