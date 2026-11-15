@@ -18507,6 +18507,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraFbReadyDone => 'Done';
 
   @override
+  String get tournamentCameraFbReadyShowQr => 'Show QR code';
+
+  @override
+  String get tournamentCameraFbReadyHideQr => 'Hide QR code';
+
+  @override
+  String get tournamentCameraFbReadyQrWarning =>
+      'The QR code contains the stream key. Do not send a screenshot of it to anyone.';
+
+  @override
+  String get tournamentCameraFbReadyQrLabel => 'QR code to open in Larix';
+
+  @override
   String get tournamentCameraFbWorking => 'Working...';
 
   @override

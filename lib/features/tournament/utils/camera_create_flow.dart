@@ -40,7 +40,13 @@ Future<void> runCreateCameraFlow({
             playbackUrl: value.playbackUrl,
           );
       submitted = value;
-      await refresh();
+      // The camera exists now: a failing refresh must not make onSubmit throw,
+      // or the sheet would stay open and a retry would create a second camera.
+      try {
+        await refresh();
+      } on Object {
+        // The list refreshes on the next load; the camera itself was saved.
+      }
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(

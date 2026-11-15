@@ -13,6 +13,8 @@ class FacebookLivePanel extends StatefulWidget {
     required this.tournamentId,
     required this.repository,
     required this.onCreated,
+    this.onBeforeCreate,
+    this.onBusyChanged,
     this.enabled = true,
   });
 
@@ -21,6 +23,12 @@ class FacebookLivePanel extends StatefulWidget {
 
   /// Cha tạo camera từ live vừa tạo; panel giữ nút bận cho tới khi xong.
   final Future<void> Function(CreatedFacebookLive live) onCreated;
+
+  /// Cha kiểm dữ liệu form trước khi gọi Facebook; trả false thì không tạo live.
+  final bool Function()? onBeforeCreate;
+
+  /// Báo cha khi panel bắt đầu/xong việc, để cha khoá phần còn lại của sheet.
+  final ValueChanged<bool>? onBusyChanged;
   final bool enabled;
 
   @override
@@ -60,20 +68,29 @@ class _FacebookLivePanelState extends State<FacebookLivePanel> {
       _busy = true;
       _error = null;
     });
+    widget.onBusyChanged?.call(true);
     try {
       await action();
     } on Object catch (failure) {
       if (mounted) setState(() => _error = facebookLiveError(failure));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+        widget.onBusyChanged?.call(false);
+      }
     }
   }
 
-  Future<void> _create() => _run(() async {
+  Future<void> _create() async {
+    if (_busy || widget.onBeforeCreate?.call() == false) return;
+    await _run(_createAndHandOver);
+  }
+
+  Future<void> _createAndHandOver() async {
     final live = await widget.repository.createLive(widget.tournamentId);
     if (!mounted) return;
     await widget.onCreated(live);
-  });
+  }
 
   @override
   Widget build(BuildContext context) {

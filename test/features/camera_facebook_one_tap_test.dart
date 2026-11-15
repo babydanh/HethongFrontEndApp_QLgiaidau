@@ -106,8 +106,9 @@ Widget _app(Widget home) => MaterialApp(
 Future<void> _openFlow(
   WidgetTester tester,
   _LiveRepo live,
-  _Admin admin,
-) async {
+  _Admin admin, {
+  Future<void> Function()? refresh,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -122,7 +123,7 @@ Future<void> _openFlow(
               ref: ref,
               tournamentId: 't1',
               courts: const [_court],
-              refresh: () async {},
+              refresh: refresh ?? () async {},
             ),
             child: const Text('open'),
           ),
@@ -257,7 +258,16 @@ void main() {
 
     expect(find.text('Camera is ready'), findsOneWidget);
     expect(find.text('Camera sân 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('fb-live-qr')), findsNothing);
+    final qrToggle = find.byKey(const ValueKey('fb-live-qr-toggle'));
+    await tester.ensureVisible(qrToggle);
+    await tester.tap(qrToggle);
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('fb-live-qr')), findsOneWidget);
+    expect(find.textContaining('QR code contains the stream key'), findsOneWidget);
+    await tester.tap(qrToggle);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('fb-live-qr')), findsNothing);
     expect(_field(tester, 'fb-live-key').obscureText, isTrue);
 
     final open = find.byKey(const ValueKey('fb-live-larix-open'));
@@ -273,6 +283,70 @@ void main() {
     await tester.tap(done);
     await tester.pumpAndSettle();
     expect(find.text('Camera is ready'), findsNothing);
+  });
+
+  testWidgets('TC-FBONE-APP-07 while the live is being created Save, Cancel and '
+      'close are disabled', (tester) async {
+    final live = _LiveRepo()..gate = Completer();
+    final admin = _Admin();
+    await _openFlow(tester, live, admin);
+    await _tapCreate(tester);
+    await tester.pump();
+
+    expect(tester.widget<FilledButton>(_editorSubmit).onPressed, isNull);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.widgetWithText(OutlinedButton, 'Cancel'))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey('tournament-manage-sheet-close')),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    live.gate!.complete(_live);
+    await tester.pumpAndSettle();
+    expect(admin.created, hasLength(1));
+    expect(find.text('Camera is ready'), findsOneWidget);
+  });
+
+  testWidgets('TC-FBONE-APP-08 invalid typed name: no live is created, name '
+      'error shown', (tester) async {
+    final live = _LiveRepo();
+    final admin = _Admin();
+    await _openFlow(tester, live, admin);
+    await tester.enterText(find.byKey(const ValueKey('camera-editor-name')), 'A');
+    await _tapCreate(tester);
+    await tester.pumpAndSettle();
+    expect(live.createCalls, 0);
+    expect(admin.created, isEmpty);
+    final message = lookupAppLocalizations(
+      const Locale('en'),
+    ).tournamentCameraNameInvalid(2, 255);
+    expect(find.text(message), findsOneWidget);
+  });
+
+  testWidgets('TC-FBONE-APP-09 refresh fails after the camera exists: sheet '
+      'closes, one camera, ready sheet opens', (tester) async {
+    final live = _LiveRepo();
+    final admin = _Admin();
+    await _openFlow(
+      tester,
+      live,
+      admin,
+      refresh: () async => throw StateError('refresh down'),
+    );
+    await _tapCreate(tester);
+    await tester.pumpAndSettle();
+    expect(admin.created, hasLength(1));
+    expect(live.createCalls, 1);
+    expect(_editorSubmit, findsNothing);
+    expect(find.text('Camera is ready'), findsOneWidget);
   });
 
   testWidgets('TC-FBONE-APP-06 page not eligible: message shown, no camera', (

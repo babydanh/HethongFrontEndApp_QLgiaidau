@@ -33217,6 +33217,30 @@ abstract class AppLocalizations {
   /// **'Xong'**
   String get tournamentCameraFbReadyDone;
 
+  /// No description provided for @tournamentCameraFbReadyShowQr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mã QR'**
+  String get tournamentCameraFbReadyShowQr;
+
+  /// No description provided for @tournamentCameraFbReadyHideQr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mã QR'**
+  String get tournamentCameraFbReadyHideQr;
+
+  /// No description provided for @tournamentCameraFbReadyQrWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR chứa khoá phát, đừng chụp màn hình gửi người khác.'**
+  String get tournamentCameraFbReadyQrWarning;
+
+  /// No description provided for @tournamentCameraFbReadyQrLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR để mở trong Larix'**
+  String get tournamentCameraFbReadyQrLabel;
+
   /// No description provided for @tournamentCameraFbWorking.
   ///
   /// In vi, this message translates to:

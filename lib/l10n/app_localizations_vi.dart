@@ -18433,6 +18433,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraFbReadyDone => 'Xong';
 
   @override
+  String get tournamentCameraFbReadyShowQr => 'Hiện mã QR';
+
+  @override
+  String get tournamentCameraFbReadyHideQr => 'Ẩn mã QR';
+
+  @override
+  String get tournamentCameraFbReadyQrWarning =>
+      'Mã QR chứa khoá phát, đừng chụp màn hình gửi người khác.';
+
+  @override
+  String get tournamentCameraFbReadyQrLabel => 'Mã QR để mở trong Larix';
+
+  @override
   String get tournamentCameraFbWorking => 'Đang xử lý...';
 
   @override
