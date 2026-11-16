@@ -27,10 +27,11 @@
 	<key>NSPhotoLibraryAddUsageDescription</key><string>Sporto sử dụng quyền lưu ảnh khi bạn tải hình ảnh xuống.</string>
 	<key>NSLocationWhenInUseUsageDescription</key><string>Sporto dùng vị trí của bạn để sắp xếp và tìm các buổi Social gần nhất.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>Sporto cần truy cập vị trí của bạn để cập nhật và hiển thị các hoạt động, buổi Social gần nhất ngay cả khi ứng dụng chạy nền.</string>
-	<key>GIDClientID</key><string>$(GOOGLE_IOS_CLIENT_ID)</string>
+	<key>GIDClientID</key><string>581793214855-skbscd9le4ug3lvr44av36iv7q9oqac5.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key><string>581793214855-kl77ogsngavgd3e4vr5dtvpo9qelmv5s.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
-		<dict><key>CFBundleTypeRole</key><string>Editor</string><key>CFBundleURLName</key><string>Google Sign-In</string><key>CFBundleURLSchemes</key><array><string>$(REVERSED_CLIENT_ID)</string></array></dict>
+		<dict><key>CFBundleTypeRole</key><string>Editor</string><key>CFBundleURLName</key><string>Google Sign-In</string><key>CFBundleURLSchemes</key><array><string>com.googleusercontent.apps.581793214855-skbscd9le4ug3lvr44av36iv7q9oqac5</string></array></dict>
 		<dict><key>CFBundleTypeRole</key><string>Viewer</string><key>CFBundleURLName</key><string>Social Session</string><key>CFBundleURLSchemes</key><array><string>sporto</string></array></dict>
 	</array>
 	<key>UIBackgroundModes</key>
