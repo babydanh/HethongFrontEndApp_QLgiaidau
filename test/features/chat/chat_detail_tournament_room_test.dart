@@ -39,6 +39,7 @@ Map<String, FakeReply> _routes({
   FakeReply? messages,
   FakeReply? send,
   Map<String, dynamic> room = const {},
+  FakeReply? chatRoom,
 }) => {
   'GET /chat/rooms/$_roomId/messages':
       messages ??
@@ -61,6 +62,7 @@ Map<String, FakeReply> _routes({
     'data': {'id': _roomId, 'participants': [], ...room},
   }),
   'POST /chat/messages': ?send,
+  'GET /tournaments/t1/chat-room': ?chatRoom,
   'GET /chat/rooms/$_roomId/pinned': const FakeReply(200, {'data': null}),
   'POST /chat/rooms/$_roomId/kicks': const FakeReply(201, {'data': {}}),
 };
@@ -79,6 +81,7 @@ Future<void> _pump(
   FakeApiAdapter adapter, {
   bool readOnly = false,
   bool organizer = false,
+  String roomType = 'TOURNAMENT',
 }) async {
   _FakeChatSocket.last = null;
   tester.view.physicalSize = const Size(900, 1800);
@@ -102,7 +105,7 @@ Future<void> _pump(
         builder: (_, _) => ChatDetailScreen(
           roomId: _roomId,
           roomName: 'Phòng giải',
-          roomType: 'TOURNAMENT',
+          roomType: roomType,
           readOnly: readOnly,
           isRoomOrganizer: organizer,
         ),
@@ -417,6 +420,43 @@ void main() {
 
     expect(find.byType(ChatDetailScreen), findsNothing);
     expect(find.text(l10n.chatRoomEvictedNotice), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 a moderator opening from the chat list gets rights from the server', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      FakeApiAdapter(
+        _routes(
+          room: {'tournamentId': 't1', 'locked': true},
+          chatRoom: const FakeReply(200, {
+            'data': {
+              'available': true,
+              'roomId': _roomId,
+              'status': 'OPEN',
+              'canWrite': true,
+              'role': 'MEMBER',
+              'canModerate': true,
+            },
+          }),
+        ),
+      ),
+    );
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byTooltip(l10n.chatRoomManageTooltip), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 a locked flag on a non-tournament room is ignored', (
+    tester,
+  ) async {
+    _FakeChatSocket.last = null;
+    await _pump(tester, FakeApiAdapter(_routes(room: {'locked': true})), roomType: 'GROUP');
+
+    expect(find.byType(TextField), findsOneWidget);
     await _unmount(tester);
   });
 }

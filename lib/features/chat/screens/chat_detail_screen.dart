@@ -146,8 +146,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       widget.readOnly || _serverClosed || _pendingApproval || _lockedForMe;
 
   /// Locked rooms still let moderators post.
-  bool get _lockedForMe => _roomLocked && !widget.isRoomOrganizer;
-  bool get _canModerate => !_isTournamentRoom || widget.isRoomOrganizer;
+  bool get _lockedForMe => _isTournamentRoom && _roomLocked && !_isModerator;
+  bool get _canModerate => !_isTournamentRoom || _isModerator;
+
+  /// Route flag (`organizer=1` from the tournament page) or `canModerate`
+  /// fetched for rooms opened from the chat list.
+  bool get _isModerator => widget.isRoomOrganizer || _serverCanModerate;
+  bool _serverCanModerate = false;
   final Map<String, Future<ChatLinkPreviewModel?>> _linkPreviewRequests = {};
   final Map<String, ChatLinkPreviewModel?> _linkPreviewCache = {};
 
@@ -475,10 +480,32 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     if (!mounted || _kicked) return;
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _kicked = true);
-    if (!widget.embedded && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
+    // Close a sheet or dialog opened over this screen first.
+    if (route != null && !route.isCurrent) {
+      navigator.popUntil((r) => r == route);
     }
+    if (!widget.embedded && navigator.canPop()) navigator.pop();
     messenger.showSnackBar(SnackBar(content: Text(notice)));
+  }
+
+  /// Opened without the route flag (e.g. from the chat list): ask the
+  /// tournament chat-room endpoint whether this viewer moderates the room.
+  Future<void> _loadModeratorRights(String? tournamentId) async {
+    if (widget.isRoomOrganizer || tournamentId == null || tournamentId.isEmpty) {
+      return;
+    }
+    try {
+      final room = await ref
+          .read(tournamentChatRepositoryProvider)
+          .getChatRoom(tournamentId);
+      if (mounted && room.canModerate) {
+        setState(() => _serverCanModerate = true);
+      }
+    } catch (_) {
+      // Keep member rights; the server still enforces every action.
+    }
   }
 
   /// `locked` / `slowModeSeconds` from room details or `chat:room:settings`;
@@ -576,7 +603,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       final res = await dio.get('/chat/rooms/${widget.roomId}');
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
       if (mounted) {
-        if (data is Map) _applyRoomSettings(data);
+        if (data is Map && _isTournamentRoom) {
+          _applyRoomSettings(data);
+          _loadModeratorRights(data['tournamentId']?.toString());
+        }
         final rawParts = data['participants'];
         if (rawParts is List) {
           final list = rawParts
@@ -1126,11 +1156,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   bool _canRevoke(ChatMessageModel message) =>
       !message.isRevoked &&
-      (message.isMine || (_isTournamentRoom && widget.isRoomOrganizer));
+      (message.isMine || (_isTournamentRoom && _isModerator));
 
   bool _canKick(ChatMessageModel message) =>
       _isTournamentRoom &&
-      widget.isRoomOrganizer &&
+      _isModerator &&
       !message.isMine &&
       !message.senderId.startsWith('ai-') &&
       message.senderId.isNotEmpty;
@@ -1644,7 +1674,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               tooltip: l10n.chatDetailPollTooltip,
               onPressed: _openCreatePollDialog,
             ),
-          if (_isTournamentRoom && widget.isRoomOrganizer)
+          if (_isTournamentRoom && _isModerator)
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_outlined, size: 22),
               tooltip: l10n.chatRoomManageTooltip,

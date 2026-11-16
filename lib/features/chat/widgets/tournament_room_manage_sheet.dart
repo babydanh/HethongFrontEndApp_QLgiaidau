@@ -61,6 +61,7 @@ class _TournamentRoomManageSheetState
   String? _nextCursor;
   bool _loading = true;
   bool _loadFailed = false;
+  bool _loadingMore = false;
   late int _slowMode = widget.slowModeSeconds;
   late bool _locked = widget.locked;
 
@@ -74,6 +75,7 @@ class _TournamentRoomManageSheetState
   }
 
   Future<void> _reload() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _loadFailed = false;
@@ -101,16 +103,25 @@ class _TournamentRoomManageSheetState
 
   Future<void> _loadMore() async {
     final cursor = _nextCursor;
-    if (cursor == null) return;
+    if (cursor == null || _loadingMore) return;
+    _loadingMore = true;
     try {
       final page = await _repo.listParticipants(widget.roomId, cursor: cursor);
       if (!mounted) return;
+      final known = {for (final m in _members) m.userId};
       setState(() {
-        _members = [..._members, ...page.items];
+        _members = [
+          ..._members,
+          ...page.items.where((m) => !known.contains(m.userId)),
+        ];
         _nextCursor = page.nextCursor;
       });
     } catch (_) {
-      _snack(AppLocalizations.of(context)!.chatRoomManageLoadError);
+      if (mounted) {
+        _snack(AppLocalizations.of(context)!.chatRoomManageLoadError);
+      }
+    } finally {
+      _loadingMore = false;
     }
   }
 
@@ -126,6 +137,7 @@ class _TournamentRoomManageSheetState
     try {
       await call();
       if (done != null) _snack(done);
+      if (!mounted) return;
       await _reload();
     } catch (e) {
       final body = e is DioException ? e.response?.data : null;
