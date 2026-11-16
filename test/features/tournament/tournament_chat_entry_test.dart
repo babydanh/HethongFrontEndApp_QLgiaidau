@@ -43,6 +43,26 @@ const _closed = TournamentChatRoom(
 );
 const _kicked = TournamentChatRoom(available: false, reason: 'KICKED');
 const _purged = TournamentChatRoom(available: false, reason: 'PURGED');
+const _needsRegistration = TournamentChatRoom(
+  available: false,
+  reason: 'NOT_REGISTERED',
+  registrationOpen: true,
+);
+const _registrationClosed = TournamentChatRoom(
+  available: false,
+  reason: 'NOT_REGISTERED',
+  registrationOpen: false,
+);
+const _pending = TournamentChatRoom(
+  available: true,
+  roomId: 'room-1',
+  status: 'OPEN',
+  canWrite: false,
+  role: 'MEMBER',
+  registration: 'PENDING',
+  name: 'Chat Cup',
+  logoUrl: 'https://cdn.example.test/logo.png',
+);
 
 Tournament _tournament() => Tournament.fromJson({
   'name': 'Chat Cup',
@@ -79,6 +99,13 @@ Future<void> _pump(
         builder: (_, state) {
           _lastRoutes.add(state.uri.toString());
           return const Scaffold(body: Text('AT /login'));
+        },
+      ),
+      GoRoute(
+        path: '/register/:id',
+        builder: (_, state) {
+          _lastRoutes.add(state.uri.toString());
+          return const Scaffold(body: Text('AT /register'));
         },
       ),
       GoRoute(
@@ -136,6 +163,9 @@ void main() {
   const closedKey = ValueKey('tournament-chat-closed');
   const kickedKey = ValueKey('tournament-chat-kicked');
   const guestKey = ValueKey('tournament-chat-guest');
+  const registerKey = ValueKey('tournament-chat-register');
+  const registerClosedKey = ValueKey('tournament-chat-register-closed');
+  const pendingKey = ValueKey('tournament-chat-pending');
 
   testWidgets('TC-ROOM-A01 OPEN reply shows the green open chat icon', (
     tester,
@@ -247,5 +277,61 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ReportSheet), findsOneWidget);
+  });
+
+  testWidgets('TC-CHAT-UI-A-04 NOT_REGISTERED opens the registration screen, not the room', (
+    tester,
+  ) async {
+    await _pump(tester, signedIn: true, room: _needsRegistration);
+
+    expect(find.byKey(registerKey), findsOneWidget);
+    expect(find.byTooltip(l10n.tournamentChatTooltipRegister), findsOneWidget);
+    expect(find.byKey(openKey), findsNothing);
+
+    await tester.tap(find.byKey(registerKey));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AT /register'), findsOneWidget);
+    expect(_lastRoutes.single, '/register/$_id');
+  });
+
+  testWidgets('TC-CHAT-UI-A-04 NOT_REGISTERED with registration closed explains and stays put', (
+    tester,
+  ) async {
+    await _pump(tester, signedIn: true, room: _registrationClosed);
+
+    expect(find.byKey(registerKey), findsNothing);
+    expect(find.byKey(registerClosedKey), findsOneWidget);
+    expect(
+      find.byTooltip(l10n.tournamentChatTooltipRegistrationClosed),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(registerClosedKey));
+    await tester.pump();
+
+    expect(
+      find.text(l10n.tournamentChatTooltipRegistrationClosed),
+      findsWidgets,
+    );
+    expect(_lastRoutes, isEmpty);
+  });
+
+  testWidgets('TC-CHAT-UI-A-04 PENDING enters the room with the input locked and the tournament name', (
+    tester,
+  ) async {
+    await _pump(tester, signedIn: true, room: _pending);
+
+    expect(find.byKey(pendingKey), findsOneWidget);
+    expect(find.byKey(openKey), findsNothing);
+
+    await tester.tap(find.byKey(pendingKey));
+    await tester.pumpAndSettle();
+
+    expect(_lastRoutes.single, startsWith('/chat/room-1'));
+    expect(_lastRoutes.single, contains('pending=1'));
+    expect(_lastRoutes.single, isNot(contains('readOnly=1')));
+    expect(_lastRoutes.single, contains('name=Chat+Cup'));
+    expect(_lastRoutes.single, contains('avatar=https'));
   });
 }

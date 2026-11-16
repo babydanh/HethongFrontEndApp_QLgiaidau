@@ -1001,6 +1001,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 roomType: type,
                 communityId: communityId,
                 readOnly: state.uri.queryParameters['readOnly'] == '1',
+                pendingApproval: state.uri.queryParameters['pending'] == '1',
                 isRoomOrganizer: state.uri.queryParameters['organizer'] == '1',
               );
             },

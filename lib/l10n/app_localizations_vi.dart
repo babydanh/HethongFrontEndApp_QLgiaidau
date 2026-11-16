@@ -20460,4 +20460,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatKickFailed => 'Không kick được người này. Thử lại sau.';
+
+  @override
+  String get tournamentChatTooltipRegister => 'Đăng ký để vào phòng giải';
+
+  @override
+  String get tournamentChatTooltipRegistrationClosed => 'Đã đóng đăng ký';
+
+  @override
+  String get tournamentChatTooltipPending => 'Vào phòng giải (chờ BTC duyệt)';
+
+  @override
+  String get chatRoomPendingBanner => 'Chờ BTC duyệt đăng ký để nhắn tin';
+
+  @override
+  String get chatRoomNotRegisteredNotice =>
+      'Bạn cần đăng ký giải để vào phòng này';
 }

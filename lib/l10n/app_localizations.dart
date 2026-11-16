@@ -36762,6 +36762,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không kick được người này. Thử lại sau.'**
   String get chatKickFailed;
+
+  /// No description provided for @tournamentChatTooltipRegister.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký để vào phòng giải'**
+  String get tournamentChatTooltipRegister;
+
+  /// No description provided for @tournamentChatTooltipRegistrationClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng đăng ký'**
+  String get tournamentChatTooltipRegistrationClosed;
+
+  /// No description provided for @tournamentChatTooltipPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào phòng giải (chờ BTC duyệt)'**
+  String get tournamentChatTooltipPending;
+
+  /// No description provided for @chatRoomPendingBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ BTC duyệt đăng ký để nhắn tin'**
+  String get chatRoomPendingBanner;
+
+  /// No description provided for @chatRoomNotRegisteredNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn cần đăng ký giải để vào phòng này'**
+  String get chatRoomNotRegisteredNotice;
 }
 
 class _AppLocalizationsDelegate

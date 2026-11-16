@@ -11,6 +11,15 @@ enum TournamentChatState {
 
   /// Room is gone or unavailable: the icon is hidden.
   purged,
+
+  /// Not registered yet and registration is open: the icon opens sign-up.
+  needsRegistration,
+
+  /// Not registered and registration is closed: the icon only explains.
+  registrationClosed,
+
+  /// Registered, waiting for the organizer: can read, cannot write.
+  pending,
 }
 
 /// Reply of `GET /tournaments/:id/chat-room`. The server decides the status
@@ -25,6 +34,10 @@ class TournamentChatRoom {
     this.role,
     this.closesAt,
     this.purgeAt,
+    this.registrationOpen,
+    this.registration,
+    this.name,
+    this.logoUrl,
   });
 
   final bool available;
@@ -36,17 +49,30 @@ class TournamentChatRoom {
   final DateTime? closesAt;
   final DateTime? purgeAt;
 
+  /// Only with `reason: NOT_REGISTERED`; null (old server) counts as open.
+  final bool? registrationOpen;
+
+  /// `APPROVED` | `PENDING` | `STAFF`; null on an old server.
+  final String? registration;
+
+  /// Tournament name and logo for the room header, when the server sends them.
+  final String? name;
+  final String? logoUrl;
+
   bool get isOrganizer => role == 'ORGANIZER';
 
   TournamentChatState get state {
     if (!available) {
-      return reason == 'KICKED'
-          ? TournamentChatState.kicked
-          : TournamentChatState.purged;
+      if (reason == 'KICKED') return TournamentChatState.kicked;
+      if (reason != 'NOT_REGISTERED') return TournamentChatState.purged;
+      return registrationOpen == false
+          ? TournamentChatState.registrationClosed
+          : TournamentChatState.needsRegistration;
     }
     if (roomId == null || roomId!.isEmpty) return TournamentChatState.purged;
-    return status == 'CLOSED'
-        ? TournamentChatState.closed
+    if (status == 'CLOSED') return TournamentChatState.closed;
+    return registration == 'PENDING'
+        ? TournamentChatState.pending
         : TournamentChatState.open;
   }
 
@@ -60,6 +86,13 @@ class TournamentChatRoom {
       role: json['role']?.toString(),
       closesAt: DateTime.tryParse(json['closesAt']?.toString() ?? ''),
       purgeAt: DateTime.tryParse(json['purgeAt']?.toString() ?? ''),
+      registrationOpen: switch (json['registrationOpen']) {
+        final bool v => v,
+        _ => null,
+      },
+      registration: json['registration']?.toString(),
+      name: json['name']?.toString(),
+      logoUrl: json['logoUrl']?.toString(),
     );
   }
 }

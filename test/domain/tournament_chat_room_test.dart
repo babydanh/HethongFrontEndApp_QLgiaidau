@@ -44,4 +44,66 @@ void main() {
     expect(of('UNAVAILABLE'), TournamentChatState.purged);
     expect(of(null), TournamentChatState.purged);
   });
+
+  test('TC-CHAT-UI-A-01 NOT_REGISTERED reply maps by registrationOpen', () {
+    TournamentChatRoom of(Map<String, dynamic> extra) =>
+        TournamentChatRoom.fromJson({
+          'available': false,
+          'reason': 'NOT_REGISTERED',
+          ...extra,
+        });
+    final open = of({'registrationOpen': true});
+    expect(open.state, TournamentChatState.needsRegistration);
+    expect(open.registrationOpen, isTrue);
+    expect(
+      of({'registrationOpen': false}).state,
+      TournamentChatState.registrationClosed,
+    );
+    // Missing flag: assume registration is still open.
+    expect(of({}).state, TournamentChatState.needsRegistration);
+  });
+
+  test('TC-CHAT-UI-A-02 registration, name and logoUrl are parsed', () {
+    final room = TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'status': 'OPEN',
+      'canWrite': false,
+      'role': 'MEMBER',
+      'registration': 'PENDING',
+      'name': 'Chat Cup',
+      'logoUrl': 'https://cdn.example.test/logo.png',
+    });
+    expect(room.state, TournamentChatState.pending);
+    expect(room.registration, 'PENDING');
+    expect(room.name, 'Chat Cup');
+    expect(room.logoUrl, 'https://cdn.example.test/logo.png');
+    expect(room.canWrite, isFalse);
+
+    final approved = TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'status': 'OPEN',
+      'canWrite': true,
+      'registration': 'APPROVED',
+      'logoUrl': null,
+    });
+    expect(approved.state, TournamentChatState.open);
+    expect(approved.logoUrl, isNull);
+  });
+
+  test('TC-CHAT-UI-A-03 old payloads without the new fields still parse', () {
+    final room = TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'status': 'OPEN',
+      'canWrite': true,
+      'role': 'MEMBER',
+    });
+    expect(room.state, TournamentChatState.open);
+    expect(room.registration, isNull);
+    expect(room.name, isNull);
+    expect(room.logoUrl, isNull);
+    expect(room.registrationOpen, isNull);
+  });
 }

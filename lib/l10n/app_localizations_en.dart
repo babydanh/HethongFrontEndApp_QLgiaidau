@@ -20547,4 +20547,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatKickFailed => 'Could not remove this person. Try again later.';
+
+  @override
+  String get tournamentChatTooltipRegister =>
+      'Register to join the tournament room';
+
+  @override
+  String get tournamentChatTooltipRegistrationClosed =>
+      'Registration is closed';
+
+  @override
+  String get tournamentChatTooltipPending =>
+      'Open tournament room (awaiting approval)';
+
+  @override
+  String get chatRoomPendingBanner =>
+      'Waiting for the organizer to approve your registration before you can message';
+
+  @override
+  String get chatRoomNotRegisteredNotice =>
+      'Register for the tournament to join this room';
 }

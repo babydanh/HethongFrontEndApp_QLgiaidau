@@ -11,11 +11,13 @@ const double _kTapTarget = 44;
 const double _kIconSize = 22;
 const double _kDimmedOpacity = 0.55;
 
-/// Chat icon in the tournament hero. One of four looks, each with its own
-/// icon and label (not only a colour change):
+/// Chat icon in the tournament hero. Each look has its own icon and label
+/// (not only a colour change):
 /// open (green) · closed (grey archive box) · kicked (dimmed, explains) ·
-/// guest (signed out, goes to login). A purged room or an unknown reply hides
-/// the icon so no dead control is left behind.
+/// guest (signed out, goes to login) · not registered (goes to sign-up, or
+/// dimmed and explains when sign-up is closed) · pending (enters, input
+/// locked). A purged room or an unknown reply hides the icon so no dead
+/// control is left behind.
 class TournamentChatEntry extends ConsumerWidget {
   const TournamentChatEntry({
     super.key,
@@ -74,6 +76,38 @@ class TournamentChatEntry extends ConsumerWidget {
             SnackBar(content: Text(l10n.chatRoomKickedNotice)),
           ),
         );
+      case TournamentChatState.needsRegistration:
+        return _ChatIconButton(
+          buttonKey: const ValueKey('tournament-chat-register'),
+          icon: Icons.how_to_reg_rounded,
+          color: AppTheme.accent,
+          label: l10n.tournamentChatTooltipRegister,
+          shadows: iconShadows,
+          onPressed: () => context.push('/register/$tournamentId'),
+        );
+      case TournamentChatState.registrationClosed:
+        return _ChatIconButton(
+          buttonKey: const ValueKey('tournament-chat-register-closed'),
+          icon: Icons.how_to_reg_rounded,
+          color: Colors.grey,
+          opacity: _kDimmedOpacity,
+          label: l10n.tournamentChatTooltipRegistrationClosed,
+          shadows: iconShadows,
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.tournamentChatTooltipRegistrationClosed),
+            ),
+          ),
+        );
+      case TournamentChatState.pending:
+        return _ChatIconButton(
+          buttonKey: const ValueKey('tournament-chat-pending'),
+          icon: Icons.hourglass_top_rounded,
+          color: AppTheme.accent,
+          label: l10n.tournamentChatTooltipPending,
+          shadows: iconShadows,
+          onPressed: () => _openRoom(context, room.value, readOnly: false),
+        );
       case TournamentChatState.purged:
         return const SizedBox.shrink();
     }
@@ -84,14 +118,18 @@ class TournamentChatEntry extends ConsumerWidget {
     TournamentChatRoom room, {
     required bool readOnly,
   }) {
-    final name = AppLocalizations.of(context)!.tournamentChatRoomName;
+    final name = room.name?.isNotEmpty == true
+        ? room.name!
+        : AppLocalizations.of(context)!.tournamentChatRoomName;
     final uri = Uri(
       path: '/chat/${room.roomId}',
       queryParameters: {
         'name': name,
+        if (room.logoUrl?.isNotEmpty == true) 'avatar': room.logoUrl!,
         'type': 'TOURNAMENT',
         'tournamentId': tournamentId,
         if (readOnly) 'readOnly': '1',
+        if (room.state == TournamentChatState.pending) 'pending': '1',
         if (room.isOrganizer) 'organizer': '1',
       },
     );

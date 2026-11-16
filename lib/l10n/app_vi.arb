@@ -8108,5 +8108,10 @@
   "chatKickConfirmBody": "Mời {name} ra khỏi phòng? Họ không vào lại được cho đến khi bạn gỡ.",
   "chatKickConfirmAction": "Mời ra",
   "chatKickDone": "Đã mời {name} ra khỏi phòng.",
-  "chatKickFailed": "Không kick được người này. Thử lại sau."
+  "chatKickFailed": "Không kick được người này. Thử lại sau.",
+  "tournamentChatTooltipRegister": "Đăng ký để vào phòng giải",
+  "tournamentChatTooltipRegistrationClosed": "Đã đóng đăng ký",
+  "tournamentChatTooltipPending": "Vào phòng giải (chờ BTC duyệt)",
+  "chatRoomPendingBanner": "Chờ BTC duyệt đăng ký để nhắn tin",
+  "chatRoomNotRegisteredNotice": "Bạn cần đăng ký giải để vào phòng này"
 }

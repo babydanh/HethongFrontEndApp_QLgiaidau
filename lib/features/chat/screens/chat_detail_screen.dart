@@ -60,6 +60,10 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
   /// the input box is replaced by a "closed" strip.
   final bool readOnly;
 
+  /// Registered but not yet approved by the organizer: can read, cannot write
+  /// (the input box is replaced by a "waiting for approval" strip).
+  final bool pendingApproval;
+
   /// The viewer organizes this tournament room: may pin, revoke other
   /// people's messages and kick. Only meaningful for `roomType: TOURNAMENT`.
   final bool isRoomOrganizer;
@@ -73,6 +77,7 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
     this.communityId,
     this.embedded = false,
     this.readOnly = false,
+    this.pendingApproval = false,
     this.isRoomOrganizer = false,
   });
 
@@ -129,9 +134,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   bool _socketConnected = false;
   bool _kicked = false;
   bool _serverClosed = false;
+  late bool _pendingApproval = widget.pendingApproval;
 
   bool get _isTournamentRoom => widget.roomType == 'TOURNAMENT';
-  bool get _isReadOnly => widget.readOnly || _serverClosed;
+  bool get _isReadOnly =>
+      widget.readOnly || _serverClosed || _pendingApproval;
   bool get _canModerate => !_isTournamentRoom || widget.isRoomOrganizer;
   final Map<String, Future<ChatLinkPreviewModel?>> _linkPreviewRequests = {};
   final Map<String, ChatLinkPreviewModel?> _linkPreviewCache = {};
@@ -383,6 +390,48 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     );
   }
 
+  /// 403 with one of the tournament-chat registration codes.
+  bool _isForbiddenWith(Object error, String code) {
+    if (error is! DioException || error.response?.statusCode != 403) {
+      return false;
+    }
+    final body = error.response?.data;
+    if (body is! Map) return false;
+    return [body['code'], body['reasonCode'], body['message']].any(
+      (v) => v?.toString().contains(code) ?? false,
+    );
+  }
+
+  /// Handles ROOM_KICKED / TOURNAMENT_CHAT_NOT_REGISTERED /
+  /// TOURNAMENT_CHAT_NOT_APPROVED; returns true when [error] was one of them.
+  bool _handleAccessError(Object error) {
+    if (_isRoomKicked(error)) {
+      _handleKicked();
+      return true;
+    }
+    if (!mounted) return false;
+    final notRegistered = _isForbiddenWith(error, 'TOURNAMENT_CHAT_NOT_REGISTERED');
+    final notApproved = _isForbiddenWith(error, 'TOURNAMENT_CHAT_NOT_APPROVED');
+    // Any other error must not touch context: this can run inside initState.
+    if (!notRegistered && !notApproved) return false;
+    final l10n = AppLocalizations.of(context)!;
+    if (notRegistered) {
+      final messenger = ScaffoldMessenger.of(context);
+      if (!widget.embedded && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.chatRoomNotRegisteredNotice)),
+      );
+      return true;
+    }
+    setState(() => _pendingApproval = true);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.chatRoomPendingBanner)));
+    return true;
+  }
+
   /// 400 TOURNAMENT_CHAT_CLOSED: the window ended while the screen was open.
   bool _isRoomClosedError(Object error) {
     if (error is! DioException) return false;
@@ -524,7 +573,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         });
       }
     } catch (e) {
-      if (_isRoomKicked(e)) _handleKicked();
+      _handleAccessError(e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -555,7 +604,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         });
       }
     } catch (e) {
-      if (_isRoomKicked(e)) _handleKicked();
+      _handleAccessError(e);
     }
   }
 
@@ -583,7 +632,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         });
       }
     } catch (e) {
-      if (_isRoomKicked(e)) _handleKicked();
+      _handleAccessError(e);
     }
   }
 
@@ -720,8 +769,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         });
       }
     } catch (e) {
-      if (_isRoomKicked(e)) {
-        _handleKicked();
+      if (_handleAccessError(e)) {
+        // Notice / navigation already handled.
       } else if (mounted && _isRoomClosedError(e)) {
         setState(() => _serverClosed = true);
         ScaffoldMessenger.of(
@@ -1056,6 +1105,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   Widget _buildClosedStrip(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
+    final waitingApproval =
+        _pendingApproval && !widget.readOnly && !_serverClosed;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -1067,11 +1118,19 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         top: false,
         child: Row(
           children: [
-            Icon(Icons.inventory_2_outlined, size: 20, color: colors.textMuted),
+            Icon(
+              waitingApproval
+                  ? Icons.hourglass_top_rounded
+                  : Icons.inventory_2_outlined,
+              size: 20,
+              color: colors.textMuted,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                l10n.chatRoomClosedBanner,
+                waitingApproval
+                    ? l10n.chatRoomPendingBanner
+                    : l10n.chatRoomClosedBanner,
                 style: TextStyle(fontSize: 13, color: colors.textMuted),
               ),
             ),

@@ -8078,5 +8078,10 @@
   "chatKickConfirmBody": "Remove {name} from the room? They cannot return until you undo it.",
   "chatKickConfirmAction": "Remove",
   "chatKickDone": "{name} was removed from the room.",
-  "chatKickFailed": "Could not remove this person. Try again later."
+  "chatKickFailed": "Could not remove this person. Try again later.",
+  "tournamentChatTooltipRegister": "Register to join the tournament room",
+  "tournamentChatTooltipRegistrationClosed": "Registration is closed",
+  "tournamentChatTooltipPending": "Open tournament room (awaiting approval)",
+  "chatRoomPendingBanner": "Waiting for the organizer to approve your registration before you can message",
+  "chatRoomNotRegisteredNotice": "Register for the tournament to join this room"
 }
