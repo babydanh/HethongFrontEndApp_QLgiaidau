@@ -334,4 +334,35 @@ void main() {
     expect(_lastRoutes.single, contains('name=Chat+Cup'));
     expect(_lastRoutes.single, contains('avatar=https'));
   });
+
+  testWidgets('TC-CHAT-UI-M-01 an admin with canModerate opens the room as moderator', (
+    tester,
+  ) async {
+    const admin = TournamentChatRoom(
+      available: true,
+      roomId: 'room-1',
+      status: 'OPEN',
+      canWrite: true,
+      role: 'MEMBER',
+      registration: 'STAFF',
+      canModerate: true,
+    );
+    await _pump(tester, signedIn: true, room: admin);
+
+    await tester.tap(find.byKey(openKey));
+    await tester.pumpAndSettle();
+
+    expect(_lastRoutes.single, contains('organizer=1'));
+  });
+
+  testWidgets('TC-CHAT-UI-M-01 a plain member opens the room without moderator rights', (
+    tester,
+  ) async {
+    await _pump(tester, signedIn: true, room: _open);
+
+    await tester.tap(find.byKey(openKey));
+    await tester.pumpAndSettle();
+
+    expect(_lastRoutes.single, isNot(contains('organizer=1')));
+  });
 }

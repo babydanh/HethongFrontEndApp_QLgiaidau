@@ -294,6 +294,12 @@ class ChatMessageModel {
   final bool isRead;
   final bool isMine;
 
+  /// `type: SYSTEM`: a server notice (joined, kicked...), not a user message.
+  final bool isSystem;
+
+  /// `metadata.event` of a system message: JOINED | KICKED | UNKICKED | EVICTED.
+  final String? systemEvent;
+
   const ChatMessageModel({
     required this.id,
     required this.roomId,
@@ -312,6 +318,8 @@ class ChatMessageModel {
     required this.createdAt,
     this.isRead = true,
     this.isMine = false,
+    this.isSystem = false,
+    this.systemEvent,
   });
 
   factory ChatMessageModel.fromJson(
@@ -450,6 +458,10 @@ class ChatMessageModel {
           DateTime.now(),
       isRead: json['isRead'] != false,
       isMine: isMine,
+      isSystem: messageType == 'SYSTEM',
+      systemEvent: messageType == 'SYSTEM'
+          ? (metadataMap?['event'])?.toString()
+          : null,
     );
   }
 
@@ -479,6 +491,8 @@ class ChatMessageModel {
       createdAt: createdAt,
       isRead: isRead,
       isMine: isMine,
+      isSystem: isSystem,
+      systemEvent: systemEvent,
     );
   }
 }

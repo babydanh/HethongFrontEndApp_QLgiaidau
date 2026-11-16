@@ -130,7 +130,7 @@ class TournamentChatEntry extends ConsumerWidget {
         'tournamentId': tournamentId,
         if (readOnly) 'readOnly': '1',
         if (room.state == TournamentChatState.pending) 'pending': '1',
-        if (room.isOrganizer) 'organizer': '1',
+        if (room.canModerate) 'organizer': '1',
       },
     );
     context.push(uri.toString());
