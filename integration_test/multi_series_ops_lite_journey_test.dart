@@ -372,16 +372,29 @@ void main() {
       final shooter = SocialShooter(tester, binding, 'TC-MULTI-F-10');
       final container = await signInAs(tester, actor('player'));
 
-      final tab = find.widgetWithText(ChoiceChip, 'Danh sách tham gia');
+      // Since 168e7b0d /ops is wrapped in TournamentManagerGuard (app_router.dart:/organizer/tournaments/:id/ops,
+      // tournament_manager_guard.dart:37): a non-manager gets the opsNoPermission state and OrganizerOpsScreen
+      // never mounts, so wait for that message instead of the roster tab.
+      final noPermission = find.text('Bạn không có quyền vận hành giải đấu này.');
       await _goUntil(
         tester,
         container,
         '/organizer/tournaments/${opsT.id}/ops',
-        tab,
+        noPermission,
       );
-      await tapCentered(tester, tab);
+      // Let a late access result rebuild before asserting nothing management-related leaked through.
       await socialWait(tester, const Duration(seconds: 5));
-      await shooter.snap('vdv-o-ops-roster');
+      await shooter.snap('vdv-o-ops-khong-co-quyen');
+      expect(
+        noPermission,
+        findsOneWidget,
+        reason: 'VĐV mở /ops giải người khác phải thấy màn không có quyền',
+      );
+      expect(
+        find.widgetWithText(ChoiceChip, 'Danh sách tham gia'),
+        findsNothing,
+        reason: 'VĐV không phải BTC không được vào màn vận hành (tab Danh sách tham gia)',
+      );
       expect(
         find.byKey(const ValueKey('organizer-ops-add-athlete')),
         findsNothing,

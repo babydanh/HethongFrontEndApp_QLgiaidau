@@ -41,6 +41,15 @@ void main() {
       // 1. Tạo giải nhanh trên app: tên, thời gian bắt đầu (mặc định của picker), một nội dung đơn.
       // Router còn chuyển trang sau đăng nhập (về trang chủ): chờ form bằng tiêu đề "Tạo giải nhanh"
       // (form đăng nhập cũng có TextFormField), vào lại /tournaments/create nếu bị đổi, thử tối đa 3 lần.
+      // Login lands on /login-loading, whose 2.2 s timer (login_loading_screen.dart:24) calls go('/home').
+      // Navigating before that lets the timer replace the create form between the wait and enterText
+      // (cloud run 43788638732: "Bad state: No element" at enterText), so wait for /home first.
+      final router = container.read(routerProvider);
+      await pumpUntilCondition(
+        tester,
+        () => router.routerDelegate.currentConfiguration.uri.path == '/home',
+        what: 'trang chủ sau màn chờ đăng nhập (/login-loading -> /home)',
+      );
       final nameField = find.byType(TextFormField);
       var typed = false;
       for (var attempt = 0; attempt < 3 && !typed; attempt++) {
@@ -51,6 +60,8 @@ void main() {
           return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
               nameField.evaluate().isNotEmpty;
         }, what: 'form Tạo giải nhanh (ô tên giải)');
+        // The trailing pump of pumpUntilCondition may already have swapped the page: retry instead of throwing.
+        if (nameField.evaluate().isEmpty) continue;
         await tester.enterText(nameField.first, tournamentName);
         await tester.pump(const Duration(milliseconds: 500));
         typed = find.text(tournamentName).evaluate().isNotEmpty;

@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/features/home/widgets/explore_new_tournaments.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:dio/dio.dart';
@@ -36,10 +38,10 @@ void main() {
       // Địa điểm: chọn "Quyết định sau" trong luồng chọn địa điểm.
       await tapText(tester, 'Chọn địa điểm');
       await tapText(tester, 'Quyết định sau');
-      await socialWait(tester);
+      await _confirmLocationSheet(tester);
       expect(
-        find.text('Quyết định sau'),
-        findsWidgets,
+        find.descendant(of: find.byType(SocialLocationRow), matching: find.text('Quyết định sau')),
+        findsOneWidget,
         reason: 'hàng địa điểm phải hiện "Quyết định sau" sau khi chọn',
       );
 
@@ -148,7 +150,7 @@ void main() {
       // Chọn "Quyết định sau" thì gửi được.
       await tapText(tester, 'Chọn địa điểm');
       await tapText(tester, 'Quyết định sau');
-      await socialWait(tester);
+      await _confirmLocationSheet(tester);
       await tester.tap(find.widgetWithText(ElevatedButton, 'Tạo kèo'));
       await tester.pump();
       await pumpUntilFound(
@@ -184,7 +186,8 @@ void main() {
       await signInWithEmail(tester, email: kOrganizerEmail);
       await openCreateSocialForm(tester);
       await tapText(tester, 'Chọn địa điểm');
-      final search = find.widgetWithText(TextField, 'Tìm theo tên hoặc địa chỉ');
+      // The sheet's "Địa điểm" name field doubles as the venue search box.
+      final search = find.byKey(const ValueKey('social-inline-name'));
       await pumpUntilFound(tester, search, what: 'ô tìm địa điểm');
       await tester.enterText(search, tag);
       await tester.pump();
@@ -197,6 +200,13 @@ void main() {
       await shooter.snap('ket-qua-tim-san');
       await tester.tap(find.text(venueName).first);
       await tester.pump();
+      // Picking a saved venue keeps the sheet open on its fixed map until confirmed.
+      await pumpUntilFound(
+        tester,
+        find.text('Sân có sẵn: vị trí lấy từ danh bạ'),
+        what: 'sheet hiện sân đã lưu sau khi chọn',
+      );
+      await _confirmLocationSheet(tester);
 
       await pumpUntilFound(
         tester,
@@ -275,6 +285,21 @@ void main() {
       await scrollToText(tester, tournamentName);
       await shooter.snap('the-giai');
     },
+  );
+}
+
+/// The location sheet does not pop on a pick ("Quyết định sau", a saved venue): tap its "Xác nhận"
+/// footer and wait for it to close, otherwise it covers the form below.
+Future<void> _confirmLocationSheet(WidgetTester tester) async {
+  final confirm = find.descendant(
+    of: find.byType(SocialLocationSheet),
+    matching: find.widgetWithText(FilledButton, 'Xác nhận'),
+  );
+  await tapFinder(tester, confirm, what: 'nút Xác nhận của sheet địa điểm');
+  await pumpUntilCondition(
+    tester,
+    () => find.byType(SocialLocationSheet).evaluate().isEmpty,
+    what: 'sheet địa điểm đóng sau khi bấm Xác nhận',
   );
 }
 
