@@ -83,10 +83,11 @@ class NewTournamentEntry {
   final String timeSlot;
 }
 
-/// New tournaments shown on [day]'s time list. Each tournament has exactly one
-/// milestone: started ones use their start time, opened ones their opening
-/// time (the same time the 7-day window is measured from). An anchor before
-/// today (e.g. started yesterday) is shown on today with its clock time.
+/// New tournaments shown on [day]'s time list, same rule as Web
+/// `placeNewTournaments`: each tournament has one milestone, its start time
+/// (no start date falls back to [now]). The opening time only decides whether
+/// it is "new", never its slot. An anchor before today (e.g. started
+/// yesterday) is shown on today with its clock time.
 List<NewTournamentEntry> newTournamentEntriesForDay(
   List<Tournament> tournaments,
   DateTime day,
@@ -109,7 +110,7 @@ List<NewTournamentEntry> newTournamentEntriesForDay(
   return [
     for (final t in picked.started) ?place(t, true, t.startDate!),
     for (final t in picked.opened)
-      ?place(t, false, _openedAt(t, now)),
+      ?place(t, false, t.startDate ?? now),
   ];
 }
 
