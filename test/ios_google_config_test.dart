@@ -16,20 +16,32 @@ String? _setting(String xcconfig, String key) {
 void main() {
   final infoPlist = File('ios/Runner/Info.plist').readAsStringSync();
 
-  test('TC-IOS-GSI-01 Info.plist reads GIDClientID from the xcconfig', () {
-    expect(
-      infoPlist,
-      matches(
-        RegExp(
-          r'<key>GIDClientID</key>\s*<string>\$\(GOOGLE_IOS_CLIENT_ID\)</string>',
-        ),
-      ),
-    );
-  });
+  // Info.plist holds literal values (5ed844c1); they must stay in sync with
+  // the xcconfig values Flutter code reads at build time.
+  for (final name in ['Debug', 'Release']) {
+    test('TC-IOS-GSI-01 Info.plist GIDClientID matches $name.xcconfig', () {
+      final xcconfig = File('ios/Flutter/$name.xcconfig').readAsStringSync();
+      final clientId = _setting(xcconfig, 'GOOGLE_IOS_CLIENT_ID');
 
-  test('TC-IOS-GSI-01 Info.plist registers the reversed client ID scheme', () {
-    expect(infoPlist, contains(r'<string>$(REVERSED_CLIENT_ID)</string>'));
-  });
+      expect(clientId, isNotNull, reason: 'GOOGLE_IOS_CLIENT_ID is missing');
+      expect(
+        infoPlist,
+        matches(
+          RegExp(
+            '<key>GIDClientID</key>\\s*<string>${RegExp.escape(clientId!)}</string>',
+          ),
+        ),
+      );
+    });
+
+    test('TC-IOS-GSI-01 Info.plist URL scheme matches $name.xcconfig', () {
+      final xcconfig = File('ios/Flutter/$name.xcconfig').readAsStringSync();
+      final reversed = _setting(xcconfig, 'REVERSED_CLIENT_ID');
+
+      expect(reversed, isNotNull, reason: 'REVERSED_CLIENT_ID is missing');
+      expect(infoPlist, contains('<string>$reversed</string>'));
+    });
+  }
 
   for (final name in ['Debug', 'Release']) {
     test('TC-IOS-GSI-01 $name.xcconfig client ID matches its URL scheme', () {
