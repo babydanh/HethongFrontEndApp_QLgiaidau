@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.da
 import 'package:app_quanly_giaidau/data/repositories/api/api_payment_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_report_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_region_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_chat_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
@@ -34,6 +35,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repo
 import 'package:app_quanly_giaidau/data/repositories/api/backend_social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_chat_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
@@ -44,6 +46,12 @@ final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
     ref.watch(dioClientProvider),
     ref.watch(matchSocketServiceProvider),
   );
+});
+
+final tournamentChatRepositoryProvider = Provider<ITournamentChatRepository>((
+  ref,
+) {
+  return ApiTournamentChatRepository(ref.watch(dioClientProvider));
 });
 
 final homeProjectionRepositoryProvider = Provider<ApiHomeProjectionRepository>(

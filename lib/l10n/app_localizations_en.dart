@@ -20485,4 +20485,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialLocationInlineVenueFromDirectory =>
       'Existing venue: location comes from the directory';
+
+  @override
+  String get tournamentChatRoomName => 'Tournament room';
+
+  @override
+  String get tournamentChatTooltipOpen => 'Join the tournament room';
+
+  @override
+  String get tournamentChatTooltipClosed => 'Review the tournament room';
+
+  @override
+  String get tournamentChatTooltipKicked =>
+      'The organizer removed you from the room';
+
+  @override
+  String get tournamentMenuTooltip => 'More options';
+
+  @override
+  String get tournamentMenuFollow => 'Follow tournament';
+
+  @override
+  String get tournamentMenuUnfollow => 'Unfollow tournament';
+
+  @override
+  String get tournamentMenuReport => 'Report tournament';
+
+  @override
+  String get chatRoomClosedBanner =>
+      'This room is closed, view only. Deleted completely after 12 months.';
+
+  @override
+  String get chatRoomClosedSendError =>
+      'This room is closed, the message was not sent.';
+
+  @override
+  String get chatRoomKickedNotice => 'The organizer removed you from the room';
+
+  @override
+  String get chatRoomKickedDetail =>
+      'You can no longer view or send messages in this room.';
+
+  @override
+  String get chatKickUserAction => 'Kick this person';
+
+  @override
+  String get chatKickConfirmTitle => 'Remove from the room?';
+
+  @override
+  String chatKickConfirmBody(Object name) {
+    return 'Remove $name from the room? They cannot return until you undo it.';
+  }
+
+  @override
+  String get chatKickConfirmAction => 'Remove';
+
+  @override
+  String chatKickDone(Object name) {
+    return '$name was removed from the room.';
+  }
+
+  @override
+  String get chatKickFailed => 'Could not remove this person. Try again later.';
 }

@@ -56,6 +56,14 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
   /// Inside another screen (e.g. a tab): no own AppBar / back button.
   final bool embedded;
 
+  /// Closed room (tournament chat after its window): messages stay visible,
+  /// the input box is replaced by a "closed" strip.
+  final bool readOnly;
+
+  /// The viewer organizes this tournament room: may pin, revoke other
+  /// people's messages and kick. Only meaningful for `roomType: TOURNAMENT`.
+  final bool isRoomOrganizer;
+
   const ChatDetailScreen({
     super.key,
     required this.roomId,
@@ -64,6 +72,8 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
     this.roomType,
     this.communityId,
     this.embedded = false,
+    this.readOnly = false,
+    this.isRoomOrganizer = false,
   });
 
   @override
@@ -117,6 +127,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   late final ChatSocketService _chatSocket;
   bool _socketConnected = false;
+  bool _kicked = false;
+  bool _serverClosed = false;
+
+  bool get _isTournamentRoom => widget.roomType == 'TOURNAMENT';
+  bool get _isReadOnly => widget.readOnly || _serverClosed;
+  bool get _canModerate => !_isTournamentRoom || widget.isRoomOrganizer;
   final Map<String, Future<ChatLinkPreviewModel?>> _linkPreviewRequests = {};
   final Map<String, ChatLinkPreviewModel?> _linkPreviewCache = {};
 
@@ -128,7 +144,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _chatSocket = ChatSocketService(ref.read(tokenManagerProvider));
+    _chatSocket = ref.read(chatSocketFactoryProvider)(
+      ref.read(tokenManagerProvider),
+    );
     _initSocket();
     _loadInitialMessages();
     _loadPinnedMessage();
@@ -346,7 +364,45 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         }
       }
     };
+    _chatSocket.onRoomKicked = (data) {
+      final roomId = data['roomId']?.toString();
+      if (roomId == null || roomId == widget.roomId) _handleKicked();
+    };
     _chatSocket.connect(widget.roomId);
+  }
+
+  /// 403 ROOM_KICKED from the server (HTTP side of the kick).
+  bool _isRoomKicked(Object error) {
+    if (error is! DioException || error.response?.statusCode != 403) {
+      return false;
+    }
+    final body = error.response?.data;
+    if (body is! Map) return false;
+    return [body['code'], body['reasonCode'], body['message']].any(
+      (v) => v?.toString().contains('ROOM_KICKED') ?? false,
+    );
+  }
+
+  /// 400 TOURNAMENT_CHAT_CLOSED: the window ended while the screen was open.
+  bool _isRoomClosedError(Object error) {
+    if (error is! DioException) return false;
+    final body = error.response?.data;
+    if (body is! Map) return false;
+    return [body['code'], body['reasonCode'], body['message']].any(
+      (v) => v?.toString().contains('TOURNAMENT_CHAT_CLOSED') ?? false,
+    );
+  }
+
+  /// The organizer removed this user: close the screen and say why. Runs once.
+  void _handleKicked() {
+    if (!mounted || _kicked) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final notice = AppLocalizations.of(context)!.chatRoomKickedNotice;
+    setState(() => _kicked = true);
+    if (!widget.embedded && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+    messenger.showSnackBar(SnackBar(content: Text(notice)));
   }
 
   String? _extractFirstUrl(String text) {
@@ -467,8 +523,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           _cursor = page.nextCursor;
         });
       }
-    } catch (_) {
-      // Fallback
+    } catch (e) {
+      if (_isRoomKicked(e)) _handleKicked();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -498,7 +554,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           _cursor = page.nextCursor;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      if (_isRoomKicked(e)) _handleKicked();
+    }
   }
 
   Future<void> _refreshMessages() async {
@@ -524,7 +582,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           _cursor = page.nextCursor;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      if (_isRoomKicked(e)) _handleKicked();
+    }
   }
 
   Future<void> _loadPinnedMessage() async {
@@ -660,7 +720,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (_isRoomKicked(e)) {
+        _handleKicked();
+      } else if (mounted && _isRoomClosedError(e)) {
+        setState(() => _serverClosed = true);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.chatRoomClosedSendError)));
+      } else if (mounted) {
         final responseData = e is DioException && e.response?.data is Map
             ? Map<String, dynamic>.from(e.response!.data as Map)
             : null;
@@ -939,6 +1006,111 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     } catch (_) {}
   }
 
+  bool _canRevoke(ChatMessageModel message) =>
+      !message.isRevoked &&
+      (message.isMine || (_isTournamentRoom && widget.isRoomOrganizer));
+
+  bool _canKick(ChatMessageModel message) =>
+      _isTournamentRoom &&
+      widget.isRoomOrganizer &&
+      !message.isMine &&
+      !message.senderId.startsWith('ai-') &&
+      message.senderId.isNotEmpty;
+
+  Future<void> _confirmKick(ChatMessageModel message) async {
+    final l10n = AppLocalizations.of(context)!;
+    final name = message.senderName.isNotEmpty
+        ? message.senderName
+        : message.senderId;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.chatKickConfirmTitle),
+        content: Text(l10n.chatKickConfirmBody(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.chatDetailCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.chatKickConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(tournamentChatRepositoryProvider)
+          .kickUser(widget.roomId, message.senderId);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.chatKickDone(name))));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.chatKickFailed)));
+    }
+  }
+
+  Widget _buildClosedStrip(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(top: BorderSide(color: colors.borderLight)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 20, color: colors.textMuted),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.chatRoomClosedBanner,
+                style: TextStyle(fontSize: 13, color: colors.textMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKickedPanel(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: widget.embedded ? null : AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.block_rounded, size: 48, color: colors.textMuted),
+              const SizedBox(height: 12),
+              Text(
+                l10n.chatRoomKickedNotice,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.chatRoomKickedDetail,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showMessageOptions(ChatMessageModel message) {
     showModalBottomSheet(
       context: context,
@@ -952,7 +1124,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Emoji Reaction Bar
@@ -1018,6 +1192,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     );
                   },
                 ),
+              if (_canModerate)
               ListTile(
                 leading: Icon(
                   message.isPinned
@@ -1034,7 +1209,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   _togglePinMessage(message);
                 },
               ),
-              if (message.isMine && !message.isRevoked)
+              if (_canRevoke(message))
                 ListTile(
                   leading: Icon(
                     Icons.delete_outline_rounded,
@@ -1049,7 +1224,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     _revokeMessage(message);
                   },
                 ),
+              if (_canKick(message))
+                ListTile(
+                  leading: Icon(Icons.person_off_outlined, color: colors.error),
+                  title: Text(
+                    l10n.chatKickUserAction,
+                    style: TextStyle(color: colors.error),
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    _confirmKick(message);
+                  },
+                ),
             ],
+          ),
           ),
         );
       },
@@ -1147,6 +1335,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final localeName = Localizations.localeOf(context).toLanguageTag();
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (_kicked) return _buildKickedPanel(colors);
     final title = widget.roomName ?? (l10n!.chatDetailRoomFallback);
     final memberDirectory = widget.communityId == null
         ? null
@@ -1300,11 +1489,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.poll_outlined, size: 22),
-            tooltip: l10n.chatDetailPollTooltip,
-            onPressed: _openCreatePollDialog,
-          ),
+          if (!_isReadOnly)
+            IconButton(
+              icon: const Icon(Icons.poll_outlined, size: 22),
+              tooltip: l10n.chatDetailPollTooltip,
+              onPressed: _openCreatePollDialog,
+            ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
             tooltip: l10n.chatDetailRoomSettingsTooltip,
@@ -1715,7 +1905,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             ),
 
           // ── Bottom Composer ──
-          Container(
+          if (_isReadOnly)
+            _buildClosedStrip(colors)
+          else
+            Container(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
             decoration: BoxDecoration(
               color: colors.bgCard,
