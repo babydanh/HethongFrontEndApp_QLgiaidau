@@ -60,9 +60,44 @@ flutter run
 | `GOOGLE_IOS_CLIENT_ID`, `GOOGLE_WEB_CLIENT_ID` | Đăng nhập Google |
 | `OSM_TILE_URL` | Nguồn ô bản đồ |
 
-Tham số build tuỳ chọn (`--dart-define`): `SENTRY_DSN`, `APP_RELEASE`.
+Tham số build tuỳ chọn (`--dart-define`): `SENTRY_DSN`, `APP_RELEASE`, `APP_ENV`, `SENTRY_TRACES_SAMPLE_RATE` (xem mục [Theo dõi lỗi](#theo-dõi-lỗi-rustrak)).
 
 `.env` là secret: không đọc, không in, không commit. Worktree mới không có `.env`; xin file từ người quản trị.
+
+---
+
+## Theo dõi lỗi (Rustrak)
+
+App gửi lỗi và crash về **Rustrak** (tự dựng trên VPS, dùng giao thức Sentry) tại `https://loi.sporto.asia`. Mỗi thành phần có một project riêng: App là `sporto-app`, Backend và Web có project riêng.
+
+**Xem lỗi:** đăng nhập `https://loi.sporto.asia` → chọn project `sporto-app` → mục Issues. Cần tài khoản Rustrak; xin người quản trị.
+
+**Cách app bật gửi lỗi** (`lib/main.dart`): chỉ gửi khi build có `SENTRY_DSN`. Không có thì app bỏ qua hẳn Sentry, không báo lỗi gì.
+
+| Tham số `--dart-define` | Mặc định | Ý nghĩa |
+|---|---|---|
+| `SENTRY_DSN` | rỗng (tắt) | Địa chỉ nhận lỗi của project `sporto-app`. DSN chỉ cho phép gửi lỗi, nhưng vẫn không commit vào repo |
+| `APP_ENV` | `production` | Nhãn môi trường |
+| `APP_RELEASE` | rỗng | Nhãn phiên bản |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Tỉ lệ lấy mẫu hiệu năng, từ 0 đến 1 |
+
+Chạy thử trên máy, gửi lỗi về Rustrak:
+
+```bash
+flutter run --dart-define=SENTRY_DSN=<DSN của project sporto-app> --dart-define=APP_ENV=dev
+```
+
+**Bản iOS (`deploy-ios.yml`) cấu hình sẵn qua GitHub của repo App:**
+
+| Loại | Tên | Việc |
+|---|---|---|
+| Secret | `SENTRY_DSN` | Workflow ghi vào `ci_defines.json` rồi truyền `--dart-define-from-file` khi build. Thiếu thì build vẫn chạy nhưng cảnh báo là bản này không báo lỗi |
+| Secret | `SENTRY_AUTH_TOKEN` | Token API của Rustrak (40 ký tự hex), dùng để upload dSYM |
+| Variable | `SENTRY_PROJECT` | Slug project, hiện là `sporto-app` |
+
+- **Lấy token:** Rustrak → Settings → API Tokens → tạo token mới, rồi đặt bằng `gh secret set SENTRY_AUTH_TOKEN -R babydanh/HethongFrontEndApp_QLgiaidau` (dán token khi được hỏi, không ghi vào lệnh hay file).
+- **dSYM** (để crash native iOS hiện đúng tên hàm) được upload sau khi build, bằng `@sentry/cli`. Bước này chỉ cảnh báo khi thiếu cấu hình hoặc lỗi, không làm hỏng deploy. Dùng được từ build sau khi có token đúng; build cũ không upload bù được.
+- **Không gửi dữ liệu cá nhân:** app đặt `sendDefaultPii = false`.
 
 ---
 
