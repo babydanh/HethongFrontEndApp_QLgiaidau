@@ -20567,4 +20567,119 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatRoomNotRegisteredNotice =>
       'Register for the tournament to join this room';
+
+  @override
+  String get chatRoomManageTooltip => 'Manage room';
+
+  @override
+  String get chatRoomManageTabMembers => 'Members';
+
+  @override
+  String get chatRoomManageTabRestricted => 'Restricted';
+
+  @override
+  String get chatRoomManageTabSettings => 'Settings';
+
+  @override
+  String get chatRoomMemberApproved => 'Approved';
+
+  @override
+  String get chatRoomMemberPending => 'Pending';
+
+  @override
+  String get chatRoomMemberStaff => 'Staff';
+
+  @override
+  String get chatRoomMemberOnline => 'Online';
+
+  @override
+  String get chatRoomMemberKicked => 'Kicked';
+
+  @override
+  String chatRoomMemberMutedUntil(Object time) {
+    return 'Muted until $time';
+  }
+
+  @override
+  String get chatRoomMuteAction => 'Mute';
+
+  @override
+  String get chatRoomMuteFor15m => '15 minutes';
+
+  @override
+  String get chatRoomMuteFor1h => '1 hour';
+
+  @override
+  String get chatRoomMuteFor1d => '1 day';
+
+  @override
+  String chatRoomMuteTitle(Object name) {
+    return 'Mute $name for how long?';
+  }
+
+  @override
+  String chatRoomMuteDone(Object name) {
+    return '$name is muted.';
+  }
+
+  @override
+  String get chatRoomUnmuteAction => 'Unmute';
+
+  @override
+  String get chatRoomUnkickAction => 'Let back in';
+
+  @override
+  String chatRoomKickedBy(Object name, Object time) {
+    return 'Kicked by $name at $time';
+  }
+
+  @override
+  String chatRoomKickedAt(Object time) {
+    return 'Kicked at $time';
+  }
+
+  @override
+  String get chatRoomKickedSection => 'Kicked';
+
+  @override
+  String get chatRoomMutedSection => 'Muted';
+
+  @override
+  String get chatRoomManageEmpty => 'No one yet';
+
+  @override
+  String get chatRoomManageLoadMore => 'Load more';
+
+  @override
+  String get chatRoomManageLoadError => 'Could not load the list.';
+
+  @override
+  String get chatRoomManageRetry => 'Retry';
+
+  @override
+  String get chatRoomActionFailed => 'That did not work. Try again later.';
+
+  @override
+  String get chatRoomCannotModerateStaff =>
+      'Organizers and admins cannot be kicked or muted.';
+
+  @override
+  String get chatRoomLockLabel => 'Lock room';
+
+  @override
+  String get chatRoomLockHint =>
+      'While locked only organizers and admins can post; everyone can still read.';
+
+  @override
+  String get chatRoomLockedBanner =>
+      'The room is locked; only organizers can post.';
+
+  @override
+  String chatRoomMutedNotice(Object time) {
+    return 'You are muted until $time.';
+  }
+
+  @override
+  String get chatRoomEvictedNotice =>
+      'Your registration is no longer valid, so you have left the tournament room.';
 }

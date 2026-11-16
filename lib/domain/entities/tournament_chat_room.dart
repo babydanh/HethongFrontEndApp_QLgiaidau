@@ -38,6 +38,7 @@ class TournamentChatRoom {
     this.registration,
     this.name,
     this.logoUrl,
+    this.canModerate = false,
   });
 
   final bool available;
@@ -58,6 +59,10 @@ class TournamentChatRoom {
   /// Tournament name and logo for the room header, when the server sends them.
   final String? name;
   final String? logoUrl;
+
+  /// Organizer, co-organizer, host-club manager or system admin: may kick,
+  /// mute, lock the room and see who is in it.
+  final bool canModerate;
 
   bool get isOrganizer => role == 'ORGANIZER';
 
@@ -93,6 +98,11 @@ class TournamentChatRoom {
       registration: json['registration']?.toString(),
       name: json['name']?.toString(),
       logoUrl: json['logoUrl']?.toString(),
+      // Old server: only organizers could moderate.
+      canModerate: switch (json['canModerate']) {
+        final bool v => v,
+        _ => json['role']?.toString() == 'ORGANIZER',
+      },
     );
   }
 }
