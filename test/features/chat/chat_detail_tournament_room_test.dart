@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../support/fake_api_adapter.dart';
 
@@ -28,9 +29,17 @@ class _FakeChatSocket extends ChatSocketService {
   }
 
   void emitKicked(Map<String, dynamic> data) => onRoomKicked?.call(data);
+
+  void emitEvicted(Map<String, dynamic> data) => onRoomEvicted?.call(data);
+
+  void emitSettings(Map<String, dynamic> data) => onRoomSettings?.call(data);
 }
 
-Map<String, FakeReply> _routes({FakeReply? messages}) => {
+Map<String, FakeReply> _routes({
+  FakeReply? messages,
+  FakeReply? send,
+  Map<String, dynamic> room = const {},
+}) => {
   'GET /chat/rooms/$_roomId/messages':
       messages ??
       FakeReply(200, {
@@ -48,9 +57,10 @@ Map<String, FakeReply> _routes({FakeReply? messages}) => {
           'meta': {'hasMore': false},
         },
       }),
-  'GET /chat/rooms/$_roomId': const FakeReply(200, {
-    'data': {'id': _roomId, 'participants': []},
+  'GET /chat/rooms/$_roomId': FakeReply(200, {
+    'data': {'id': _roomId, 'participants': [], ...room},
   }),
+  'POST /chat/messages': ?send,
   'GET /chat/rooms/$_roomId/pinned': const FakeReply(200, {'data': null}),
   'POST /chat/rooms/$_roomId/kicks': const FakeReply(201, {'data': {}}),
 };
@@ -247,6 +257,166 @@ void main() {
       (r) => r.method == 'POST' && r.path == '/chat/rooms/$_roomId/kicks',
     );
     expect(kick.body, {'userId': 'someone'});
+    await _unmount(tester);
+  });
+
+  Future<void> send(WidgetTester tester, String text) async {
+    await tester.enterText(find.byType(TextField), text);
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.send_rounded));
+    await _settle(tester);
+  }
+
+  testWidgets('TC-CHAT-UI-M-02 a SYSTEM message shows as a small centered notice', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      FakeApiAdapter(
+        _routes(
+          messages: FakeReply(200, {
+            'data': {
+              'data': [
+                {
+                  'id': 's1',
+                  'roomId': _roomId,
+                  'type': 'SYSTEM',
+                  'senderId': null,
+                  'content': 'Bạn An đã tham gia phòng',
+                  'metadata': {'event': 'JOINED', 'visibleTo': 'ALL'},
+                  'createdAt': DateTime.now().toIso8601String(),
+                },
+              ],
+              'meta': {'hasMore': false},
+            },
+          }),
+        ),
+      ),
+    );
+
+    final notice = find.byKey(const ValueKey('chat-system-s1'));
+    expect(notice, findsOneWidget);
+    expect(
+      find.descendant(of: notice, matching: find.text('Bạn An đã tham gia phòng')),
+      findsOneWidget,
+    );
+
+    await tester.longPress(find.text('Bạn An đã tham gia phòng'));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.chatReplyAction), findsNothing);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 only a moderator sees the manage-room button', (
+    tester,
+  ) async {
+    await _pump(tester, FakeApiAdapter(_routes()));
+    expect(find.byTooltip(l10n.chatRoomManageTooltip), findsNothing);
+    await _unmount(tester);
+
+    await _pump(tester, FakeApiAdapter(_routes()), organizer: true);
+    expect(find.byTooltip(l10n.chatRoomManageTooltip), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 a 403 TOURNAMENT_CHAT_MUTED says until when', (
+    tester,
+  ) async {
+    final until = DateTime.now().add(const Duration(hours: 1));
+    await _pump(
+      tester,
+      FakeApiAdapter(
+        _routes(
+          send: FakeReply(403, {
+            'statusCode': 403,
+            'code': 'TOURNAMENT_CHAT_MUTED',
+            'message': 'TOURNAMENT_CHAT_MUTED',
+            'until': until.toUtc().toIso8601String(),
+          }),
+        ),
+      ),
+    );
+
+    await send(tester, 'xin chào');
+
+    expect(
+      find.text(l10n.chatRoomMutedNotice(DateFormat('HH:mm dd/MM').format(until))),
+      findsOneWidget,
+    );
+    expect(find.byType(ChatDetailScreen), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 a 403 TOURNAMENT_CHAT_LOCKED swaps the input for the locked strip', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      FakeApiAdapter(
+        _routes(
+          send: const FakeReply(403, {
+            'statusCode': 403,
+            'code': 'TOURNAMENT_CHAT_LOCKED',
+            'message': 'TOURNAMENT_CHAT_LOCKED',
+          }),
+        ),
+      ),
+    );
+
+    await send(tester, 'xin chào');
+
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text(l10n.chatRoomLockedBanner), findsWidgets);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 a locked room from room details hides the input for members', (
+    tester,
+  ) async {
+    await _pump(tester, FakeApiAdapter(_routes(room: {'locked': true})));
+
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text(l10n.chatRoomLockedBanner), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 chat:room:settings locks members but not moderators', (
+    tester,
+  ) async {
+    await _pump(tester, FakeApiAdapter(_routes()));
+    _FakeChatSocket.last!.emitSettings({
+      'roomId': _roomId,
+      'slowModeSeconds': 5,
+      'locked': true,
+    });
+    await tester.pump();
+    expect(find.byType(TextField), findsNothing);
+
+    _FakeChatSocket.last!.emitSettings({'roomId': _roomId, 'locked': false});
+    await tester.pump();
+    expect(find.byType(TextField), findsOneWidget);
+    await _unmount(tester);
+
+    await _pump(tester, FakeApiAdapter(_routes()), organizer: true);
+    _FakeChatSocket.last!.emitSettings({'roomId': _roomId, 'locked': true});
+    await tester.pump();
+    expect(find.byType(TextField), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('TC-CHAT-UI-M-03 chat:room:evicted closes the screen with a friendly notice', (
+    tester,
+  ) async {
+    await _pump(tester, FakeApiAdapter(_routes()));
+
+    _FakeChatSocket.last!.emitEvicted({
+      'roomId': _roomId,
+      'reason': 'REGISTRATION_LOST',
+    });
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ChatDetailScreen), findsNothing);
+    expect(find.text(l10n.chatRoomEvictedNotice), findsOneWidget);
     await _unmount(tester);
   });
 }

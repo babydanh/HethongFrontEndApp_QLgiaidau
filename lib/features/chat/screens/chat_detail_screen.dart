@@ -16,6 +16,8 @@ import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/chat_system_notice.dart';
+import 'package:app_quanly_giaidau/features/chat/widgets/tournament_room_manage_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
@@ -133,12 +135,18 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   late final ChatSocketService _chatSocket;
   bool _socketConnected = false;
   bool _kicked = false;
+  bool _evicted = false;
+  bool _roomLocked = false;
+  int _slowModeSeconds = 0;
   bool _serverClosed = false;
   late bool _pendingApproval = widget.pendingApproval;
 
   bool get _isTournamentRoom => widget.roomType == 'TOURNAMENT';
   bool get _isReadOnly =>
-      widget.readOnly || _serverClosed || _pendingApproval;
+      widget.readOnly || _serverClosed || _pendingApproval || _lockedForMe;
+
+  /// Locked rooms still let moderators post.
+  bool get _lockedForMe => _roomLocked && !widget.isRoomOrganizer;
   bool get _canModerate => !_isTournamentRoom || widget.isRoomOrganizer;
   final Map<String, Future<ChatLinkPreviewModel?>> _linkPreviewRequests = {};
   final Map<String, ChatLinkPreviewModel?> _linkPreviewCache = {};
@@ -375,6 +383,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       final roomId = data['roomId']?.toString();
       if (roomId == null || roomId == widget.roomId) _handleKicked();
     };
+    _chatSocket.onRoomEvicted = (data) {
+      final roomId = data['roomId']?.toString();
+      if (roomId == null || roomId == widget.roomId) _handleEvicted();
+    };
+    _chatSocket.onRoomSettings = (data) {
+      if (!mounted || data['roomId']?.toString() != widget.roomId) return;
+      _applyRoomSettings(data);
+    };
     _chatSocket.connect(widget.roomId);
   }
 
@@ -444,14 +460,64 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   /// The organizer removed this user: close the screen and say why. Runs once.
   void _handleKicked() {
+    if (!mounted) return;
+    _leaveRoom(AppLocalizations.of(context)!.chatRoomKickedNotice);
+  }
+
+  /// `chat:room:evicted`: the registration is no longer valid.
+  void _handleEvicted() {
+    if (!mounted) return;
+    _evicted = true;
+    _leaveRoom(AppLocalizations.of(context)!.chatRoomEvictedNotice);
+  }
+
+  void _leaveRoom(String notice) {
     if (!mounted || _kicked) return;
     final messenger = ScaffoldMessenger.of(context);
-    final notice = AppLocalizations.of(context)!.chatRoomKickedNotice;
     setState(() => _kicked = true);
     if (!widget.embedded && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
     messenger.showSnackBar(SnackBar(content: Text(notice)));
+  }
+
+  /// `locked` / `slowModeSeconds` from room details or `chat:room:settings`;
+  /// missing fields keep their current value.
+  void _applyRoomSettings(Map<dynamic, dynamic> data) {
+    final locked = data['locked'];
+    final slowMode = data['slowModeSeconds'];
+    setState(() {
+      if (locked is bool) _roomLocked = locked;
+      if (slowMode is num) _slowModeSeconds = slowMode.toInt();
+    });
+  }
+
+  /// 403 TOURNAMENT_CHAT_LOCKED / TOURNAMENT_CHAT_MUTED on send; returns true
+  /// when [error] was one of them and the notice is shown.
+  bool _handleModerationSendError(Object error) {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    if (_isForbiddenWith(error, 'TOURNAMENT_CHAT_LOCKED')) {
+      setState(() => _roomLocked = true);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.chatRoomLockedBanner)),
+      );
+      return true;
+    }
+    if (!_isForbiddenWith(error, 'TOURNAMENT_CHAT_MUTED')) return false;
+    final body = (error as DioException).response!.data as Map;
+    final data = body['data'];
+    final rawUntil = body['until'] ?? (data is Map ? data['until'] : null);
+    final until = DateTime.tryParse(rawUntil?.toString() ?? '')?.toLocal();
+    if (until == null) return false;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.chatRoomMutedNotice(DateFormat('HH:mm dd/MM').format(until)),
+        ),
+      ),
+    );
+    return true;
   }
 
   String? _extractFirstUrl(String text) {
@@ -510,6 +576,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       final res = await dio.get('/chat/rooms/${widget.roomId}');
       final data = res.data is Map ? (res.data['data'] ?? res.data) : null;
       if (mounted) {
+        if (data is Map) _applyRoomSettings(data);
         final rawParts = data['participants'];
         if (rawParts is List) {
           final list = rawParts
@@ -771,6 +838,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     } catch (e) {
       if (_handleAccessError(e)) {
         // Notice / navigation already handled.
+      } else if (mounted && _handleModerationSendError(e)) {
+        // Mute / lock notice already shown.
       } else if (mounted && _isRoomClosedError(e)) {
         setState(() => _serverClosed = true);
         ScaffoldMessenger.of(
@@ -1107,6 +1176,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final waitingApproval =
         _pendingApproval && !widget.readOnly && !_serverClosed;
+    final locked =
+        !waitingApproval && _lockedForMe && !widget.readOnly && !_serverClosed;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -1121,6 +1192,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             Icon(
               waitingApproval
                   ? Icons.hourglass_top_rounded
+                  : locked
+                  ? Icons.lock_outline_rounded
                   : Icons.inventory_2_outlined,
               size: 20,
               color: colors.textMuted,
@@ -1130,6 +1203,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               child: Text(
                 waitingApproval
                     ? l10n.chatRoomPendingBanner
+                    : locked
+                    ? l10n.chatRoomLockedBanner
                     : l10n.chatRoomClosedBanner,
                 style: TextStyle(fontSize: 13, color: colors.textMuted),
               ),
@@ -1153,7 +1228,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               Icon(Icons.block_rounded, size: 48, color: colors.textMuted),
               const SizedBox(height: 12),
               Text(
-                l10n.chatRoomKickedNotice,
+                _evicted
+                    ? l10n.chatRoomEvictedNotice
+                    : l10n.chatRoomKickedNotice,
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
@@ -1300,6 +1377,19 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _openManageRoom() {
+    TournamentRoomManageSheet.show(
+      context,
+      roomId: widget.roomId,
+      slowModeSeconds: _slowModeSeconds,
+      locked: _roomLocked,
+      onSettingsChanged: (slowModeSeconds, locked) => _applyRoomSettings({
+        'slowModeSeconds': slowModeSeconds,
+        'locked': locked,
+      }),
     );
   }
 
@@ -1554,6 +1644,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               tooltip: l10n.chatDetailPollTooltip,
               onPressed: _openCreatePollDialog,
             ),
+          if (_isTournamentRoom && widget.isRoomOrganizer)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_outlined, size: 22),
+              tooltip: l10n.chatRoomManageTooltip,
+              onPressed: _openManageRoom,
+            ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
             tooltip: l10n.chatDetailRoomSettingsTooltip,
@@ -1777,6 +1873,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                     ),
                                   ),
                                 ),
+                              if (msg.isSystem)
+                                ChatSystemNotice(
+                                  key: ValueKey('chat-system-${msg.id}'),
+                                  text: msg.content,
+                                )
+                              else
                               _buildMessageBubble(
                                 msg,
                                 colors,
@@ -1791,7 +1893,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                 tagPresets: tagPresets,
                                 memberDirectory: memberDirectory,
                               ),
-                              if (msg.isMine)
+                              if (msg.isMine && !msg.isSystem)
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: Padding(

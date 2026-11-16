@@ -36792,6 +36792,204 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bạn cần đăng ký giải để vào phòng này'**
   String get chatRoomNotRegisteredNotice;
+
+  /// No description provided for @chatRoomManageTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý phòng'**
+  String get chatRoomManageTooltip;
+
+  /// No description provided for @chatRoomManageTabMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get chatRoomManageTabMembers;
+
+  /// No description provided for @chatRoomManageTabRestricted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kick / cấm'**
+  String get chatRoomManageTabRestricted;
+
+  /// No description provided for @chatRoomManageTabSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get chatRoomManageTabSettings;
+
+  /// No description provided for @chatRoomMemberApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get chatRoomMemberApproved;
+
+  /// No description provided for @chatRoomMemberPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get chatRoomMemberPending;
+
+  /// No description provided for @chatRoomMemberStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC / trọng tài'**
+  String get chatRoomMemberStaff;
+
+  /// No description provided for @chatRoomMemberOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang online'**
+  String get chatRoomMemberOnline;
+
+  /// No description provided for @chatRoomMemberKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bị kick'**
+  String get chatRoomMemberKicked;
+
+  /// No description provided for @chatRoomMemberMutedUntil.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấm nhắn đến {time}'**
+  String chatRoomMemberMutedUntil(Object time);
+
+  /// No description provided for @chatRoomMuteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấm nhắn'**
+  String get chatRoomMuteAction;
+
+  /// No description provided for @chatRoomMuteFor15m.
+  ///
+  /// In vi, this message translates to:
+  /// **'15 phút'**
+  String get chatRoomMuteFor15m;
+
+  /// No description provided for @chatRoomMuteFor1h.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 giờ'**
+  String get chatRoomMuteFor1h;
+
+  /// No description provided for @chatRoomMuteFor1d.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 ngày'**
+  String get chatRoomMuteFor1d;
+
+  /// No description provided for @chatRoomMuteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấm {name} nhắn trong bao lâu?'**
+  String chatRoomMuteTitle(Object name);
+
+  /// No description provided for @chatRoomMuteDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cấm {name} nhắn tin.'**
+  String chatRoomMuteDone(Object name);
+
+  /// No description provided for @chatRoomUnmuteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ cấm nhắn'**
+  String get chatRoomUnmuteAction;
+
+  /// No description provided for @chatRoomUnkickAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho vào lại'**
+  String get chatRoomUnkickAction;
+
+  /// No description provided for @chatRoomKickedBy.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} kick lúc {time}'**
+  String chatRoomKickedBy(Object name, Object time);
+
+  /// No description provided for @chatRoomKickedAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị kick lúc {time}'**
+  String chatRoomKickedAt(Object time);
+
+  /// No description provided for @chatRoomKickedSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị kick'**
+  String get chatRoomKickedSection;
+
+  /// No description provided for @chatRoomMutedSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang bị cấm nhắn'**
+  String get chatRoomMutedSection;
+
+  /// No description provided for @chatRoomManageEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có ai'**
+  String get chatRoomManageEmpty;
+
+  /// No description provided for @chatRoomManageLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải thêm'**
+  String get chatRoomManageLoadMore;
+
+  /// No description provided for @chatRoomManageLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách.'**
+  String get chatRoomManageLoadError;
+
+  /// No description provided for @chatRoomManageRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get chatRoomManageRetry;
+
+  /// No description provided for @chatRoomActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thực hiện được. Thử lại sau.'**
+  String get chatRoomActionFailed;
+
+  /// No description provided for @chatRoomCannotModerateStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể kick hay cấm nhắn BTC hoặc admin.'**
+  String get chatRoomCannotModerateStaff;
+
+  /// No description provided for @chatRoomLockLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoá phòng'**
+  String get chatRoomLockLabel;
+
+  /// No description provided for @chatRoomLockHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi khoá, chỉ BTC và admin nhắn được; mọi người vẫn đọc được.'**
+  String get chatRoomLockHint;
+
+  /// No description provided for @chatRoomLockedBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng đang khoá, chỉ BTC nhắn được.'**
+  String get chatRoomLockedBanner;
+
+  /// No description provided for @chatRoomMutedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bị cấm nhắn đến {time}.'**
+  String chatRoomMutedNotice(Object time);
+
+  /// No description provided for @chatRoomEvictedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký giải của bạn không còn hiệu lực nên bạn đã rời phòng giải.'**
+  String get chatRoomEvictedNotice;
 }
 
 class _AppLocalizationsDelegate

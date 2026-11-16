@@ -26,6 +26,13 @@ class ChatSocketService {
 
   /// The organizer removed this user from the room (`chat:room:kicked`).
   void Function(Map<String, dynamic>)? onRoomKicked;
+
+  /// The viewer lost the right to be in a tournament room
+  /// (`chat:room:evicted`, e.g. registration rejected or withdrawn).
+  void Function(Map<String, dynamic>)? onRoomEvicted;
+
+  /// Slow mode or lock changed (`chat:room:settings`).
+  void Function(Map<String, dynamic>)? onRoomSettings;
   void Function(bool)? onConnection;
 
   ChatSocketService(this.tokenManager);
@@ -150,6 +157,15 @@ class ChatSocketService {
       onRoomKicked?.call(_asMap(data));
     });
 
+    _socket!.on('chat:room:evicted', (data) {
+      onRoomEvicted?.call(_asMap(data));
+    });
+
+    _socket!.on('chat:room:settings', (data) {
+      final map = _asMap(data);
+      if (map.isNotEmpty) onRoomSettings?.call(map);
+    });
+
     _socket!.on('chat:room:created', (data) {
       final map = _asMap(data);
       if (map.isNotEmpty) onRoomActivity?.call(map);
@@ -214,6 +230,8 @@ class ChatSocketService {
     onRoomRead = null;
     onRoomActivity = null;
     onRoomKicked = null;
+    onRoomEvicted = null;
+    onRoomSettings = null;
     onConnection = null;
     disconnect();
   }
