@@ -65,7 +65,7 @@ Xong code + test xanh thì tự đi tiếp, KHÔNG cần hỏi lại:
 ## Đã thử
 | Cách | Kết quả | Vì sao / bằng chứng |
 |---|---|---|
-| (chưa làm gì ở nhánh này) | | |
+| Giao cho máy cloud lần 1 (fast-handoff) | thất bại | 4 máy đủ 3 việc, danh5 chưa clone repo, số còn lại ngủ (exit 7); đã đánh thức danh4 và giao lại 2026-11-16 |
 
 ## Ràng buộc thay đổi lần này
 - Thêm: toàn bộ phần trên (quyền moderator, tin SYSTEM, mute/lock, eviction).
