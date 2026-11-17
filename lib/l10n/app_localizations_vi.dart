@@ -20476,4 +20476,118 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get chatRoomNotRegisteredNotice =>
       'Bạn cần đăng ký giải để vào phòng này';
+
+  @override
+  String get chatRoomManageTooltip => 'Quản lý phòng';
+
+  @override
+  String get chatRoomManageTabMembers => 'Thành viên';
+
+  @override
+  String get chatRoomManageTabRestricted => 'Kick / cấm';
+
+  @override
+  String get chatRoomManageTabSettings => 'Cài đặt';
+
+  @override
+  String get chatRoomMemberApproved => 'Đã duyệt';
+
+  @override
+  String get chatRoomMemberPending => 'Chờ duyệt';
+
+  @override
+  String get chatRoomMemberStaff => 'BTC / trọng tài';
+
+  @override
+  String get chatRoomMemberOnline => 'Đang online';
+
+  @override
+  String get chatRoomMemberKicked => 'Đã bị kick';
+
+  @override
+  String chatRoomMemberMutedUntil(Object time) {
+    return 'Cấm nhắn đến $time';
+  }
+
+  @override
+  String get chatRoomMuteAction => 'Cấm nhắn';
+
+  @override
+  String get chatRoomMuteFor15m => '15 phút';
+
+  @override
+  String get chatRoomMuteFor1h => '1 giờ';
+
+  @override
+  String get chatRoomMuteFor1d => '1 ngày';
+
+  @override
+  String chatRoomMuteTitle(Object name) {
+    return 'Cấm $name nhắn trong bao lâu?';
+  }
+
+  @override
+  String chatRoomMuteDone(Object name) {
+    return 'Đã cấm $name nhắn tin.';
+  }
+
+  @override
+  String get chatRoomUnmuteAction => 'Gỡ cấm nhắn';
+
+  @override
+  String get chatRoomUnkickAction => 'Cho vào lại';
+
+  @override
+  String chatRoomKickedBy(Object name, Object time) {
+    return '$name kick lúc $time';
+  }
+
+  @override
+  String chatRoomKickedAt(Object time) {
+    return 'Bị kick lúc $time';
+  }
+
+  @override
+  String get chatRoomKickedSection => 'Bị kick';
+
+  @override
+  String get chatRoomMutedSection => 'Đang bị cấm nhắn';
+
+  @override
+  String get chatRoomManageEmpty => 'Chưa có ai';
+
+  @override
+  String get chatRoomManageLoadMore => 'Tải thêm';
+
+  @override
+  String get chatRoomManageLoadError => 'Không tải được danh sách.';
+
+  @override
+  String get chatRoomManageRetry => 'Thử lại';
+
+  @override
+  String get chatRoomActionFailed => 'Không thực hiện được. Thử lại sau.';
+
+  @override
+  String get chatRoomCannotModerateStaff =>
+      'Không thể kick hay cấm nhắn BTC hoặc admin.';
+
+  @override
+  String get chatRoomLockLabel => 'Khoá phòng';
+
+  @override
+  String get chatRoomLockHint =>
+      'Khi khoá, chỉ BTC và admin nhắn được; mọi người vẫn đọc được.';
+
+  @override
+  String get chatRoomLockedBanner => 'Phòng đang khoá, chỉ BTC nhắn được.';
+
+  @override
+  String chatRoomMutedNotice(Object time) {
+    return 'Bạn bị cấm nhắn đến $time.';
+  }
+
+  @override
+  String get chatRoomEvictedNotice =>
+      'Đăng ký giải của bạn không còn hiệu lực nên bạn đã rời phòng giải.';
 }

@@ -106,4 +106,36 @@ void main() {
     expect(room.logoUrl, isNull);
     expect(room.registrationOpen, isNull);
   });
+
+  test('TC-CHAT-UI-M-01 canModerate is parsed; admin moderates without ORGANIZER', () {
+    final admin = TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'status': 'OPEN',
+      'canWrite': true,
+      'role': 'MEMBER',
+      'registration': 'STAFF',
+      'canModerate': true,
+    });
+    expect(admin.canModerate, isTrue);
+    expect(admin.isOrganizer, isFalse);
+
+    final member = TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'role': 'MEMBER',
+      'canModerate': false,
+    });
+    expect(member.canModerate, isFalse);
+  });
+
+  test('TC-CHAT-UI-M-01 old server without canModerate falls back to ORGANIZER role', () {
+    TournamentChatRoom of(String role) => TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'role': role,
+    });
+    expect(of('ORGANIZER').canModerate, isTrue);
+    expect(of('MEMBER').canModerate, isFalse);
+  });
 }
