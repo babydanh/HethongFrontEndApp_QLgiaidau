@@ -18361,6 +18361,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraSourcePush => 'Camera / điện thoại';
 
   @override
+  String get tournamentCameraSportoCamHint =>
+      'Dùng điện thoại làm camera? Tải app SportO Cam:';
+
+  @override
+  String get tournamentCameraSportoCamAndroid => 'Tải trên Google Play';
+
+  @override
+  String get tournamentCameraSportoCamIos => 'Tải trên App Store';
+
+  @override
   String get tournamentCameraSourceLive => 'Live YouTube / Facebook';
 
   @override
@@ -20055,6 +20065,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get camTabTitle => 'Camera của giải';
+
+  @override
+  String get camMatchCamOn => 'Bật cam';
+
+  @override
+  String get camMatchCamOff => 'Tắt cam';
+
+  @override
+  String get camTabReadOnlyBadge => 'Chỉ xem';
+
+  @override
+  String get camTabReadOnlyNote =>
+      'Giải đã kết thúc nên không thêm được camera.';
 
   @override
   String get camTabHelpTooltip => 'Hướng dẫn tab Camera';

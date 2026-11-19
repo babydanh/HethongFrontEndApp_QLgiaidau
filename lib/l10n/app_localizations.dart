@@ -33091,6 +33091,24 @@ abstract class AppLocalizations {
   /// **'Camera / điện thoại'**
   String get tournamentCameraSourcePush;
 
+  /// No description provided for @tournamentCameraSportoCamHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng điện thoại làm camera? Tải app SportO Cam:'**
+  String get tournamentCameraSportoCamHint;
+
+  /// No description provided for @tournamentCameraSportoCamAndroid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải trên Google Play'**
+  String get tournamentCameraSportoCamAndroid;
+
+  /// No description provided for @tournamentCameraSportoCamIos.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải trên App Store'**
+  String get tournamentCameraSportoCamIos;
+
   /// No description provided for @tournamentCameraSourceLive.
   ///
   /// In vi, this message translates to:
@@ -36060,6 +36078,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Camera của giải'**
   String get camTabTitle;
+
+  /// No description provided for @camMatchCamOn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật cam'**
+  String get camMatchCamOn;
+
+  /// No description provided for @camMatchCamOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt cam'**
+  String get camMatchCamOff;
+
+  /// No description provided for @camTabReadOnlyBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ xem'**
+  String get camTabReadOnlyBadge;
+
+  /// No description provided for @camTabReadOnlyNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đã kết thúc nên không thêm được camera.'**
+  String get camTabReadOnlyNote;
 
   /// No description provided for @camTabHelpTooltip.
   ///

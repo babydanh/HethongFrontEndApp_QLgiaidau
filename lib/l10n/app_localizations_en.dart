@@ -18435,6 +18435,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraSourcePush => 'Camera / phone';
 
   @override
+  String get tournamentCameraSportoCamHint =>
+      'Using a phone as the camera? Get the SportO Cam app:';
+
+  @override
+  String get tournamentCameraSportoCamAndroid => 'Get it on Google Play';
+
+  @override
+  String get tournamentCameraSportoCamIos => 'Download on the App Store';
+
+  @override
   String get tournamentCameraSourceLive => 'YouTube / Facebook live';
 
   @override
@@ -20140,6 +20150,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get camTabTitle => 'Tournament cameras';
+
+  @override
+  String get camMatchCamOn => 'Cam on';
+
+  @override
+  String get camMatchCamOff => 'Cam off';
+
+  @override
+  String get camTabReadOnlyBadge => 'View only';
+
+  @override
+  String get camTabReadOnlyNote =>
+      'This tournament has ended, so cameras can\'t be added.';
 
   @override
   String get camTabHelpTooltip => 'Camera tab guide';

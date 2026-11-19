@@ -239,27 +239,34 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
               ),
             )
           else ...[
-            Semantics(
-              label: l10n.tournamentManagementCameraStreamWatchLiveAria(
-                widget.label,
+            if (!widget.readOnly && (hasCamera || isLive))
+              _CamToggleButton(
+                key: ValueKey('camera-match-toggle-${match.id}'),
+                isLive: isLive,
+                onPressed: () => _toggle(isLive),
               ),
-              excludeSemantics: true,
-              child: IconButton(
-                tooltip: l10n.tournamentManagementCameraStreamWatchLive,
-                constraints: const BoxConstraints.tightFor(
-                  width: kMinTouchTarget,
-                  height: kMinTouchTarget,
+            if (isLive || hasCamera)
+              Semantics(
+                label: l10n.tournamentManagementCameraStreamWatchLiveAria(
+                  widget.label,
                 ),
-                onPressed: () => context.push(
-                  NavigationHelper.getLiveMatchRoute(
-                    widget.tournamentId,
-                    match.id,
+                excludeSemantics: true,
+                child: IconButton(
+                  tooltip: l10n.tournamentManagementCameraStreamWatchLive,
+                  constraints: const BoxConstraints.tightFor(
+                    width: kMinTouchTarget,
+                    height: kMinTouchTarget,
                   ),
+                  onPressed: () => context.push(
+                    NavigationHelper.getLiveMatchRoute(
+                      widget.tournamentId,
+                      match.id,
+                    ),
+                  ),
+                  color: isLive ? _liveTone : null,
+                  icon: const Icon(Icons.play_circle_outline_rounded),
                 ),
-                color: isLive ? _liveTone : null,
-                icon: const Icon(Icons.play_circle_outline_rounded),
               ),
-            ),
             PopupMenuButton<String>(
               tooltip: l10n.camMatchMore,
               onSelected: (value) => _onMenu(value, isLive),
@@ -306,6 +313,40 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
       ),
       childWhenDragging: Opacity(opacity: 0.38, child: row),
       child: tappable,
+    );
+  }
+}
+
+/// Bật cam / Tắt cam: the one stream action, visible on the row instead of
+/// only inside the ⋯ menu. Red while the match is live.
+class _CamToggleButton extends StatelessWidget {
+  const _CamToggleButton({
+    super.key,
+    required this.isLive,
+    required this.onPressed,
+  });
+
+  final bool isLive;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tone = isLive ? _liveTone : AppTheme.primary;
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: tone,
+        side: BorderSide(color: tone.withValues(alpha: 0.5)),
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        visualDensity: VisualDensity.compact,
+      ),
+      child: Text(
+        isLive ? l10n.camMatchCamOff : l10n.camMatchCamOn,
+        maxLines: 1,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }

@@ -344,6 +344,7 @@ class _TournamentManagementCameraSectionState
               filter: _filter,
               stages: cameraMatchStages(assignable, stageOf),
               onFilterChanged: (value) => setState(() => _filter = value),
+              readOnly: widget.readOnly,
               onCreateCamera: widget.readOnly || courts.isEmpty
                   ? null
                   : () => runCreateCameraFlow(
@@ -444,24 +445,30 @@ class _CourtChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: AppTheme.spacingSM,
-      runSpacing: AppTheme.spacingXS,
-      children: [
-        ChoiceChip(
-          key: const ValueKey('camera-court-chip-all'),
-          label: Text(l10n.camCourtAll),
-          selected: selectedId == null,
-          onSelected: (_) => onSelected(null),
-        ),
-        for (final court in courts)
+    // One scrollable row so many courts never push the court list down.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
           ChoiceChip(
-            key: ValueKey('camera-court-chip-${court.id}'),
-            label: Text(court.name.isEmpty ? court.id : court.name),
-            selected: selectedId == court.id,
-            onSelected: (_) => onSelected(court.id),
+            key: const ValueKey('camera-court-chip-all'),
+            visualDensity: VisualDensity.compact,
+            label: Text(l10n.camCourtAll),
+            selected: selectedId == null,
+            onSelected: (_) => onSelected(null),
           ),
-      ],
+          for (final court in courts) ...[
+            const SizedBox(width: AppTheme.spacingSM),
+            ChoiceChip(
+              key: ValueKey('camera-court-chip-${court.id}'),
+              visualDensity: VisualDensity.compact,
+              label: Text(court.name.isEmpty ? court.id : court.name),
+              selected: selectedId == court.id,
+              onSelected: (_) => onSelected(court.id),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -514,6 +521,7 @@ class _MatchPool extends StatelessWidget {
                     match: matches[i],
                     label: _matchLabel(l10n, matches[i]),
                     hasCamera: _matchHasCamera(matches[i], cameras),
+                    showCourtChip: false,
                     readOnly: readOnly,
                     isBusy: busyMatchIds.contains(matches[i].id),
                     courts: courts,
