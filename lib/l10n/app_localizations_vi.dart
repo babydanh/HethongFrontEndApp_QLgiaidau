@@ -18361,6 +18361,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraSourcePush => 'Camera / điện thoại';
 
   @override
+  String get tournamentCameraSportoCamHint =>
+      'Dùng điện thoại làm camera? Tải app SportO Cam:';
+
+  @override
+  String get tournamentCameraSportoCamAndroid => 'Tải trên Google Play';
+
+  @override
+  String get tournamentCameraSportoCamIos => 'Tải trên App Store';
+
+  @override
   String get tournamentCameraSourceLive => 'Live YouTube / Facebook';
 
   @override

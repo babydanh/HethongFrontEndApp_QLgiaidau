@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.d
 import 'package:app_quanly_giaidau/features/tournament/utils/facebook_live_error.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_add_help.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_panel.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/sporto_cam_download.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -351,6 +352,8 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
             const SizedBox(height: 12),
             if (!_liveSource) ...[
               const CameraAddHelp(),
+              const SizedBox(height: 8),
+              const SportoCamDownload(),
               const SizedBox(height: 8),
             ],
             TextField(

@@ -18435,6 +18435,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraSourcePush => 'Camera / phone';
 
   @override
+  String get tournamentCameraSportoCamHint =>
+      'Using a phone as the camera? Get the SportO Cam app:';
+
+  @override
+  String get tournamentCameraSportoCamAndroid => 'Get it on Google Play';
+
+  @override
+  String get tournamentCameraSportoCamIos => 'Download on the App Store';
+
+  @override
   String get tournamentCameraSourceLive => 'YouTube / Facebook live';
 
   @override

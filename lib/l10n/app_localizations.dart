@@ -33091,6 +33091,24 @@ abstract class AppLocalizations {
   /// **'Camera / điện thoại'**
   String get tournamentCameraSourcePush;
 
+  /// No description provided for @tournamentCameraSportoCamHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng điện thoại làm camera? Tải app SportO Cam:'**
+  String get tournamentCameraSportoCamHint;
+
+  /// No description provided for @tournamentCameraSportoCamAndroid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải trên Google Play'**
+  String get tournamentCameraSportoCamAndroid;
+
+  /// No description provided for @tournamentCameraSportoCamIos.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải trên App Store'**
+  String get tournamentCameraSportoCamIos;
+
   /// No description provided for @tournamentCameraSourceLive.
   ///
   /// In vi, this message translates to:
