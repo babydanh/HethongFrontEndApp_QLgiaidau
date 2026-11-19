@@ -29,11 +29,15 @@ class CameraTabHeader extends StatefulWidget {
     required this.onFilterChanged,
     required this.onRefresh,
     required this.onWatchCameras,
+    this.readOnly = false,
     this.onCreateCamera,
     this.onOpenStreaming,
   });
 
   final List<TournamentCameraModel>? cameras;
+
+  /// Finished tournament: shows a note so the missing ＋ button is explained.
+  final bool readOnly;
   final CameraMatchFilter filter;
   final List<CameraStage> stages;
   final ValueChanged<CameraMatchFilter> onFilterChanged;
@@ -177,6 +181,7 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
               ? row
               : AnimatedSwitcher(duration: _swapDuration, child: row),
         ),
+        if (widget.readOnly) const _ReadOnlyNote(),
         if (reduceMotion)
           tags
         else
@@ -186,6 +191,44 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
             child: tags,
           ),
       ],
+    );
+  }
+}
+
+/// "Chỉ xem" lock chip plus one line saying why cameras cannot be added.
+class _ReadOnlyNote extends StatelessWidget {
+  const _ReadOnlyNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return Padding(
+      key: const ValueKey('camTabReadOnlyNote'),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacingXS),
+      child: Row(
+        children: [
+          Icon(Icons.lock_outline_rounded, size: 14, color: colors.textMuted),
+          const SizedBox(width: 4),
+          Text(
+            l10n.camTabReadOnlyBadge,
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              l10n.camTabReadOnlyNote,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textMuted, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

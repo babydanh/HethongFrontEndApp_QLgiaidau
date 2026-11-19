@@ -20057,6 +20057,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get camTabTitle => 'Camera của giải';
 
   @override
+  String get camMatchCamOn => 'Bật cam';
+
+  @override
+  String get camMatchCamOff => 'Tắt cam';
+
+  @override
+  String get camTabReadOnlyBadge => 'Chỉ xem';
+
+  @override
+  String get camTabReadOnlyNote =>
+      'Giải đã kết thúc nên không thêm được camera.';
+
+  @override
   String get camTabHelpTooltip => 'Hướng dẫn tab Camera';
 
   @override

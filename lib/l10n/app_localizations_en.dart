@@ -20142,6 +20142,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get camTabTitle => 'Tournament cameras';
 
   @override
+  String get camMatchCamOn => 'Cam on';
+
+  @override
+  String get camMatchCamOff => 'Cam off';
+
+  @override
+  String get camTabReadOnlyBadge => 'View only';
+
+  @override
+  String get camTabReadOnlyNote =>
+      'This tournament has ended, so cameras can\'t be added.';
+
+  @override
   String get camTabHelpTooltip => 'Camera tab guide';
 
   @override

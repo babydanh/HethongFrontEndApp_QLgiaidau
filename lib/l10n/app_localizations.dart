@@ -36061,6 +36061,30 @@ abstract class AppLocalizations {
   /// **'Camera của giải'**
   String get camTabTitle;
 
+  /// No description provided for @camMatchCamOn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật cam'**
+  String get camMatchCamOn;
+
+  /// No description provided for @camMatchCamOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt cam'**
+  String get camMatchCamOff;
+
+  /// No description provided for @camTabReadOnlyBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ xem'**
+  String get camTabReadOnlyBadge;
+
+  /// No description provided for @camTabReadOnlyNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đã kết thúc nên không thêm được camera.'**
+  String get camTabReadOnlyNote;
+
   /// No description provided for @camTabHelpTooltip.
   ///
   /// In vi, this message translates to:

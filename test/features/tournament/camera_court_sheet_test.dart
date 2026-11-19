@@ -230,12 +230,17 @@ void main() {
     expect(find.byKey(_tile1), findsOneWidget);
     expect(find.byKey(_tile2), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('camera-court-chip-court-2')));
+    // The chips share one horizontal scroll row, so scroll to each before tapping.
+    final chip2 = find.byKey(const ValueKey('camera-court-chip-court-2'));
+    await tester.ensureVisible(chip2);
+    await tester.tap(chip2);
     await tester.pumpAndSettle();
     expect(find.byKey(_tile1), findsNothing);
     expect(find.byKey(_tile2), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('camera-court-chip-all')));
+    final chipAll = find.byKey(const ValueKey('camera-court-chip-all'));
+    await tester.ensureVisible(chipAll);
+    await tester.tap(chipAll);
     await tester.pumpAndSettle();
     expect(find.byKey(_tile1), findsOneWidget);
     expect(find.byKey(_tile2), findsOneWidget);
