@@ -1113,6 +1113,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       onSubmitPenalty: (teamSide, option, reason) =>
                           _submitPenalty(match, teamSide, option, reason),
                       onRecordPenalty: () => _showFoulSelectionDialog(match),
+                      canScore: true,
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 22),
@@ -2691,6 +2692,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           onSubmitPenalty: (teamSide, option, reason) =>
               _submitPenalty(match, teamSide, option, reason),
           onForceWin: () => _showForceWinDialog(match),
+          canScore: true,
         );
       },
     );

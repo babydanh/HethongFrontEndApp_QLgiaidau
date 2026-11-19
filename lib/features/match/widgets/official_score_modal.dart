@@ -18,6 +18,12 @@ import 'package:app_quanly_giaidau/features/match/utils/score_validation_localiz
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
+import 'package:app_quanly_giaidau/domain/services/tournament_manage_access.dart';
+import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/providers/tournament_co_organizer_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 
@@ -40,6 +46,7 @@ void showOfficialScoreModal(
   Future<void> Function(int teamSide, PenaltyOption option, String reason)?
   onSubmitPenalty,
   VoidCallback? onForceWin,
+  bool? canScore,
 }) {
   Navigator.of(context).push(
     MaterialPageRoute(
@@ -50,6 +57,7 @@ void showOfficialScoreModal(
         onRecordPenalty: onRecordPenalty,
         onSubmitPenalty: onSubmitPenalty,
         onForceWin: onForceWin,
+        canScore: canScore,
       ),
     ),
   );
@@ -67,6 +75,7 @@ class OfficialScorePage extends ConsumerStatefulWidget {
   )?
   onSubmitPenalty;
   final VoidCallback? onForceWin;
+  final bool? canScore;
 
   const OfficialScorePage({
     super.key,
@@ -76,6 +85,7 @@ class OfficialScorePage extends ConsumerStatefulWidget {
     this.onRecordPenalty,
     this.onSubmitPenalty,
     this.onForceWin,
+    this.canScore,
   });
 
   @override
@@ -168,6 +178,40 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
           tournamentIsLite: tournamentAsync?.value?.isLite == true,
         ) ||
         config.isOpenScoring;
+
+    final auth = ref.watch(authProvider);
+    final profileId = ref.watch(userProfileProvider).asData?.value.id;
+    final scoreAccess = auth.isAuthenticated && effectiveTournamentId.isNotEmpty
+        ? ref.watch(matchScoreAccessProvider(widget.matchId)).asData?.value
+        : null;
+    final isTokenReferee =
+        auth.isReferee &&
+        effectiveTournamentId.isNotEmpty &&
+        auth.tournamentId == effectiveTournamentId;
+    final isTournamentStaff =
+        effectiveTournamentId.isNotEmpty &&
+        auth.isAuthenticated &&
+        (scoringStaffTournamentIds(
+              ref.watch(myTournamentWorkspaceProvider).value,
+            ).contains(effectiveTournamentId) ||
+            (ref
+                    .watch(tournamentCoOrganizerProvider(effectiveTournamentId))
+                    .asData
+                    ?.value ??
+                false));
+    final resolvedCanScore = widget.canScore ??
+        (auth.canScore ||
+            isTokenReferee ||
+            (effectiveTournamentId.isNotEmpty &&
+                canControlTournamentLive(
+                  userId: profileId,
+                  isAdmin: auth.isAdmin,
+                  createdBy: tournamentAsync?.value?.creatorId,
+                  refereeId: widget.match.refereeId,
+                  isTournamentStaff: isTournamentStaff,
+                  scoreAccess: scoreAccess,
+                )));
+
     // Pickleball scores on the court itself: points, set and match controls
     // all sit on it, so the shared bottom bar is not drawn.
     final courtMode = kind == SportRuleKind.pickleball;
@@ -358,6 +402,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 params,
                                 kind,
                                 isLite,
+                                resolvedCanScore,
                               ),
                               Padding(
                                 // Keep the foul page clear of the overlay row.
@@ -887,6 +932,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     ({String tournamentId, String matchId}) params,
     SportRuleKind kind,
     bool isLite,
+    bool canScore,
   ) {
     // Strict badminton and tennis score on a court too; Lite cards keep the
     // plain panels.
@@ -895,7 +941,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     final scorePanel = kind == SportRuleKind.pickleball
         ? PickleballCourtPanel(
             params: params,
-            canScore: ref.watch(authProvider).canScore,
+            canScore: canScore,
             onForceWin: widget.onForceWin,
           )
         : kind == SportRuleKind.football
@@ -907,14 +953,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         : racketCourt
         ? RacketCourtPanel(params: params)
         : kind == SportRuleKind.tennis
-        ? TennisScorePanel(params: params, isReadOnly: false)
+        ? TennisScorePanel(params: params, isReadOnly: !canScore)
         : isLite
-        ? RallyScorePanel(params: params, isReadOnly: false)
+        ? RallyScorePanel(params: params, isReadOnly: !canScore)
         : kind == SportRuleKind.badminton
-        ? BadmintonScorePanel(params: params, isReadOnly: false)
+        ? BadmintonScorePanel(params: params, isReadOnly: !canScore)
         : kind == SportRuleKind.tableTennis
-        ? TableTennisScorePanel(params: params, isReadOnly: false)
-        : RallyScorePanel(params: params, isReadOnly: false);
+        ? TableTennisScorePanel(params: params, isReadOnly: !canScore)
+        : RallyScorePanel(params: params, isReadOnly: !canScore);
     // The pickleball court (sideways or upright) runs edge to edge; only the
     // warning below keeps a side margin.
     final sideways = kind == SportRuleKind.pickleball;

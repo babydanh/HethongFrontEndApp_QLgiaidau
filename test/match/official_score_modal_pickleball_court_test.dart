@@ -28,6 +28,12 @@ class _Referee extends AuthNotifier {
       const AuthState(status: AuthStatus.authenticated, role: UserRole.referee);
 }
 
+class _Viewer extends AuthNotifier {
+  @override
+  AuthState build() =>
+      const AuthState(status: AuthStatus.authenticated, role: UserRole.viewer);
+}
+
 class _EchoCourtRepository extends Fake implements IMatchRepository {
   @override
   Future<MatchModel> updateCourtState(
@@ -94,6 +100,8 @@ Future<void> _pump(
   bool lite = false,
   List<SetScoreData> finishedSets = const [],
   Size size = const Size(360, 780),
+  bool? canScore,
+  AuthNotifier Function()? authOverride,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -102,7 +110,7 @@ Future<void> _pump(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        authProvider.overrideWith(_Referee.new),
+        authProvider.overrideWith(authOverride ?? _Referee.new),
         singleMatchProvider.overrideWith((ref, params) => Stream.value(match)),
         tournamentProvider.overrideWith((ref, id) => Stream.value(null)),
         pickleballCourtContextProvider.overrideWith((ref, params) => _context),
@@ -136,6 +144,7 @@ Future<void> _pump(
                   tournamentId: _params.tournamentId,
                   matchId: _params.matchId,
                   match: match,
+                  canScore: canScore,
                 ),
                 child: const Text('open'),
               ),
@@ -470,6 +479,40 @@ void main() {
         lessThan(tester.getRect(find.byType(TabBar)).top),
       );
     });
+
+    testWidgets(
+      'viewer with canScore: true (e.g. Co-Organizer / Dong BTC) enables scoring on court',
+      (tester) async {
+        await _pump(
+          tester,
+          sportKey: 'PICKLEBALL',
+          authOverride: _Viewer.new,
+          canScore: true,
+        );
+
+        final courtPanel = tester.widget<PickleballCourtPanel>(
+          find.byType(PickleballCourtPanel),
+        );
+        expect(courtPanel.canScore, isTrue);
+      },
+    );
+
+    testWidgets(
+      'viewer without canScore remains read-only',
+      (tester) async {
+        await _pump(
+          tester,
+          sportKey: 'PICKLEBALL',
+          authOverride: _Viewer.new,
+          canScore: false,
+        );
+
+        final courtPanel = tester.widget<PickleballCourtPanel>(
+          find.byType(PickleballCourtPanel),
+        );
+        expect(courtPanel.canScore, isFalse);
+      },
+    );
   });
 
   testWidgets('other sports keep the shared bottom bar', (tester) async {
