@@ -7320,6 +7320,7 @@
   "tournamentCameraFbReadyHideQr": "Hide QR code",
   "tournamentCameraFbReadyQrWarning": "The QR code contains the stream key. Do not send a screenshot of it to anyone.",
   "tournamentCameraFbReadyQrLabel": "QR code to open in Larix",
+  "tournamentCameraFbReadyQrPlainLabel": "Plain RTMP code (other apps read the address and stream key)",
   "tournamentCameraFbWorking": "Working...",
   "tournamentCameraFbHowTo": "Paste these 2 lines into your streaming app or OBS, then tap Start streaming.",
   "tournamentCameraFbRtmpLabel": "Server address (RTMP)",

@@ -18530,6 +18530,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraFbReadyQrLabel => 'QR code to open in Larix';
 
   @override
+  String get tournamentCameraFbReadyQrPlainLabel =>
+      'Plain RTMP code (other apps read the address and stream key)';
+
+  @override
   String get tournamentCameraFbWorking => 'Working...';
 
   @override

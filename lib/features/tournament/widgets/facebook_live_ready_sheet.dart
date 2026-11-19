@@ -61,7 +61,7 @@ class FacebookLiveReadySheet extends StatefulWidget {
 
 class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
   bool _launching = false;
-  bool _qrVisible = false;
+  bool _qrVisible = true;
 
   /// Larix chưa cài (hoặc không mở được) thì báo cách xử lý thay vì im lặng.
   Future<void> _openLarix(String link) async {
@@ -86,8 +86,38 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
     }
   }
 
-  /// QR hidden by default, like the web: it carries the stream key.
-  List<Widget> _buildQr(AppLocalizations l10n, String link) {
+  Widget _qrFigure(String key, String label, String data) {
+    return Semantics(
+      label: label,
+      image: true,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: QrImageView(
+              key: ValueKey(key),
+              data: data,
+              version: QrVersions.auto,
+              size: 200,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Two QR codes shown right away (Larix link + plain RTMP address); the toggle only hides them.
+  List<Widget> _buildQr(AppLocalizations l10n, String larixLink, String plain) {
     final colors = context.colors;
     return [
       OutlinedButton.icon(
@@ -103,24 +133,12 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
       ),
       if (_qrVisible) ...[
         const SizedBox(height: 12),
-        Center(
-          child: Semantics(
-            label: l10n.tournamentCameraFbReadyQrLabel,
-            image: true,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: QrImageView(
-                key: const ValueKey('fb-live-qr'),
-                data: link,
-                version: QrVersions.auto,
-                size: 200,
-              ),
-            ),
-          ),
+        _qrFigure('fb-live-qr', l10n.tournamentCameraFbReadyQrLabel, larixLink),
+        const SizedBox(height: 16),
+        _qrFigure(
+          'fb-live-qr-plain',
+          l10n.tournamentCameraFbReadyQrPlainLabel,
+          plain,
         ),
         const SizedBox(height: 8),
         Text(
@@ -141,6 +159,7 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
       live.streamKey,
       'SportO Live',
     );
+    final plainRtmp = buildPlainRtmpUrl(live.rtmpUrl, live.streamKey);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -169,7 +188,7 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
           value: live.streamKey,
           masked: true,
         ),
-        if (larixLink != null) ...[
+        if (larixLink != null && plainRtmp != null) ...[
           const SizedBox(height: 12),
           OutlinedButton.icon(
             key: const ValueKey('fb-live-larix-open'),
@@ -179,7 +198,7 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
             label: Text(l10n.tournamentCameraFbLarixOpen),
           ),
           const SizedBox(height: 12),
-          ..._buildQr(l10n, larixLink),
+          ..._buildQr(l10n, larixLink, plainRtmp),
         ],
       ],
     );

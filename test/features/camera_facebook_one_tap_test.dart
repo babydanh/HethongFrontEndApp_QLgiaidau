@@ -258,16 +258,16 @@ void main() {
 
     expect(find.text('Camera is ready'), findsOneWidget);
     expect(find.text('Camera sân 1'), findsOneWidget);
-    expect(find.byKey(const ValueKey('fb-live-qr')), findsNothing);
+    // QR codes are visible right away; the toggle only hides them.
+    expect(find.byKey(const ValueKey('fb-live-qr')), findsOneWidget);
+    expect(find.byKey(const ValueKey('fb-live-qr-plain')), findsOneWidget);
+    expect(find.textContaining('QR code contains the stream key'), findsOneWidget);
     final qrToggle = find.byKey(const ValueKey('fb-live-qr-toggle'));
     await tester.ensureVisible(qrToggle);
     await tester.tap(qrToggle);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('fb-live-qr')), findsOneWidget);
-    expect(find.textContaining('QR code contains the stream key'), findsOneWidget);
-    await tester.tap(qrToggle);
-    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('fb-live-qr')), findsNothing);
+    expect(find.byKey(const ValueKey('fb-live-qr-plain')), findsNothing);
     expect(_field(tester, 'fb-live-key').obscureText, isTrue);
 
     final open = find.byKey(const ValueKey('fb-live-larix-open'));

@@ -18456,6 +18456,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraFbReadyQrLabel => 'Mã QR để mở trong Larix';
 
   @override
+  String get tournamentCameraFbReadyQrPlainLabel =>
+      'Mã RTMP thuần (app khác tự đọc địa chỉ và khoá phát)';
+
+  @override
   String get tournamentCameraFbWorking => 'Đang xử lý...';
 
   @override

@@ -33259,6 +33259,12 @@ abstract class AppLocalizations {
   /// **'Mã QR để mở trong Larix'**
   String get tournamentCameraFbReadyQrLabel;
 
+  /// No description provided for @tournamentCameraFbReadyQrPlainLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã RTMP thuần (app khác tự đọc địa chỉ và khoá phát)'**
+  String get tournamentCameraFbReadyQrPlainLabel;
+
   /// No description provided for @tournamentCameraFbWorking.
   ///
   /// In vi, this message translates to:

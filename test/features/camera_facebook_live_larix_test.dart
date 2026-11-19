@@ -7,8 +7,9 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_rea
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-/// TC-LARIX-APP-01..06: open the Facebook live stream in Larix Broadcaster with one tap.
+/// TC-LARIX-APP-01..06 + TC-RTMP-QR-APP-01..04: open the Facebook live stream in Larix Broadcaster with one tap.
 const _server = 'rtmps://live-api-s.facebook.com:443/rtmp';
 const _key = 'FB-123-0?s_bl=1&s_ps=1&a=b';
 const _live = CreatedFacebookLive(
@@ -71,6 +72,43 @@ void main() {
     test('TC-LARIX-APP-03 returns null when the server or the key is missing', () {
       expect(buildLarixSetupUrl('', _key, 'x'), isNull);
       expect(buildLarixSetupUrl(_server, '   ', 'x'), isNull);
+    });
+  });
+
+  group('buildPlainRtmpUrl', () {
+    test('TC-RTMP-QR-APP-01 joins server and key with one slash, keeps ? & = raw', () {
+      for (final server in [_server, '$_server/', ' $_server/ ']) {
+        expect(buildPlainRtmpUrl(server, ' $_key '), '$_server/$_key');
+      }
+    });
+
+    test('TC-RTMP-QR-APP-02 returns null when the server or the key is missing', () {
+      expect(buildPlainRtmpUrl('', _key), isNull);
+      expect(buildPlainRtmpUrl(_server, '   '), isNull);
+    });
+  });
+
+  group('FacebookLiveReadySheet QR codes', () {
+    testWidgets('TC-RTMP-QR-APP-03 shows the Larix QR and the plain RTMP QR without a tap', (
+      tester,
+    ) async {
+      await _pumpCreated(tester, (_) async => true);
+      expect(find.byKey(const ValueKey('fb-live-qr')), findsOneWidget);
+      expect(find.byKey(const ValueKey('fb-live-qr-plain')), findsOneWidget);
+    });
+
+    testWidgets('TC-RTMP-QR-APP-04 the toggle hides and shows both QR codes', (
+      tester,
+    ) async {
+      await _pumpCreated(tester, (_) async => true);
+      final toggle = find.byKey(const ValueKey('fb-live-qr-toggle'));
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.byType(QrImageView), findsNothing);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(find.byType(QrImageView), findsNWidgets(2));
     });
   });
 

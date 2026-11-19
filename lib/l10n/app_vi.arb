@@ -7348,6 +7348,7 @@
   "tournamentCameraFbReadyHideQr": "Ẩn mã QR",
   "tournamentCameraFbReadyQrWarning": "Mã QR chứa khoá phát, đừng chụp màn hình gửi người khác.",
   "tournamentCameraFbReadyQrLabel": "Mã QR để mở trong Larix",
+  "tournamentCameraFbReadyQrPlainLabel": "Mã RTMP thuần (app khác tự đọc địa chỉ và khoá phát)",
   "tournamentCameraFbWorking": "Đang xử lý...",
   "tournamentCameraFbHowTo": "Dán 2 dòng này vào app livestream hoặc OBS rồi bấm Bắt đầu phát.",
   "tournamentCameraFbRtmpLabel": "Địa chỉ máy chủ (RTMP)",
