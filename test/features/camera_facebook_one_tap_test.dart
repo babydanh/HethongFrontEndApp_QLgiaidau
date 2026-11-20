@@ -231,10 +231,9 @@ void main() {
     expect(find.text('Camera is ready'), findsOneWidget);
   });
 
-  testWidgets('TC-FBONE-APP-05 ready sheet masks the key and opens Larix', (
+  testWidgets('TC-FBONE-APP-05 ready sheet masks the key and shows the RTMP QR', (
     tester,
   ) async {
-    final launched = <Uri>[];
     await tester.pumpWidget(
       _app(
         Builder(
@@ -243,10 +242,6 @@ void main() {
               context,
               live: _live,
               cameraName: 'Camera sân 1',
-              launchLink: (uri) async {
-                launched.add(uri);
-                return true;
-              },
             ),
             child: const Text('open'),
           ),
@@ -258,25 +253,15 @@ void main() {
 
     expect(find.text('Camera is ready'), findsOneWidget);
     expect(find.text('Camera sân 1'), findsOneWidget);
-    // QR codes are visible right away; the toggle only hides them.
+    // The QR code is visible right away; the toggle only hides it.
     expect(find.byKey(const ValueKey('fb-live-qr')), findsOneWidget);
-    expect(find.byKey(const ValueKey('fb-live-qr-plain')), findsOneWidget);
     expect(find.textContaining('QR code contains the stream key'), findsOneWidget);
     final qrToggle = find.byKey(const ValueKey('fb-live-qr-toggle'));
     await tester.ensureVisible(qrToggle);
     await tester.tap(qrToggle);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('fb-live-qr')), findsNothing);
-    expect(find.byKey(const ValueKey('fb-live-qr-plain')), findsNothing);
     expect(_field(tester, 'fb-live-key').obscureText, isTrue);
-
-    final open = find.byKey(const ValueKey('fb-live-larix-open'));
-    await tester.ensureVisible(open);
-    await tester.tap(open);
-    await tester.pumpAndSettle();
-    expect(launched, hasLength(1));
-    expect(launched.single.scheme, 'larix');
-    expect(launched.single.queryParameters['conn[][url]'], '$_server/$_key');
 
     final done = find.byKey(const ValueKey('fb-live-ready-done'));
     await tester.ensureVisible(done);

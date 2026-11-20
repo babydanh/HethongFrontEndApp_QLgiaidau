@@ -18437,7 +18437,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraFbReadyHint =>
-      'Camera đã được tạo. Phát bằng điện thoại này qua Larix, quét mã QR bằng Larix ở máy khác, hoặc dán 2 dòng dưới vào OBS rồi bấm Bắt đầu phát. Giữ kín khoá phát; khung xem trước có thể trống đến khi bạn bắt đầu phát.';
+      'Camera đã được tạo. Phát bằng điện thoại: mở app SportO Cam rồi quét mã QR, hoặc dán 2 dòng dưới vào app livestream khác hay OBS rồi bấm Bắt đầu phát. Giữ kín khoá phát; khung xem trước có thể trống đến khi bạn bắt đầu phát.';
 
   @override
   String get tournamentCameraFbReadyDone => 'Xong';
@@ -18453,11 +18453,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã QR chứa khoá phát, đừng chụp màn hình gửi người khác.';
 
   @override
-  String get tournamentCameraFbReadyQrLabel => 'Mã QR để mở trong Larix';
-
-  @override
   String get tournamentCameraFbReadyQrPlainLabel =>
-      'Mã RTMP thuần (app khác tự đọc địa chỉ và khoá phát)';
+      'Mã QR RTMP (địa chỉ và khoá phát)';
 
   @override
   String get tournamentCameraFbWorking => 'Đang xử lý...';
@@ -18475,17 +18472,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentCameraFbKeyWarning =>
       'Giữ kín khoá phát, không gửi cho người lạ. Link xem đã tự điền ở trên; khung xem trước có thể trống đến khi bạn bắt đầu phát.';
-
-  @override
-  String get tournamentCameraFbLarixHint =>
-      'Phát bằng điện thoại này: cài Larix Broadcaster (miễn phí), bấm Mở trong Larix, xác nhận nhập kết nối rồi bấm nút phát.';
-
-  @override
-  String get tournamentCameraFbLarixOpen => 'Mở trong Larix';
-
-  @override
-  String get tournamentCameraFbLarixMissing =>
-      'Chưa mở được Larix. Hãy cài Larix Broadcaster từ cửa hàng ứng dụng rồi thử lại.';
 
   @override
   String get tournamentCameraFbShowKey => 'Hiện khoá phát';
