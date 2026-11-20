@@ -58,6 +58,7 @@ class MatchReplay {
     List<MatchReplayOverlayEvent> overlayEvents =
         const <MatchReplayOverlayEvent>[],
     List<MatchReplayScoreEvent> scoreEvents = const <MatchReplayScoreEvent>[],
+    this.externalUrl,
   }) : segments = List<MatchReplaySegment>.unmodifiable(segments),
        overlayEvents = List<MatchReplayOverlayEvent>.unmodifiable(
          overlayEvents,
@@ -79,7 +80,11 @@ class MatchReplay {
     final derivedDuration = segments.isEmpty
         ? 0
         : segments.last.offsetSec + segments.last.durationSec;
-    final available = json['available'] == true && segments.isNotEmpty;
+    final externalUrl = _nullableString(json['externalUrl']);
+    // A finished Facebook/YouTube live has no files: its watch link is the replay.
+    final available =
+        json['available'] == true &&
+        (segments.isNotEmpty || externalUrl != null);
     return MatchReplay(
       matchId: json['matchId'] is String ? json['matchId']! as String : '',
       available: available,
@@ -94,6 +99,7 @@ class MatchReplay {
       segments: segments,
       overlayEvents: MatchReplayOverlayEvent.parseList(json['overlayEvents']),
       scoreEvents: MatchReplayScoreEvent.parseList(json['scoreEvents']),
+      externalUrl: externalUrl,
     );
   }
 
@@ -112,6 +118,10 @@ class MatchReplay {
   /// Score after each change, placed on the replay timeline, ordered by offset.
   /// Empty for a match recorded before the Backend stored them.
   final List<MatchReplayScoreEvent> scoreEvents;
+
+  /// Facebook/YouTube watch link replayed in an embed when [segments] is empty;
+  /// null on an older Backend or when the live has real recording files.
+  final String? externalUrl;
 }
 
 /// One H2H or bracket overlay on/off change placed on the replay timeline by

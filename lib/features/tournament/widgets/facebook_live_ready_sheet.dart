@@ -1,39 +1,30 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/repositories/facebook_camera_live_repository.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/larix_link.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/rtmp_url.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-Future<bool> _launchExternal(Uri uri) =>
-    launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// Thân sheet "Camera đã sẵn sàng" sau khi tạo camera live Facebook một nút: máy
-/// chủ RTMP, khoá phát (che sẵn), nút Mở trong Larix và QR của cùng link Larix
-/// (ẩn cho tới khi bấm Hiện mã QR vì QR chứa khoá phát). Khoá phát chỉ vẽ ra,
-/// không log, không lưu; trạng thái hiện/ẩn chết cùng sheet.
+/// chủ RTMP, khoá phát (che sẵn) và QR RTMP thuần (hiện sẵn, có nút Ẩn vì QR
+/// chứa khoá phát). Khoá phát chỉ vẽ ra, không log, không lưu; trạng thái
+/// hiện/ẩn chết cùng sheet.
 class FacebookLiveReadySheet extends StatefulWidget {
   const FacebookLiveReadySheet({
     super.key,
     required this.live,
     required this.cameraName,
-    required this.launchLink,
   });
 
   final CreatedFacebookLive live;
   final String cameraName;
 
-  /// Mở link ngoài app (Larix); tách ra để test không gọi plugin thật.
-  final Future<bool> Function(Uri uri) launchLink;
-
   static Future<void> show(
     BuildContext context, {
     required CreatedFacebookLive live,
     required String cameraName,
-    Future<bool> Function(Uri uri)? launchLink,
   }) {
     final l10n = AppLocalizations.of(context)!;
     return TournamentManageSheet.show<void>(
@@ -47,11 +38,7 @@ class FacebookLiveReadySheet extends StatefulWidget {
           child: Text(l10n.tournamentCameraFbReadyDone),
         ),
       ],
-      child: FacebookLiveReadySheet(
-        live: live,
-        cameraName: cameraName,
-        launchLink: launchLink ?? _launchExternal,
-      ),
+      child: FacebookLiveReadySheet(live: live, cameraName: cameraName),
     );
   }
 
@@ -60,41 +47,49 @@ class FacebookLiveReadySheet extends StatefulWidget {
 }
 
 class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
-  bool _launching = false;
-  bool _qrVisible = false;
+  bool _qrVisible = true;
 
-  /// Larix chưa cài (hoặc không mở được) thì báo cách xử lý thay vì im lặng.
-  Future<void> _openLarix(String link) async {
-    if (_launching) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final missing = AppLocalizations.of(
-      context,
-    )!.tournamentCameraFbLarixMissing;
-    setState(() => _launching = true);
-    var opened = false;
-    try {
-      opened = await widget.launchLink(Uri.parse(link));
-    } on Object {
-      opened = false;
-    } finally {
-      if (mounted) setState(() => _launching = false);
-    }
-    if (!opened) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(missing)));
-    }
+  Widget _qrFigure(String key, String label, String data) {
+    return Semantics(
+      label: label,
+      image: true,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: QrImageView(
+              key: ValueKey(key),
+              data: data,
+              version: QrVersions.auto,
+              size: 200,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
   }
 
-  /// QR hidden by default, like the web: it carries the stream key.
-  List<Widget> _buildQr(AppLocalizations l10n, String link) {
+  /// The RTMP QR is shown right away; the toggle only hides it.
+  List<Widget> _buildQr(AppLocalizations l10n, String plain) {
     final colors = context.colors;
     return [
       OutlinedButton.icon(
         key: const ValueKey('fb-live-qr-toggle'),
         onPressed: () => setState(() => _qrVisible = !_qrVisible),
         style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-        icon: Icon(_qrVisible ? Icons.visibility_off_outlined : Icons.qr_code_2),
+        icon: Icon(
+          _qrVisible ? Icons.visibility_off_outlined : Icons.qr_code_2,
+        ),
         label: Text(
           _qrVisible
               ? l10n.tournamentCameraFbReadyHideQr
@@ -103,24 +98,10 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
       ),
       if (_qrVisible) ...[
         const SizedBox(height: 12),
-        Center(
-          child: Semantics(
-            label: l10n.tournamentCameraFbReadyQrLabel,
-            image: true,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: QrImageView(
-                key: const ValueKey('fb-live-qr'),
-                data: link,
-                version: QrVersions.auto,
-                size: 200,
-              ),
-            ),
-          ),
+        _qrFigure(
+          'fb-live-qr',
+          l10n.tournamentCameraFbReadyQrPlainLabel,
+          plain,
         ),
         const SizedBox(height: 8),
         Text(
@@ -136,11 +117,7 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final live = widget.live;
-    final larixLink = buildLarixSetupUrl(
-      live.rtmpUrl,
-      live.streamKey,
-      'SportO Live',
-    );
+    final plainRtmp = buildPlainRtmpUrl(live.rtmpUrl, live.streamKey);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -169,17 +146,9 @@ class _FacebookLiveReadySheetState extends State<FacebookLiveReadySheet> {
           value: live.streamKey,
           masked: true,
         ),
-        if (larixLink != null) ...[
+        if (plainRtmp != null) ...[
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            key: const ValueKey('fb-live-larix-open'),
-            onPressed: _launching ? null : () => _openLarix(larixLink),
-            style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-            icon: const Icon(Icons.smartphone_outlined),
-            label: Text(l10n.tournamentCameraFbLarixOpen),
-          ),
-          const SizedBox(height: 12),
-          ..._buildQr(l10n, larixLink),
+          ..._buildQr(l10n, plainRtmp),
         ],
       ],
     );
@@ -232,10 +201,7 @@ class _SecretRowState extends State<_SecretRow> {
             autocorrect: false,
             enableSuggestions: false,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-            decoration: InputDecoration(
-              labelText: widget.label,
-              isDense: true,
-            ),
+            decoration: InputDecoration(labelText: widget.label, isDense: true),
           ),
         ),
         if (widget.masked)
@@ -247,7 +213,9 @@ class _SecretRowState extends State<_SecretRow> {
             onPressed: () => setState(() => _visible = !_visible),
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             icon: Icon(
-              _visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _visible
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
             ),
           ),
         IconButton(

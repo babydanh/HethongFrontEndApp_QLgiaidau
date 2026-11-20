@@ -18511,7 +18511,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraFbReadyHint =>
-      'The camera has been created. Stream from this phone with Larix, scan the QR code with Larix on another device, or paste the 2 lines below into OBS and start streaming. Keep the stream key private; the preview may stay blank until you start streaming.';
+      'The camera has been created. Stream from a phone: open the SportO Cam app and scan the QR code, or paste the 2 lines below into another livestream app or OBS, then tap Start streaming. Keep the stream key secret; the preview may stay blank until you start streaming.';
 
   @override
   String get tournamentCameraFbReadyDone => 'Done';
@@ -18527,7 +18527,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'The QR code contains the stream key. Do not send a screenshot of it to anyone.';
 
   @override
-  String get tournamentCameraFbReadyQrLabel => 'QR code to open in Larix';
+  String get tournamentCameraFbReadyQrPlainLabel =>
+      'RTMP QR code (address and stream key)';
 
   @override
   String get tournamentCameraFbWorking => 'Working...';
@@ -18545,17 +18546,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentCameraFbKeyWarning =>
       'Keep the stream key private. The watch link is filled in above; the preview may stay blank until you start streaming.';
-
-  @override
-  String get tournamentCameraFbLarixHint =>
-      'Stream from this phone: install Larix Broadcaster (free), tap Open in Larix, confirm the connection import, then tap the start button.';
-
-  @override
-  String get tournamentCameraFbLarixOpen => 'Open in Larix';
-
-  @override
-  String get tournamentCameraFbLarixMissing =>
-      'Could not open Larix. Install Larix Broadcaster from the app store and try again.';
 
   @override
   String get tournamentCameraFbShowKey => 'Show stream key';

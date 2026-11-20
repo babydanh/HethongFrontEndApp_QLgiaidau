@@ -98,7 +98,6 @@ Future<void> _pumpReady(WidgetTester tester) async {
             context,
             live: _live,
             cameraName: 'Camera A',
-            launchLink: (_) async => true,
           ),
           child: const Text('open'),
         ),
