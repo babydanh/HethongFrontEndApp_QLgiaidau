@@ -35,7 +35,10 @@ final matchReplayProvider = FutureProvider.family<MatchReplay?, String>((
   );
   try {
     final replay = await repository.getMatchReplay(matchId);
-    return replay.available && replay.segments.isNotEmpty ? replay : null;
+    // Files to play, or a Facebook/YouTube watch link the embed can show.
+    final playable =
+        replay.segments.isNotEmpty || LiveEmbed.parse(replay.externalUrl).isOk;
+    return replay.available && playable ? replay : null;
   } on Object {
     return null;
   }
@@ -142,14 +145,22 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     _url = null;
     if (url == null && !playback.hasValue) return const _NoSignalBox();
     if (replay == null) return const _NoSignalBox();
-    final player = MatchReplayPlayer(
-      key: ValueKey<String>('match-replay-${replay.matchId}'),
-      replay: replay,
-      fullscreen: widget.fullscreen,
-      onToggleFullscreen: widget.onToggleFullscreen,
-      onControlsVisibleChanged: widget.onControlsVisibleChanged,
-      onPositionChanged: widget.onReplayPositionChanged,
-    );
+    final linkEmbed = LiveEmbed.parse(replay.externalUrl);
+    final Widget player = replay.segments.isEmpty && linkEmbed.isOk
+        // No recording files: replay the live from its own watch link.
+        ? LiveEmbedPlayer(
+            key: ValueKey<String>('match-replay-embed-${linkEmbed.embedUrl}'),
+            embed: linkEmbed,
+            fill: widget.fill,
+          )
+        : MatchReplayPlayer(
+            key: ValueKey<String>('match-replay-${replay.matchId}'),
+            replay: replay,
+            fullscreen: widget.fullscreen,
+            onToggleFullscreen: widget.onToggleFullscreen,
+            onControlsVisibleChanged: widget.onControlsVisibleChanged,
+            onPositionChanged: widget.onReplayPositionChanged,
+          );
     // The player keeps its own 16:9 shape; the page aligns it.
     return canToggle ? _withToggle(player, replayShown: true) : player;
   }
