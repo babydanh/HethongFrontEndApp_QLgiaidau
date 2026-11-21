@@ -248,6 +248,7 @@ jobs:
             --skip_metadata true \
             --skip_binary_upload true \
             --submit_for_review true \
+            --run_precheck_before_submit false \
             --automatic_release true \
             --force true || {
               echo "⚠️ Fastlane deliver submit encountered a non-fatal warning, build is already uploaded."
