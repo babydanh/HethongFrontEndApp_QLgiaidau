@@ -199,8 +199,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     .asData
                     ?.value ??
                 false));
+    // Club / social matches have no tournament: any signed-in member scores
+    // them, as the live page does for Super Lite matches.
     final resolvedCanScore = widget.canScore ??
         (auth.canScore ||
+            (effectiveTournamentId.isEmpty && auth.isAuthenticated) ||
             isTokenReferee ||
             (effectiveTournamentId.isNotEmpty &&
                 canControlTournamentLive(

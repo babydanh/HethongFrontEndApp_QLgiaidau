@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.d
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -69,14 +70,15 @@ SportConfig _config(SportRuleKind kind, SportScoringModel model, bool open) =>
       tiebreakAt: 0,
     );
 
-MatchModel _match(String sportKey) => MatchModel.fromJson({
-  'id': 'match-1',
-  'tournamentId': 'tournament-1',
-  'status': 'LIVE',
-  'sport': sportKey,
-  'team1Members': ['Lan Anh', 'Minh'],
-  'team2Members': ['Bảo', 'Hà'],
-}, 'match-1');
+MatchModel _match(String sportKey, {bool clubMatch = false}) =>
+    MatchModel.fromJson({
+      'id': 'match-1',
+      if (!clubMatch) 'tournamentId': 'tournament-1',
+      'status': 'LIVE',
+      'sport': sportKey,
+      'team1Members': ['Lan Anh', 'Minh'],
+      'team2Members': ['Bảo', 'Hà'],
+    }, 'match-1');
 
 const _context = CourtContext(
   score1: 4,
@@ -102,11 +104,12 @@ Future<void> _pump(
   Size size = const Size(360, 780),
   bool? canScore,
   AuthNotifier Function()? authOverride,
+  bool clubMatch = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final match = _match(sportKey);
+  final match = _match(sportKey, clubMatch: clubMatch);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -141,7 +144,7 @@ Future<void> _pump(
               child: ElevatedButton(
                 onPressed: () => showOfficialScoreModal(
                   context,
-                  tournamentId: _params.tournamentId,
+                  tournamentId: clubMatch ? '' : _params.tournamentId,
                   matchId: _params.matchId,
                   match: match,
                   canScore: canScore,
@@ -513,6 +516,26 @@ void main() {
         expect(courtPanel.canScore, isFalse);
       },
     );
+  });
+
+  // TC-CLUB-SCORE-01: club / social matches open the page without a
+  // tournament; a plain member scores them as before the co-organizer fix.
+  testWidgets('club match outside a tournament stays scorable for a member', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      sportKey: 'TABLE_TENNIS',
+      kind: SportRuleKind.tableTennis,
+      model: SportScoringModel.rallyPointSet,
+      authOverride: _Viewer.new,
+      clubMatch: true,
+    );
+
+    final panel = tester.widget<TableTennisScorePanel>(
+      find.byType(TableTennisScorePanel),
+    );
+    expect(panel.isReadOnly, isFalse);
   });
 
   testWidgets('other sports keep the shared bottom bar', (tester) async {
