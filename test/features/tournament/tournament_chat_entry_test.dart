@@ -53,15 +53,9 @@ const _registrationClosed = TournamentChatRoom(
   reason: 'NOT_REGISTERED',
   registrationOpen: false,
 );
-const _pending = TournamentChatRoom(
-  available: true,
-  roomId: 'room-1',
-  status: 'OPEN',
-  canWrite: false,
-  role: 'MEMBER',
-  registration: 'PENDING',
-  name: 'Chat Cup',
-  logoUrl: 'https://cdn.example.test/logo.png',
+const _pendingApproval = TournamentChatRoom(
+  available: false,
+  reason: 'PENDING_APPROVAL',
 );
 
 Tournament _tournament() => Tournament.fromJson({
@@ -165,7 +159,7 @@ void main() {
   const guestKey = ValueKey('tournament-chat-guest');
   const registerKey = ValueKey('tournament-chat-register');
   const registerClosedKey = ValueKey('tournament-chat-register-closed');
-  const pendingKey = ValueKey('tournament-chat-pending');
+  const pendingApprovalKey = ValueKey('tournament-chat-pending-approval');
 
   testWidgets('TC-ROOM-A01 OPEN reply shows the green open chat icon', (
     tester,
@@ -317,22 +311,24 @@ void main() {
     expect(_lastRoutes, isEmpty);
   });
 
-  testWidgets('TC-CHAT-UI-A-04 PENDING enters the room with the input locked and the tournament name', (
+  testWidgets('TC-CHAT-PENDING-APP-04 PENDING_APPROVAL explains and does not enter the room', (
     tester,
   ) async {
-    await _pump(tester, signedIn: true, room: _pending);
+    await _pump(tester, signedIn: true, room: _pendingApproval);
 
-    expect(find.byKey(pendingKey), findsOneWidget);
+    expect(find.byKey(pendingApprovalKey), findsOneWidget);
     expect(find.byKey(openKey), findsNothing);
+    expect(find.byKey(registerKey), findsNothing);
+    expect(
+      find.byTooltip(l10n.tournamentChatTooltipPendingApproval),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byKey(pendingKey));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(pendingApprovalKey));
+    await tester.pump();
 
-    expect(_lastRoutes.single, startsWith('/chat/room-1'));
-    expect(_lastRoutes.single, contains('pending=1'));
-    expect(_lastRoutes.single, isNot(contains('readOnly=1')));
-    expect(_lastRoutes.single, contains('name=Chat+Cup'));
-    expect(_lastRoutes.single, contains('avatar=https'));
+    expect(find.text(l10n.tournamentChatTooltipPendingApproval), findsWidgets);
+    expect(_lastRoutes, isEmpty);
   });
 
   testWidgets('TC-CHAT-UI-M-01 an admin with canModerate opens the room as moderator', (

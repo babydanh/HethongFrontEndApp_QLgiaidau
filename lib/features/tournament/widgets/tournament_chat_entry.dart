@@ -15,9 +15,9 @@ const double _kDimmedOpacity = 0.55;
 /// (not only a colour change):
 /// open (green) · closed (grey archive box) · kicked (dimmed, explains) ·
 /// guest (signed out, goes to login) · not registered (goes to sign-up, or
-/// dimmed and explains when sign-up is closed) · pending (enters, input
-/// locked). A purged room or an unknown reply hides the icon so no dead
-/// control is left behind.
+/// dimmed and explains when sign-up is closed) · pending approval (dimmed,
+/// explains, never enters). A purged room or an unknown reply hides the icon
+/// so no dead control is left behind.
 class TournamentChatEntry extends ConsumerWidget {
   const TournamentChatEntry({
     super.key,
@@ -99,14 +99,17 @@ class TournamentChatEntry extends ConsumerWidget {
             ),
           ),
         );
-      case TournamentChatState.pending:
+      case TournamentChatState.pendingApproval:
         return _ChatIconButton(
-          buttonKey: const ValueKey('tournament-chat-pending'),
+          buttonKey: const ValueKey('tournament-chat-pending-approval'),
           icon: Icons.hourglass_top_rounded,
-          color: AppTheme.accent,
-          label: l10n.tournamentChatTooltipPending,
+          color: Colors.grey,
+          opacity: _kDimmedOpacity,
+          label: l10n.tournamentChatTooltipPendingApproval,
           shadows: iconShadows,
-          onPressed: () => _openRoom(context, room.value, readOnly: false),
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.tournamentChatTooltipPendingApproval)),
+          ),
         );
       case TournamentChatState.purged:
         return const SizedBox.shrink();
@@ -129,7 +132,6 @@ class TournamentChatEntry extends ConsumerWidget {
         'type': 'TOURNAMENT',
         'tournamentId': tournamentId,
         if (readOnly) 'readOnly': '1',
-        if (room.state == TournamentChatState.pending) 'pending': '1',
         if (room.canModerate) 'organizer': '1',
       },
     );

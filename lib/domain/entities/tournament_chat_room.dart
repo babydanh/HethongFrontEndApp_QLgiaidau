@@ -18,8 +18,9 @@ enum TournamentChatState {
   /// Not registered and registration is closed: the icon only explains.
   registrationClosed,
 
-  /// Registered, waiting for the organizer: can read, cannot write.
-  pending,
+  /// Registered but not approved by the organizer yet: cannot enter the room,
+  /// not even to read. The icon only explains.
+  pendingApproval,
 }
 
 /// Reply of `GET /tournaments/:id/chat-room`. The server decides the status
@@ -53,7 +54,7 @@ class TournamentChatRoom {
   /// Only with `reason: NOT_REGISTERED`; null (old server) counts as open.
   final bool? registrationOpen;
 
-  /// `APPROVED` | `PENDING` | `STAFF`; null on an old server.
+  /// `APPROVED` | `STAFF` when available; null on an old server.
   final String? registration;
 
   /// Tournament name and logo for the room header, when the server sends them.
@@ -69,6 +70,9 @@ class TournamentChatRoom {
   TournamentChatState get state {
     if (!available) {
       if (reason == 'KICKED') return TournamentChatState.kicked;
+      if (reason == 'PENDING_APPROVAL') {
+        return TournamentChatState.pendingApproval;
+      }
       if (reason != 'NOT_REGISTERED') return TournamentChatState.purged;
       return registrationOpen == false
           ? TournamentChatState.registrationClosed
@@ -76,9 +80,7 @@ class TournamentChatRoom {
     }
     if (roomId == null || roomId!.isEmpty) return TournamentChatState.purged;
     if (status == 'CLOSED') return TournamentChatState.closed;
-    return registration == 'PENDING'
-        ? TournamentChatState.pending
-        : TournamentChatState.open;
+    return TournamentChatState.open;
   }
 
   factory TournamentChatRoom.fromJson(Map<String, dynamic> json) {

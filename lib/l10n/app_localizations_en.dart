@@ -20570,12 +20570,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Registration is closed';
 
   @override
-  String get tournamentChatTooltipPending =>
-      'Open tournament room (awaiting approval)';
-
-  @override
-  String get chatRoomPendingBanner =>
-      'Waiting for the organizer to approve your registration before you can message';
+  String get tournamentChatTooltipPendingApproval =>
+      'Waiting for the organizer to approve you before you can join the room';
 
   @override
   String get chatRoomNotRegisteredNotice =>

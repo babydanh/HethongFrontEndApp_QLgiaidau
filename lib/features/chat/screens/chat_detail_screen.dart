@@ -62,10 +62,6 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
   /// the input box is replaced by a "closed" strip.
   final bool readOnly;
 
-  /// Registered but not yet approved by the organizer: can read, cannot write
-  /// (the input box is replaced by a "waiting for approval" strip).
-  final bool pendingApproval;
-
   /// The viewer organizes this tournament room: may pin, revoke other
   /// people's messages and kick. Only meaningful for `roomType: TOURNAMENT`.
   final bool isRoomOrganizer;
@@ -79,7 +75,6 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
     this.communityId,
     this.embedded = false,
     this.readOnly = false,
-    this.pendingApproval = false,
     this.isRoomOrganizer = false,
   });
 
@@ -139,11 +134,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   bool _roomLocked = false;
   int _slowModeSeconds = 0;
   bool _serverClosed = false;
-  late bool _pendingApproval = widget.pendingApproval;
 
   bool get _isTournamentRoom => widget.roomType == 'TOURNAMENT';
   bool get _isReadOnly =>
-      widget.readOnly || _serverClosed || _pendingApproval || _lockedForMe;
+      widget.readOnly || _serverClosed || _lockedForMe;
 
   /// Locked rooms still let moderators post.
   bool get _lockedForMe => _isTournamentRoom && _roomLocked && !_isModerator;
@@ -436,20 +430,20 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     // Any other error must not touch context: this can run inside initState.
     if (!notRegistered && !notApproved) return false;
     final l10n = AppLocalizations.of(context)!;
-    if (notRegistered) {
-      final messenger = ScaffoldMessenger.of(context);
-      if (!widget.embedded && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.chatRoomNotRegisteredNotice)),
-      );
-      return true;
+    // Both cases mean no access at all (not even reading): leave the room.
+    final messenger = ScaffoldMessenger.of(context);
+    if (!widget.embedded && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
     }
-    setState(() => _pendingApproval = true);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.chatRoomPendingBanner)));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          notRegistered
+              ? l10n.chatRoomNotRegisteredNotice
+              : l10n.tournamentChatTooltipPendingApproval,
+        ),
+      ),
+    );
     return true;
   }
 
@@ -1204,10 +1198,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   Widget _buildClosedStrip(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final waitingApproval =
-        _pendingApproval && !widget.readOnly && !_serverClosed;
-    final locked =
-        !waitingApproval && _lockedForMe && !widget.readOnly && !_serverClosed;
+    final locked = _lockedForMe && !widget.readOnly && !_serverClosed;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -1220,9 +1211,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         child: Row(
           children: [
             Icon(
-              waitingApproval
-                  ? Icons.hourglass_top_rounded
-                  : locked
+              locked
                   ? Icons.lock_outline_rounded
                   : Icons.inventory_2_outlined,
               size: 20,
@@ -1231,9 +1220,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                waitingApproval
-                    ? l10n.chatRoomPendingBanner
-                    : locked
+                locked
                     ? l10n.chatRoomLockedBanner
                     : l10n.chatRoomClosedBanner,
                 style: TextStyle(fontSize: 13, color: colors.textMuted),

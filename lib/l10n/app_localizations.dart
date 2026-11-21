@@ -36799,17 +36799,11 @@ abstract class AppLocalizations {
   /// **'Đã đóng đăng ký'**
   String get tournamentChatTooltipRegistrationClosed;
 
-  /// No description provided for @tournamentChatTooltipPending.
+  /// No description provided for @tournamentChatTooltipPendingApproval.
   ///
   /// In vi, this message translates to:
-  /// **'Vào phòng giải (chờ BTC duyệt)'**
-  String get tournamentChatTooltipPending;
-
-  /// No description provided for @chatRoomPendingBanner.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chờ BTC duyệt đăng ký để nhắn tin'**
-  String get chatRoomPendingBanner;
+  /// **'Chờ BTC duyệt để vào phòng'**
+  String get tournamentChatTooltipPendingApproval;
 
   /// No description provided for @chatRoomNotRegisteredNotice.
   ///

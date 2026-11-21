@@ -68,17 +68,17 @@ void main() {
       'available': true,
       'roomId': 'r1',
       'status': 'OPEN',
-      'canWrite': false,
+      'canWrite': true,
       'role': 'MEMBER',
-      'registration': 'PENDING',
+      'registration': 'APPROVED',
       'name': 'Chat Cup',
       'logoUrl': 'https://cdn.example.test/logo.png',
     });
-    expect(room.state, TournamentChatState.pending);
-    expect(room.registration, 'PENDING');
+    expect(room.state, TournamentChatState.open);
+    expect(room.registration, 'APPROVED');
     expect(room.name, 'Chat Cup');
     expect(room.logoUrl, 'https://cdn.example.test/logo.png');
-    expect(room.canWrite, isFalse);
+    expect(room.canWrite, isTrue);
 
     final approved = TournamentChatRoom.fromJson({
       'available': true,
@@ -90,6 +90,46 @@ void main() {
     });
     expect(approved.state, TournamentChatState.open);
     expect(approved.logoUrl, isNull);
+  });
+
+  test('TC-CHAT-PENDING-APP-01 PENDING_APPROVAL reply maps to pendingApproval', () {
+    final room = TournamentChatRoom.fromJson({
+      'available': false,
+      'reason': 'PENDING_APPROVAL',
+    });
+    expect(room.state, TournamentChatState.pendingApproval);
+    expect(room.roomId, isNull);
+  });
+
+  test('TC-CHAT-PENDING-APP-02 unknown or old reasons keep their previous states', () {
+    TournamentChatState of(String? reason, {Map<String, dynamic>? extra}) =>
+        TournamentChatRoom.fromJson({
+          'available': false,
+          'reason': ?reason,
+          ...?extra,
+        }).state;
+    expect(of('SOMETHING_NEW'), TournamentChatState.purged);
+    expect(of('pending_approval'), TournamentChatState.purged);
+    expect(of('KICKED'), TournamentChatState.kicked);
+    expect(of('PURGED'), TournamentChatState.purged);
+    expect(of('UNAVAILABLE'), TournamentChatState.purged);
+    expect(
+      of('NOT_REGISTERED', extra: {'registrationOpen': false}),
+      TournamentChatState.registrationClosed,
+    );
+    expect(of('NOT_REGISTERED'), TournamentChatState.needsRegistration);
+  });
+
+  test('TC-CHAT-PENDING-APP-03 available room is open for APPROVED and STAFF', () {
+    TournamentChatState of(String registration) => TournamentChatRoom.fromJson({
+      'available': true,
+      'roomId': 'r1',
+      'status': 'OPEN',
+      'canWrite': true,
+      'registration': registration,
+    }).state;
+    expect(of('APPROVED'), TournamentChatState.open);
+    expect(of('STAFF'), TournamentChatState.open);
   });
 
   test('TC-CHAT-UI-A-03 old payloads without the new fields still parse', () {

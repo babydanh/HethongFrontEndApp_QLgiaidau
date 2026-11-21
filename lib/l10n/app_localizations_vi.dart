@@ -20481,10 +20481,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentChatTooltipRegistrationClosed => 'Đã đóng đăng ký';
 
   @override
-  String get tournamentChatTooltipPending => 'Vào phòng giải (chờ BTC duyệt)';
-
-  @override
-  String get chatRoomPendingBanner => 'Chờ BTC duyệt đăng ký để nhắn tin';
+  String get tournamentChatTooltipPendingApproval =>
+      'Chờ BTC duyệt để vào phòng';
 
   @override
   String get chatRoomNotRegisteredNotice =>
