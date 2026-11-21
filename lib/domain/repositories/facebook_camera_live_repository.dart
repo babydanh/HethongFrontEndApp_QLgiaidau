@@ -64,4 +64,8 @@ abstract class IFacebookCameraLiveRepository {
 
   /// Idempotent ở Backend: bấm lại trả đúng live đang chờ.
   Future<CreatedFacebookLive> createLive(String tournamentId);
+
+  /// Re-reads the live code of an existing Facebook camera. The backend keeps
+  /// it for 7 days: after that it answers 404 `FACEBOOK_LIVE_CODE_EXPIRED`.
+  Future<CreatedFacebookLive> getCameraLive(String cameraId);
 }

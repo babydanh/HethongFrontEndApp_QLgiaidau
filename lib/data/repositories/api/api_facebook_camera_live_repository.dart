@@ -33,4 +33,16 @@ class ApiFacebookCameraLiveRepository implements IFacebookCameraLiveRepository {
       CreatedFacebookLive.fromJson(
         _map(await _dio.post('/livestream/tournaments/$tournamentId/facebook-live')),
       );
+
+  @override
+  Future<CreatedFacebookLive> getCameraLive(String cameraId) async =>
+      CreatedFacebookLive.fromJson(
+        _map(
+          await _dio.get(
+            '/livestream/cameras/$cameraId/facebook-live',
+            // The response holds the stream key: never serve it from cache.
+            options: Options(extra: const <String, Object?>{'noCache': true}),
+          ),
+        ),
+      );
 }

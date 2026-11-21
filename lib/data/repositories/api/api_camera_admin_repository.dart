@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/data/models/camera_patch.dart';
 import 'package:app_quanly_giaidau/data/models/camera_stream_key_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.dart';
@@ -46,6 +47,11 @@ class ApiCameraAdminRepository implements ICameraAdminRepository {
   @override
   Future<void> deleteCamera(String cameraId) async {
     await _dio.delete('/livestream/cameras/$cameraId');
+  }
+
+  @override
+  Future<void> updateCamera(String cameraId, CameraPatch patch) async {
+    await _dio.patch('/livestream/cameras/$cameraId', data: patch.toJson());
   }
 
   @override

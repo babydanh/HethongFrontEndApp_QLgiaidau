@@ -18658,6 +18658,37 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get tournamentCameraActionsTooltip => 'Camera actions';
+
+  @override
+  String get tournamentCameraViewCode => 'View stream code';
+
+  @override
+  String get tournamentCameraEditAction => 'Edit camera';
+
+  @override
+  String get tournamentCameraEditUrlLabel => 'Playback URL';
+
+  @override
+  String get tournamentCameraEditUrlInvalid =>
+      'The URL must start with https://.';
+
+  @override
+  String tournamentCameraEditSaved(Object name) {
+    return 'Camera $name saved.';
+  }
+
+  @override
+  String get tournamentCameraFbCodeExpired => 'The stream code has expired.';
+
+  @override
+  String get tournamentCameraFbCodeExpiredAsk =>
+      'The stream code has expired. Create a new one for this camera?';
+
+  @override
+  String get tournamentCameraFbCodeRegenerate => 'Create new code';
+
+  @override
   String tournamentCameraCourtChanged(Object court, Object name) {
     return '$name moved to $court.';
   }

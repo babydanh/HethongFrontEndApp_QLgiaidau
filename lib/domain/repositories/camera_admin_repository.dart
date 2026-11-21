@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/data/models/camera_patch.dart';
 import 'package:app_quanly_giaidau/data/models/camera_stream_key_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 
@@ -25,6 +26,11 @@ abstract class ICameraAdminRepository {
   /// Archives a camera. The backend refuses (409) while it is live; that
   /// refusal is rethrown untouched so the caller can show its message.
   Future<void> deleteCamera(String cameraId);
+
+  /// Renames [cameraId] and/or changes its playback URL; only the fields set
+  /// on [patch] are sent. The backend refuses (409) an archived camera or a URL
+  /// change while LIVE, and (400) a URL on a camera whose URL is not editable.
+  Future<void> updateCamera(String cameraId, CameraPatch patch);
 
   /// Moves [cameraId] to [courtId]; a null [courtId] unassigns the court.
   Future<void> assignCameraCourt(String cameraId, String? courtId);

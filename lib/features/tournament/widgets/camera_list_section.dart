@@ -1,10 +1,14 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/data/models/camera_patch.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/camera_facebook_code.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_edit_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_status_badge.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/facebook_live_ready_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
@@ -12,7 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Every camera of the tournament, one line each: name, mode · court (or
-/// "Chưa gắn sân") and status, with a delete button for organizers.
+/// "Chưa gắn sân") and status, with a delete button and an actions menu (edit,
+/// view Facebook live code) for organizers.
 ///
 /// It lists cameras that no court uses too, which the court popups cannot
 /// show. A delete re-reads the list; a refused delete shows the server's
@@ -87,6 +92,112 @@ class _CameraListSectionState extends ConsumerState<CameraListSection> {
     }
   }
 
+  String _failureText(Object failure, AppLocalizations l10n) =>
+      tournamentSheetServerMessage(failure) ??
+      ErrorParser.parse(failure, l10n.tournamentCameraActionFailed, l10n);
+
+  /// Marks [id] busy for the duration of [body] (one request per camera).
+  Future<T> _withBusy<T>(String id, Future<T> Function() body) async {
+    setState(() => _busyIds.add(id));
+    try {
+      return await body();
+    } finally {
+      if (mounted) setState(() => _busyIds.remove(id));
+    }
+  }
+
+  Future<void> _viewCode(TournamentCameraModel camera) async {
+    if (_busyIds.contains(camera.id)) return;
+    final l10n = AppLocalizations.of(context)!;
+    final live = ref.read(facebookCameraLiveRepositoryProvider);
+    try {
+      final code = await _withBusy(
+        camera.id,
+        () => live.getCameraLive(camera.id),
+      );
+      if (!mounted) return;
+      await FacebookLiveReadySheet.show(
+        context,
+        live: code,
+        cameraName: camera.name,
+      );
+    } on Object catch (failure) {
+      if (!mounted) return;
+      if (isFacebookLiveCodeExpired(failure)) return _offerNewCode(camera);
+      _toast(_failureText(failure, l10n));
+    }
+  }
+
+  /// The stored code is gone: a new one is offered only where the backend lets
+  /// the playback URL change (editable and not LIVE).
+  Future<void> _offerNewCode(TournamentCameraModel camera) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (!canRegenerateFacebookCode(camera)) {
+      _toast(l10n.tournamentCameraFbCodeExpired);
+      return;
+    }
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.tournamentCameraViewCode,
+      message: l10n.tournamentCameraFbCodeExpiredAsk,
+      confirmLabel: l10n.tournamentCameraFbCodeRegenerate,
+    );
+    if (!confirmed || !mounted) return;
+    await _regenerateCode(camera);
+  }
+
+  /// Creating the live is idempotent in the backend, so a failed PATCH can be
+  /// retried without leaking a second live.
+  Future<void> _regenerateCode(TournamentCameraModel camera) async {
+    if (_busyIds.contains(camera.id)) return;
+    final l10n = AppLocalizations.of(context)!;
+    final live = ref.read(facebookCameraLiveRepositoryProvider);
+    final admin = ref.read(cameraAdminRepositoryProvider);
+    final notifier = ref.read(
+      tournamentCamerasProvider(widget.tournamentId).notifier,
+    );
+    try {
+      final code = await _withBusy(camera.id, () async {
+        final created = await live.createLive(widget.tournamentId);
+        await admin.updateCamera(
+          camera.id,
+          CameraPatch(playbackUrl: created.watchUrl),
+        );
+        return created;
+      });
+      await notifier.refresh();
+      if (!mounted) return;
+      await FacebookLiveReadySheet.show(
+        context,
+        live: code,
+        cameraName: camera.name,
+      );
+    } on Object catch (failure) {
+      if (mounted) _toast(_failureText(failure, l10n));
+    }
+  }
+
+  Future<void> _edit(TournamentCameraModel camera) async {
+    if (_busyIds.contains(camera.id)) return;
+    final l10n = AppLocalizations.of(context)!;
+    final admin = ref.read(cameraAdminRepositoryProvider);
+    final notifier = ref.read(
+      tournamentCamerasProvider(widget.tournamentId).notifier,
+    );
+    var savedName = camera.name;
+    final saved = await CameraEditSheet.show(
+      context,
+      camera: camera,
+      onSubmit: (patch) async {
+        await admin.updateCamera(camera.id, patch);
+        savedName = patch.name ?? camera.name;
+      },
+    );
+    if (saved != true) return;
+    await notifier.refresh();
+    if (mounted) _toast(l10n.tournamentCameraEditSaved(savedName));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -118,6 +229,10 @@ class _CameraListSectionState extends ConsumerState<CameraListSection> {
                 : _courtName(camera.courtId),
             busy: _busyIds.contains(camera.id),
             onDelete: widget.readOnly ? null : () => _delete(camera),
+            onEdit: widget.readOnly ? null : () => _edit(camera),
+            onViewCode: widget.readOnly || !canViewFacebookCode(camera)
+                ? null
+                : () => _viewCode(camera),
           ),
       ],
     );
@@ -130,12 +245,16 @@ class _CameraLine extends StatelessWidget {
     required this.courtLabel,
     required this.busy,
     required this.onDelete,
+    required this.onEdit,
+    required this.onViewCode,
   });
 
   final TournamentCameraModel camera;
   final String courtLabel;
   final bool busy;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onViewCode;
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +299,24 @@ class _CameraLine extends StatelessWidget {
           ),
           const SizedBox(width: AppTheme.spacingSM),
           CameraStatusBadge(status: camera.status),
+          if (!busy && onEdit != null)
+            PopupMenuButton<VoidCallback>(
+              key: ValueKey('camera-actions-${camera.id}'),
+              tooltip: l10n.tournamentCameraActionsTooltip,
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: onEdit!,
+                  child: Text(l10n.tournamentCameraEditAction),
+                ),
+                if (onViewCode != null)
+                  PopupMenuItem(
+                    value: onViewCode!,
+                    child: Text(l10n.tournamentCameraViewCode),
+                  ),
+              ],
+            ),
           if (busy)
             const SizedBox.square(
               dimension: kMinTouchTarget,

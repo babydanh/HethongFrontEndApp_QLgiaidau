@@ -33463,6 +33463,60 @@ abstract class AppLocalizations {
   /// **'Đã xoá camera {name}.'**
   String tournamentCameraDeleted(Object name);
 
+  /// No description provided for @tournamentCameraActionsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác camera'**
+  String get tournamentCameraActionsTooltip;
+
+  /// No description provided for @tournamentCameraViewCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem mã phát'**
+  String get tournamentCameraViewCode;
+
+  /// No description provided for @tournamentCameraEditAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa camera'**
+  String get tournamentCameraEditAction;
+
+  /// No description provided for @tournamentCameraEditUrlLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'URL phát'**
+  String get tournamentCameraEditUrlLabel;
+
+  /// No description provided for @tournamentCameraEditUrlInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'URL phải bắt đầu bằng https://.'**
+  String get tournamentCameraEditUrlInvalid;
+
+  /// No description provided for @tournamentCameraEditSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu camera {name}.'**
+  String tournamentCameraEditSaved(Object name);
+
+  /// No description provided for @tournamentCameraFbCodeExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã phát đã hết hạn.'**
+  String get tournamentCameraFbCodeExpired;
+
+  /// No description provided for @tournamentCameraFbCodeExpiredAsk.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã phát đã hết hạn. Tạo mã mới cho camera này?'**
+  String get tournamentCameraFbCodeExpiredAsk;
+
+  /// No description provided for @tournamentCameraFbCodeRegenerate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo mã mới'**
+  String get tournamentCameraFbCodeRegenerate;
+
   /// No description provided for @tournamentCameraCourtChanged.
   ///
   /// In vi, this message translates to:

@@ -18584,6 +18584,37 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get tournamentCameraActionsTooltip => 'Thao tác camera';
+
+  @override
+  String get tournamentCameraViewCode => 'Xem mã phát';
+
+  @override
+  String get tournamentCameraEditAction => 'Sửa camera';
+
+  @override
+  String get tournamentCameraEditUrlLabel => 'URL phát';
+
+  @override
+  String get tournamentCameraEditUrlInvalid =>
+      'URL phải bắt đầu bằng https://.';
+
+  @override
+  String tournamentCameraEditSaved(Object name) {
+    return 'Đã lưu camera $name.';
+  }
+
+  @override
+  String get tournamentCameraFbCodeExpired => 'Mã phát đã hết hạn.';
+
+  @override
+  String get tournamentCameraFbCodeExpiredAsk =>
+      'Mã phát đã hết hạn. Tạo mã mới cho camera này?';
+
+  @override
+  String get tournamentCameraFbCodeRegenerate => 'Tạo mã mới';
+
+  @override
   String tournamentCameraCourtChanged(Object court, Object name) {
     return 'Đã gắn $name vào $court.';
   }

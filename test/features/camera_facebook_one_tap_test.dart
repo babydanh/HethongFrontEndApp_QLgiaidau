@@ -49,6 +49,9 @@ class _LiveRepo implements IFacebookCameraLiveRepository {
     if (error != null) return Future.error(error);
     return gate?.future ?? Future.value(_live);
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _Admin implements ICameraAdminRepository {

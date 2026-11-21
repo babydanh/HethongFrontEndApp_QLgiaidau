@@ -15,6 +15,7 @@ class TournamentCameraModel {
     required this.status,
     this.courtId,
     this.playbackUrl,
+    this.playbackUrlEditable = false,
   });
 
   final String id;
@@ -23,6 +24,10 @@ class TournamentCameraModel {
   final String status;
   final String? courtId;
   final String? playbackUrl;
+
+  /// Backend flag: only a PULL camera with a typed URL may have it changed.
+  /// A missing flag means false.
+  final bool playbackUrlEditable;
 
   factory TournamentCameraModel.fromJson(Map<String, Object?> json) {
     String? readText(Object? value) {
@@ -38,6 +43,7 @@ class TournamentCameraModel {
       status: json['status']?.toString() ?? '',
       courtId: readText(json['courtId'] ?? json['court_id']),
       playbackUrl: readText(json['playbackUrl'] ?? json['playback_url']),
+      playbackUrlEditable: json['playbackUrlEditable'] == true,
     );
   }
 
