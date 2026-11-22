@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_serve_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -57,6 +60,34 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
     if (changed && _correcting) setState(() => _correcting = false);
   }
 
+  /// Tennis doubles tap: picks the server at once while the team has not
+  /// chosen, otherwise opens the menu of what the rules still allow.
+  Future<void> _tapTennis(int team, int index, String title) async {
+    if (_correcting) {
+      _pickServer(team, index);
+      return;
+    }
+    final state = ref.read(scorePanelNotifierProvider(widget.params));
+    if (state.racketTennisQuickPick(team)) {
+      _notifier.racketApplyTennisAction(
+        TennisCellAction(
+          TennisCellActionKind.pickServer,
+          team: team,
+          playerIndex: index,
+        ),
+      );
+      return;
+    }
+    final picked = await showDialog<TennisCellAction>(
+      context: context,
+      builder: (_) => _TennisMenu(
+        title: title,
+        actions: state.racketTennisActions(team, index),
+      ),
+    );
+    if (picked != null && mounted) _notifier.racketApplyTennisAction(picked);
+  }
+
   Future<void> _openMenu() async {
     final l10n = AppLocalizations.of(context)!;
     final choose = await showModalBottomSheet<bool>(
@@ -81,6 +112,15 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
     RallySetState rally,
   ) {
     if (_correcting) return l10n.racketPickServerHint;
+    if (state.tennisDoubles) {
+      return switch (state.racketTennisHint) {
+        TennisHint.pickServer => l10n.racketTennisHintPickServer,
+        TennisHint.swapReceiver => l10n.racketTennisHintSwapReceiver,
+        TennisHint.decidingReceiver => l10n.racketTennisHintDeciding,
+        null =>
+          state.tennisMatchTiebreakDue ? l10n.cbdTennisMatchTiebreak : null,
+      };
+    }
     if (state.racketCanPickFirstServer) return l10n.racketPickFirstHint;
     // After a minus, doubles may know the serving team but not the player.
     if (state.racketServerTeam == null ||
@@ -183,6 +223,13 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
     final readOnly = widget.isReadOnly || finished;
     final picking =
         !readOnly && (_correcting || state.racketCanPickFirstServer);
+    final tennisDoubles = !readOnly && doubles && state.tennisDoubles;
+    String title(int team, int i) {
+      final players = team == 1 ? players1 : players2;
+      return i < players.length && players[i].trim().isNotEmpty
+          ? players[i]
+          : (team == 1 ? name1 : name2);
+    }
 
     return LayoutBuilder(
       builder: (context, box) => RacketCourtView(
@@ -191,7 +238,7 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
         team2Players: players2,
         team1Name: name1,
         team2Name: name2,
-        endsFlipped: state.racketPick.endsFlipped,
+        endsFlipped: state.racketEndsFlipped,
         axis: box.maxWidth >= box.maxHeight ? Axis.horizontal : Axis.vertical,
         scoreText1: score1,
         scoreText2: score2,
@@ -205,7 +252,11 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
         onUndo: _notifier.racketUndoStep,
         onSwitchEnds: _notifier.racketSwitchEnds,
         onMenu: _openMenu,
-        onPickServer: picking ? _pickServer : null,
+        onPickServer: tennisDoubles
+            ? (team, i) => unawaited(_tapTennis(team, i, title(team, i)))
+            : picking
+            ? _pickServer
+            : null,
         resolve: (source, target) => racketResolveDrop(
           source: source,
           target: target,
@@ -216,6 +267,73 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
         ),
         onDrop: _notifier.racketApplyDrop,
       ),
+    );
+  }
+}
+
+/// Tennis doubles menu for one player: the actions the rules allow now, with
+/// a short note when the team is locked and only corrections remain.
+class _TennisMenu extends StatelessWidget {
+  const _TennisMenu({required this.title, required this.actions});
+
+  final String title;
+  final List<TennisCellAction> actions;
+
+  String _label(
+    AppLocalizations l10n,
+    TennisCellActionKind kind,
+  ) => switch (kind) {
+    TennisCellActionKind.pickServer => l10n.racketTennisActionServe,
+    TennisCellActionKind.correctServer => l10n.racketTennisActionCorrectServer,
+    TennisCellActionKind.pickReceiveRight =>
+      l10n.racketTennisActionSwapReceiver,
+    TennisCellActionKind.fixReceiver => l10n.racketTennisActionFixReceiver,
+    TennisCellActionKind.decidingReceiver => l10n.racketTennisActionDeciding,
+    TennisCellActionKind.switchEnds => l10n.pickleballCourtActionSwitchEnds,
+  };
+
+  String? _note(AppLocalizations l10n, TennisCellActionKind kind) =>
+      switch (kind) {
+        TennisCellActionKind.correctServer => l10n.racketTennisNoteServeLocked,
+        TennisCellActionKind.fixReceiver => l10n.racketTennisNoteReceiveLocked,
+        _ => null,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final notes = [for (final a in actions) ?_note(l10n, a.kind)];
+    return AlertDialog(
+      scrollable: true,
+      title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          for (final action in actions)
+            FilledButton(
+              onPressed: () => Navigator.pop(context, action),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              child: Text(
+                _label(l10n, action.kind),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          for (final note in notes)
+            Text(note, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.close),
+        ),
+      ],
     );
   }
 }

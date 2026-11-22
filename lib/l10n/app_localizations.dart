@@ -35947,6 +35947,66 @@ abstract class AppLocalizations {
   /// **'Game {a}-{b}'**
   String racketGames(int a, int b);
 
+  /// No description provided for @racketTennisHintPickServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm VĐV để chọn người giao.'**
+  String get racketTennisHintPickServer;
+
+  /// No description provided for @racketTennisHintSwapReceiver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm VĐV đội nhận nếu muốn đổi người nhận.'**
+  String get racketTennisHintSwapReceiver;
+
+  /// No description provided for @racketTennisHintDeciding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm quyết định: bấm VĐV đội nhận để chọn người đỡ.'**
+  String get racketTennisHintDeciding;
+
+  /// No description provided for @racketTennisActionServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao bóng cho người này'**
+  String get racketTennisActionServe;
+
+  /// No description provided for @racketTennisActionCorrectServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa sai: người này đang giao'**
+  String get racketTennisActionCorrectServer;
+
+  /// No description provided for @racketTennisActionSwapReceiver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ phải/trái'**
+  String get racketTennisActionSwapReceiver;
+
+  /// No description provided for @racketTennisActionFixReceiver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa sai: đổi người nhận trong game này'**
+  String get racketTennisActionFixReceiver;
+
+  /// No description provided for @racketTennisActionDeciding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người này đỡ điểm quyết định'**
+  String get racketTennisActionDeciding;
+
+  /// No description provided for @racketTennisNoteServeLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đã giao trong set này nên thứ tự đã khoá. Sửa sai thì vòng giao tiếp tục từ người này tới hết set.'**
+  String get racketTennisNoteServeLocked;
+
+  /// No description provided for @racketTennisNoteReceiveLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đã nhận trong set này nên vị trí đã khoá. Sửa sai chỉ áp dụng tới hết game này.'**
+  String get racketTennisNoteReceiveLocked;
+
   /// No description provided for @bracketMgmt_manageTooltip.
   ///
   /// In vi, this message translates to:

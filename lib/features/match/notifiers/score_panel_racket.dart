@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/domain/services/racket_court_layout.dart';
 import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_serve_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_undo.dart';
@@ -15,6 +16,45 @@ extension ScorePanelRacket on ScorePanelState {
       config.kind == SportRuleKind.tennis;
 
   bool get _isTennis => config.kind == SportRuleKind.tennis;
+
+  bool get _isTennisDoubles => _isTennis && tennisDoubles;
+
+  /// The score as the tennis doubles serve rules read it.
+  TennisScoreInput get racketTennisInput {
+    final done = finishedSets.where((set) => set.isFinished);
+    final last = finishedSets.isEmpty ? null : finishedSets.last;
+    final live = last == null || last.isFinished ? null : last;
+    final t = tennis ?? const TennisGameState();
+    return TennisScoreInput(
+      setIndex: done.length,
+      gamesBefore: done.fold(0, (n, set) => n + set.score1 + set.score2),
+      games1: live?.score1 ?? 0,
+      games2: live?.score2 ?? 0,
+      points1: t.team1GamePoints,
+      points2: t.team2GamePoints,
+      isTiebreak: tennisInTiebreak,
+      noAd: config.noAd,
+    );
+  }
+
+  TennisServe get _tennisServe => tennisServeOf(racketTennisInput, tennisCourt);
+
+  /// Team 2 on the first half (left/top) instead of team 1.
+  bool get racketEndsFlipped =>
+      _isTennisDoubles ? tennisCourt.endsFlipped : racketPick.endsFlipped;
+
+  /// Tennis doubles: what a tap on [playerIndex] of [team] offers.
+  List<TennisCellAction> racketTennisActions(int team, int playerIndex) =>
+      tennisCellActions(racketTennisInput, tennisCourt, team, playerIndex);
+
+  /// Tennis doubles: a tap on [team] picks its server without a menu.
+  bool racketTennisQuickPick(int team) =>
+      tennisQuickPick(racketTennisInput, tennisCourt, team);
+
+  /// Tennis doubles reminder; null otherwise or once the match is over.
+  TennisHint? get racketTennisHint => _isTennisDoubles && !this.isMatchComplete
+      ? tennisHint(racketTennisInput, tennisCourt)
+      : null;
 
   /// Sets closed so far. Tennis keeps the live set in the same list.
   int get racketClosedSetCount =>
@@ -68,6 +108,7 @@ extension ScorePanelRacket on ScorePanelState {
 
   /// The server stands in the right cell of its team.
   bool get racketServerRight {
+    if (_isTennisDoubles) return _tennisServe.serveRight;
     if (_isTennis) return tennisServeRight(_tennisPointsInGame);
     return _badmintonServe(false).rightCourt ?? true;
   }
@@ -75,6 +116,7 @@ extension ScorePanelRacket on ScorePanelState {
   /// Doubles only: index (0 or 1) of the serving player, null when unknown.
   int? racketServerPlayerIndex({required bool doubles}) {
     if (!doubles) return racketServerTeam == null ? null : 0;
+    if (_isTennisDoubles) return _tennisServe.playerIndex;
     if (_isTennis) {
       final team = tennisServerTeam;
       final inTiebreak = tennisInTiebreak;
@@ -109,6 +151,9 @@ extension ScorePanelRacket on ScorePanelState {
 
   /// Player index standing in the right cell of [team] when it does not serve.
   int _rightPlayerOf(int team) {
+    if (_isTennisDoubles) {
+      return tennisRightReceiver(racketTennisInput, tennisCourt, team);
+    }
     final starter = racketPick.rightStarterOf(team);
     if (_isTennis) return starter;
     final r = rally ?? const RallySetState();

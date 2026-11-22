@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_serve_state.dart';
 
 /// Trạng thái game point cho Tennis (0,1,2,3 = 0,15,30,40, 4+ = Ad/Deuce).
 class TennisGameState {
@@ -83,7 +84,8 @@ class RallySetState {
   );
 }
 
-/// What the referee chose for badminton and tennis, kept in the session only:
+/// What the referee chose for badminton and tennis singles, kept in the
+/// session only (tennis doubles uses [ScorePanelState.tennisCourt]):
 /// the team and player that serve first, who stands in the right cell, and
 /// whether the teams changed halves (by the rules or by hand).
 class RacketServePick {
@@ -149,6 +151,7 @@ class RacketUndoStep {
     required this.tennis,
     required this.finishedSets,
     required this.pick,
+    required this.tennisCourt,
     required this.closedSetCount,
   });
 
@@ -156,6 +159,7 @@ class RacketUndoStep {
   final TennisGameState? tennis;
   final List<SetScoreData> finishedSets;
   final RacketServePick pick;
+  final TennisCourtState tennisCourt;
 
   /// Sets closed at that moment: a step from an earlier set can no longer be
   /// restored once a set has been closed.
@@ -304,6 +308,13 @@ class ScorePanelState {
   /// Badminton and tennis steps that can be taken back, oldest first.
   final List<RacketUndoStep> racketUndo;
 
+  /// Tennis with two players on a side: serve and receive follow
+  /// [tennisCourt] (per set, saved on the server) instead of [racketPick].
+  final bool tennisDoubles;
+
+  /// Tennis doubles referee choices, restored from `scoreDetails.courtState`.
+  final TennisCourtState tennisCourt;
+
   const ScorePanelState({
     required this.config,
     this.finishedSets = const [],
@@ -319,6 +330,8 @@ class ScorePanelState {
     this.isLite = false,
     this.racketPick = const RacketServePick(),
     this.racketUndo = const [],
+    this.tennisDoubles = false,
+    this.tennisCourt = const TennisCourtState(),
   });
 
   /// Số set thắng.
@@ -401,6 +414,8 @@ class ScorePanelState {
     bool? isLite,
     RacketServePick? racketPick,
     List<RacketUndoStep>? racketUndo,
+    bool? tennisDoubles,
+    TennisCourtState? tennisCourt,
   }) => ScorePanelState(
     config: config ?? this.config,
     finishedSets: finishedSets ?? this.finishedSets,
@@ -416,5 +431,7 @@ class ScorePanelState {
     isLite: isLite ?? this.isLite,
     racketPick: racketPick ?? this.racketPick,
     racketUndo: racketUndo ?? this.racketUndo,
+    tennisDoubles: tennisDoubles ?? this.tennisDoubles,
+    tennisCourt: tennisCourt ?? this.tennisCourt,
   );
 }
