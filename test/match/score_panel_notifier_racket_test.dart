@@ -1,6 +1,9 @@
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/racket_court_layout.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_serve_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -25,7 +28,42 @@ class _Writes extends Fake implements IMatchRepository {
     bool useLiteParticipantAccess = false,
     ({String date, String? time})? playedAt,
   }) async {}
+
+  final courtWrites = <Map<String, dynamic>>[];
+  Object? courtError;
+
+  @override
+  Future<MatchModel> updateCourtState(
+    String matchId,
+    Map<String, dynamic> courtState,
+  ) async {
+    courtWrites.add(courtState);
+    final error = courtError;
+    if (error != null) throw error;
+    return _doublesMatch(courtState);
+  }
 }
+
+MatchModel _doublesMatch(Map<String, dynamic>? courtState) => MatchModel(
+  id: 'match-1',
+  tournamentId: 'tournament-1',
+  round: 1,
+  matchNumber: 1,
+  team1Id: 'team-1',
+  team2Id: 'team-2',
+  team1Name: 'Team A',
+  team2Name: 'Team B',
+  team1Members: const ['An', 'Binh'],
+  team2Members: const ['Chi', 'Dung'],
+  sportKey: 'tennis',
+  status: 'LIVE',
+  scoreDetails: {
+    'sets': const [],
+    if (courtState != null) 'courtState': courtState,
+  },
+  bracketPosition: const BracketPosition(round: 1, position: 1),
+  updatedAt: DateTime.utc(2026, 11, 22),
+);
 
 class _Panel extends ScorePanelNotifier {
   _Panel(super.arg, this.initial);
@@ -50,11 +88,13 @@ ProviderContainer _container(
   List<SetScoreData> sets = const [],
   TennisGameState? tennis,
   RallySetState? rally,
+  bool tennisDoubles = false,
+  _Writes? writes,
 }) {
   final isTennis = config.kind == SportRuleKind.tennis;
   final container = ProviderContainer(
     overrides: [
-      matchRepositoryProvider.overrideWithValue(_Writes()),
+      matchRepositoryProvider.overrideWithValue(writes ?? _Writes()),
       scorePanelNotifierProvider.overrideWith2(
         (arg) => _Panel(
           arg,
@@ -63,6 +103,7 @@ ProviderContainer _container(
             finishedSets: sets,
             tennis: tennis,
             rally: rally ?? (isTennis ? null : const RallySetState()),
+            tennisDoubles: tennisDoubles,
           ),
         ),
       ),
@@ -390,6 +431,165 @@ void main() {
       expect(_state(c).rally!.swaps2, 1);
       expect(_panel(c).racketCorrectServer(1, 1), isTrue);
       expect(_state(c).rally!.swaps2, 1);
+    });
+  });
+
+  group('TC-RACKET-N-15 tennis doubles serve order per set', () {
+    test('picking the server shows the receiver at once', () {
+      final c = _container(_tennis(), tennisDoubles: true);
+      expect(_panel(c).racketPickFirstServer(1, 1), isTrue);
+      final cells = _state(c).racketCells(doubles: true);
+      final server = cells.firstWhere((x) => x.role == CourtCellRole.server);
+      final receiver = cells.firstWhere(
+        (x) => x.role == CourtCellRole.receiver,
+      );
+      expect([server.team, server.playerIndex], [1, 1]);
+      expect([receiver.team, receiver.playerIndex], [2, 0]);
+      expect(_state(c).racketTennisHint, TennisHint.swapReceiver);
+    });
+
+    test('set 2 asks again: the set 1 pick does not carry over', () {
+      final c = _container(
+        _tennis(),
+        tennisDoubles: true,
+        sets: const [SetScoreData(score1: 5, score2: 0)],
+      );
+      // Game 6 of set 1: team 2 serves its 3rd turn (it is locked, so the
+      // referee corrects instead of picking).
+      expect(_state(c).racketServerTeam, 2);
+      _panel(c).racketApplyTennisAction(
+        const TennisCellAction(
+          TennisCellActionKind.correctServer,
+          team: 2,
+          playerIndex: 1,
+        ),
+      );
+      expect(_state(c).racketServerPlayerIndex(doubles: true), 1);
+      _tennisPoints(c, true, 4); // 6-0, set closed
+      expect(_state(c).racketClosedSetCount, 1);
+      // Set 2 opens with fresh choices for both teams.
+      expect(_state(c).racketServerTeam, 1);
+      expect(_state(c).racketServerPlayerIndex(doubles: true), 0);
+      expect(_state(c).racketTennisHint, TennisHint.pickServer);
+      expect(_state(c).tennisCourt.choiceAt(1).serveFirstOf(2), isNull);
+    });
+  });
+
+  group('TC-RACKET-N-16 tennis doubles locked team only corrects', () {
+    test('receiver fix lasts this game only', () {
+      final c = _container(_tennis(), tennisDoubles: true);
+      _panel(c).racketPickFirstServer(1, 0);
+      _tennisPoints(c, true, 1);
+      final actions = _state(c).racketTennisActions(2, 0);
+      expect(
+        [for (final a in actions) a.kind],
+        [TennisCellActionKind.fixReceiver, TennisCellActionKind.switchEnds],
+      );
+      expect(_panel(c).racketApplyTennisAction(actions.first), isTrue);
+      // 15-0, left court: the fix put player 1 right, so player 0 receives.
+      final receiver = _state(c)
+          .racketCells(doubles: true)
+          .firstWhere((x) => x.role == CourtCellRole.receiver);
+      expect(receiver.playerIndex, 0);
+      expect(receiver.rightCourt, isFalse);
+    });
+
+    test('a drag swap on the receiving pair goes through the same rules', () {
+      final c = _container(_tennis(), tennisDoubles: true);
+      _panel(c).racketPickFirstServer(1, 0);
+      expect(_panel(c).racketApplyDrop(const SwapPlaces(2)), isTrue);
+      expect(_state(c).tennisCourt.choiceAt(0).receiveRightOf(2), 1);
+    });
+  });
+
+  group('TC-RACKET-N-17 tennis doubles court state is saved', () {
+    test('each change is sent once in the shared contract', () async {
+      final writes = _Writes();
+      final c = _container(_tennis(), tennisDoubles: true, writes: writes);
+      _panel(c).racketPickFirstServer(1, 0);
+      _panel(c).racketPickFirstServer(1, 0); // double tap: nothing new
+      await Future<void>.delayed(Duration.zero);
+      expect(writes.courtWrites, hasLength(1));
+      expect(writes.courtWrites.single['kind'], 'TENNIS');
+      expect(writes.courtWrites.single['firstServerTeam'], 1);
+    });
+
+    test('a failed save keeps the pick, reports once, retries later', () async {
+      final writes = _Writes()..courtError = Exception('offline');
+      final c = _container(_tennis(), tennisDoubles: true, writes: writes);
+      _panel(c).racketPickFirstServer(1, 1);
+      await Future<void>.delayed(Duration.zero);
+      expect(_state(c).racketServerPlayerIndex(doubles: true), 1);
+      expect(_state(c).errorMessage, isNotNull);
+      _panel(c).racketSwitchEnds();
+      await Future<void>.delayed(Duration.zero);
+      expect(writes.courtWrites, hasLength(2));
+      expect(_state(c).errorMessage, isNull);
+      writes.courtError = null;
+      _tennisPoints(c, true, 1); // any later step retries
+      await Future<void>.delayed(Duration.zero);
+      expect(writes.courtWrites, hasLength(3));
+      expect(writes.courtWrites.last['endsFlipped'], isTrue);
+    });
+
+    test('undo restores the court state and saves it', () async {
+      final writes = _Writes();
+      final c = _container(_tennis(), tennisDoubles: true, writes: writes);
+      _panel(c).racketPickFirstServer(2, 1);
+      await Future<void>.delayed(Duration.zero);
+      expect(writes.courtWrites.last['firstServerTeam'], 2);
+      _panel(c).racketUndoStep();
+      await Future<void>.delayed(Duration.zero);
+      expect(_state(c).tennisCourt, const TennisCourtState());
+      expect(writes.courtWrites.last['firstServerTeam'], isNull);
+    });
+
+    test('ends change by the rules is kept in the court state', () {
+      final c = _container(_tennis(), tennisDoubles: true);
+      _tennisPoints(c, true, 4);
+      expect(_state(c).tennisCourt.endsFlipped, isTrue);
+      expect(_state(c).racketEndsFlipped, isTrue);
+      expect(_state(c).racketPick.endsFlipped, isFalse);
+    });
+  });
+
+  group('TC-RACKET-N-18 tennis doubles court state is restored', () {
+    test('reopening reads scoreDetails.courtState', () {
+      final c = _container(_tennis());
+      final saved = const TennisCourtState(
+        firstServerTeam: 2,
+        sets: [TennisSetChoice(serveFirst2: 1, receiveRight1: 1)],
+      ).toJson();
+      _panel(c).applyMatchSnapshot(_doublesMatch(saved));
+      expect(_state(c).tennisDoubles, isTrue);
+      expect(_state(c).racketServerTeam, 2);
+      expect(_state(c).racketServerPlayerIndex(doubles: true), 1);
+      final receiver = _state(c)
+          .racketCells(doubles: true)
+          .firstWhere((x) => x.role == CourtCellRole.receiver);
+      expect([receiver.team, receiver.playerIndex], [1, 1]);
+    });
+  });
+
+  group('TC-RACKET-N-19 No-Ad deciding point in tennis doubles', () {
+    test('the chosen receiver moves the serve to that court', () {
+      final c = _container(
+        _tennis({'noAd': true}),
+        tennisDoubles: true,
+        tennis: const TennisGameState(team1GamePoints: 3, team2GamePoints: 3),
+      );
+      expect(_state(c).racketTennisHint, TennisHint.decidingReceiver);
+      expect(
+        _panel(c).racketApplyTennisAction(
+          const TennisCellAction(
+            TennisCellActionKind.decidingReceiver,
+            team: 2,
+            playerIndex: 1,
+          ),
+        ),
+        isTrue,
+      );
+      expect(_state(c).racketServerRight, isFalse);
     });
   });
 }

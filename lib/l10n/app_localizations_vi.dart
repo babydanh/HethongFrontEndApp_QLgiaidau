@@ -19991,6 +19991,41 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get racketTennisHintPickServer => 'Bấm VĐV để chọn người giao.';
+
+  @override
+  String get racketTennisHintSwapReceiver =>
+      'Bấm VĐV đội nhận nếu muốn đổi người nhận.';
+
+  @override
+  String get racketTennisHintDeciding =>
+      'Điểm quyết định: bấm VĐV đội nhận để chọn người đỡ.';
+
+  @override
+  String get racketTennisActionServe => 'Giao bóng cho người này';
+
+  @override
+  String get racketTennisActionCorrectServer => 'Sửa sai: người này đang giao';
+
+  @override
+  String get racketTennisActionSwapReceiver => 'Đổi chỗ phải/trái';
+
+  @override
+  String get racketTennisActionFixReceiver =>
+      'Sửa sai: đổi người nhận trong game này';
+
+  @override
+  String get racketTennisActionDeciding => 'Người này đỡ điểm quyết định';
+
+  @override
+  String get racketTennisNoteServeLocked =>
+      'Đội đã giao trong set này nên thứ tự đã khoá. Sửa sai thì vòng giao tiếp tục từ người này tới hết set.';
+
+  @override
+  String get racketTennisNoteReceiveLocked =>
+      'Đội đã nhận trong set này nên vị trí đã khoá. Sửa sai chỉ áp dụng tới hết game này.';
+
+  @override
   String get bracketMgmt_manageTooltip => 'Quản lý';
 
   @override

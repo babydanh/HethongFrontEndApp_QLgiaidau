@@ -20075,6 +20075,43 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get racketTennisHintPickServer => 'Tap a player to choose who serves.';
+
+  @override
+  String get racketTennisHintSwapReceiver =>
+      'Tap a receiver to swap who receives.';
+
+  @override
+  String get racketTennisHintDeciding =>
+      'Deciding point: tap a receiver to choose who returns.';
+
+  @override
+  String get racketTennisActionServe => 'This player serves';
+
+  @override
+  String get racketTennisActionCorrectServer =>
+      'Correction: this player is serving';
+
+  @override
+  String get racketTennisActionSwapReceiver => 'Swap right/left';
+
+  @override
+  String get racketTennisActionFixReceiver =>
+      'Correction: swap the receiver for this game';
+
+  @override
+  String get racketTennisActionDeciding =>
+      'This player returns the deciding point';
+
+  @override
+  String get racketTennisNoteServeLocked =>
+      'This team has served in this set, so the order is locked. A correction continues the order from this player to the end of the set.';
+
+  @override
+  String get racketTennisNoteReceiveLocked =>
+      'This team has received in this set, so the positions are locked. A correction lasts until the end of this game.';
+
+  @override
   String get bracketMgmt_manageTooltip => 'Manage';
 
   @override

@@ -31,6 +31,12 @@ class _Writes extends Fake implements IMatchRepository {
     bool useLiteParticipantAccess = false,
     ({String date, String? time})? playedAt,
   }) async {}
+
+  @override
+  Future<MatchModel> updateCourtState(
+    String matchId,
+    Map<String, dynamic> courtState,
+  ) async => _match(doubles: true);
 }
 
 /// The real score panel logic, started from a state the test chooses.
@@ -73,13 +79,27 @@ ScorePanelState _tennis() => ScorePanelState(
   tennis: const TennisGameState(),
 );
 
+ScorePanelState _tennisDoubles({
+  Map<String, dynamic> format = const {},
+  TennisGameState tennis = const TennisGameState(),
+}) => ScorePanelState(
+  config: resolveSportConfig({
+    'kind': 'TENNIS',
+    'setsToWin': 2,
+    'format': format,
+  }, SportRuleKind.tennis),
+  tennis: tennis,
+  tennisDoubles: true,
+);
+
 Future<ProviderContainer> _pump(
   WidgetTester tester,
   ScorePanelState state, {
   required bool doubles,
   bool readOnly = false,
+  Size size = const Size(900, 420),
 }) async {
-  tester.view.physicalSize = const Size(900, 420);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final match = _match(doubles: doubles);
@@ -239,4 +259,88 @@ void main() {
     );
     await _flush(tester);
   });
+
+  testWidgets(
+    'TC-RACKET-P-09 tennis doubles: pick the server, receiver shows',
+    (tester) async {
+      final c = await _pump(tester, _tennisDoubles(), doubles: true);
+      expect(find.text('Tap a player to choose who serves.'), findsOneWidget);
+      await tester.tap(find.text('Binh'));
+      await tester.pump();
+      expect(_read(c).racketServerPlayerIndex(doubles: true), 1);
+      expect(find.textContaining('SERVE'), findsOneWidget);
+      expect(find.text('RECEIVE'), findsOneWidget);
+      expect(find.text('Tap a receiver to swap who receives.'), findsOneWidget);
+      await _flush(tester);
+    },
+  );
+
+  testWidgets('TC-RACKET-P-10 locked receivers only get the correction', (
+    tester,
+  ) async {
+    final c = await _pump(tester, _tennisDoubles(), doubles: true);
+    await tester.tap(find.text('An'));
+    await tester.pump();
+    await tester.tap(find.text('Chi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Swap right/left'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.pump();
+    await tester.tap(find.text('Chi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Swap right/left'), findsNothing);
+    await tester.tap(find.text('Correction: swap the receiver for this game'));
+    await tester.pumpAndSettle();
+    expect(_read(c).tennisCourt.gameFix?.playerIndex, 1);
+    await _flush(tester);
+  });
+
+  testWidgets('TC-RACKET-P-11 No-Ad 40-40 offers the deciding receiver', (
+    tester,
+  ) async {
+    final state = _tennisDoubles(
+      format: const {'noAd': true},
+      tennis: const TennisGameState(team1GamePoints: 3, team2GamePoints: 3),
+    );
+    await _pump(tester, state, doubles: true);
+    expect(
+      find.text('Deciding point: tap a receiver to choose who returns.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Dung'));
+    await tester.pumpAndSettle();
+    expect(find.text('This player returns the deciding point'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+  });
+
+  for (final size in const [Size(320, 640), Size(768, 1024)]) {
+    testWidgets(
+      'TC-RACKET-P-12 tennis doubles menu fits at ${size.width.toInt()} px',
+      (tester) async {
+        await _pump(tester, _tennisDoubles(), doubles: true, size: size);
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.text('An'));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+        await tester.pump();
+        await tester.tap(find.text('Binh'));
+        await tester.pumpAndSettle();
+        expect(find.text('Correction: this player is serving'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        final button = tester.getSize(
+          find.ancestor(
+            of: find.text('Correction: this player is serving'),
+            matching: find.byType(FilledButton),
+          ),
+        );
+        expect(button.height, greaterThanOrEqualTo(44));
+        await tester.tap(find.text('Close'));
+        await tester.pumpAndSettle();
+        await _flush(tester);
+      },
+    );
+  }
 }

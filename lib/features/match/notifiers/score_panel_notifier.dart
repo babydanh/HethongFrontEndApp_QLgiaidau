@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/football_rules.dart';
@@ -9,6 +10,7 @@ import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_serve_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
@@ -99,6 +101,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool _liveSyncInFlight = false;
   int? _lastLocalWriteRevision;
   bool _isDisposed = false;
+
+  /// Tennis doubles court state as the server last had it (or was sent).
+  TennisCourtState _tennisCourtServer = const TennisCourtState();
+  Future<void> _tennisCourtChain = Future<void>.value();
+  int _tennisCourtSaves = 0;
+  bool _tennisCourtErrorShown = false;
 
   ScorePanelNotifier(this.arg);
 
@@ -285,7 +293,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     // bar visibly blink and briefly recompute its set/button labels.
     if (_scoreSignature(hydrated) == _scoreSignature(state) &&
         hydrated.isServerTerminal == state.isServerTerminal &&
-        hydrated.isLite == state.isLite) {
+        hydrated.isLite == state.isLite &&
+        hydrated.tennisDoubles == state.tennisDoubles &&
+        hydrated.tennisCourt == state.tennisCourt) {
       return;
     }
     state = hydrated;
@@ -329,11 +339,18 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       effectiveSportRules,
       SportRuleKind.fromString(match.sportKey),
     );
+    final tennisDoubles =
+        config.kind == SportRuleKind.tennis &&
+        (matchSidePlayers(match, 1).length >= 2 ||
+            matchSidePlayers(match, 2).length >= 2);
+    final tennisCourt = _readTennisCourt(current, details);
     if (details == null) {
       return current.copyWith(
         config: config,
         isLite: _isLiteMatch(match, ref, arg),
         isServerTerminal: _isServerTerminal(match),
+        tennisDoubles: tennisDoubles,
+        tennisCourt: tennisCourt,
       );
     }
 
@@ -437,7 +454,22 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       pickleball: pbState,
       rally: rallyState,
       football: _readFootballState(details) ?? current.football,
+      tennisDoubles: tennisDoubles,
+      tennisCourt: tennisCourt,
     );
+  }
+
+  /// The server court state, unless a local change is still unsaved (then the
+  /// local one wins and is retried on the next step).
+  TennisCourtState _readTennisCourt(
+    ScorePanelState current,
+    Map<String, dynamic>? details,
+  ) {
+    final server = TennisCourtState.fromJson(details?['courtState']);
+    final adopt =
+        _tennisCourtSaves == 0 && current.tennisCourt == _tennisCourtServer;
+    _tennisCourtServer = server;
+    return adopt ? server : current.tennisCourt;
   }
 
   static SportConfig _initConfig(Ref ref, MatchControlParams arg) {
@@ -566,6 +598,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     );
     _checkTennisGameEnd();
     _racketEndsAfterTennisPoint(gamesBefore);
+    _persistTennisCourt();
     if (state.isMatchComplete) {
       // Strict tennis completes only after the configured number of sets.
       // Open/Lite tennis never reaches this branch from a set count.
@@ -596,6 +629,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         tennisTiebreakChangeEnds(t.team1GamePoints + t.team2GamePoints)) {
       _racketFlipEnds();
     }
+    _persistTennisCourt();
     _scheduleLiveSync();
   }
 
@@ -979,6 +1013,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       tennis: tennis ? (state.tennis ?? const TennisGameState()) : null,
       finishedSets: state.finishedSets,
       pick: state.racketPick,
+      tennisCourt: state.tennisCourt,
       closedSetCount: state.racketClosedSetCount,
     );
     state = state.copyWith(
@@ -987,6 +1022,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   void _racketFlipEnds() {
+    if (_tennisDoubles) {
+      state = state.copyWith(tennisCourt: tennisToggleEnds(state.tennisCourt));
+      return;
+    }
     final pick = state.racketPick;
     state = state.copyWith(
       racketPick: pick.copyWith(endsFlipped: !pick.endsFlipped),
@@ -1037,6 +1076,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   /// returns false (and changes nothing) otherwise.
   bool racketPickFirstServer(int team, int playerIndex) {
     if (!state.racketCanPickFirstServer) return false;
+    if (_tennisDoubles) {
+      return _setTennisCourt(
+        tennisPickServer(
+          state.racketTennisInput,
+          state.tennisCourt,
+          team,
+          playerIndex,
+        ),
+      );
+    }
     _racketRemember();
     var pick = state.racketPick
         .copyWith(firstTeam: team)
@@ -1053,6 +1102,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   /// yet). A later game cannot change the serving team, the rules decide it.
   bool racketCorrectServer(int team, int playerIndex) {
     if (!state.isRacket || state.isMatchComplete) return false;
+    if (_tennisDoubles) {
+      return _setTennisCourt(
+        tennisSetServer(
+          state.racketTennisInput,
+          state.tennisCourt,
+          team,
+          playerIndex,
+        ),
+      );
+    }
     if (state.racketCanPickFirstServer) {
       return racketPickFirstServer(team, playerIndex);
     }
@@ -1125,12 +1184,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (!state.isRacket) return;
     _racketRemember();
     _racketFlipEnds();
+    _persistTennisCourt();
   }
 
   /// Applies a drop already accepted by `racketResolveDrop`.
   bool racketApplyDrop(CourtDropAction action) {
     if (!state.isRacket) return false;
     switch (action) {
+      case SwapPlaces(:final team) when _tennisDoubles:
+        return _racketTennisSwap(team);
       case SwapPlaces(:final team):
         _racketRemember();
         state = state.copyWith(
@@ -1161,11 +1223,77 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       tennis: step.tennis,
       finishedSets: step.finishedSets,
       racketPick: step.pick,
+      tennisCourt: step.tennisCourt,
       racketUndo: stack.sublist(0, stack.length - 1),
       errorMessage: null,
     );
+    _persistTennisCourt();
     _scheduleLiveSync();
     return true;
+  }
+
+  // ════════════════ TENNIS DOUBLES COURT ════════════════
+
+  bool get _tennisDoubles =>
+      state.config.kind == SportRuleKind.tennis && state.tennisDoubles;
+
+  /// Applies a menu action from `racketTennisActions`. False when it was
+  /// refused or changes nothing (a double tap).
+  bool racketApplyTennisAction(TennisCellAction action) {
+    if (!_tennisDoubles || state.isMatchComplete) return false;
+    return _setTennisCourt(
+      tennisApplyAction(state.racketTennisInput, state.tennisCourt, action),
+    );
+  }
+
+  /// The receiving pair swaps cells: for the set while it is free, for this
+  /// game only (Rule 27e) once it is locked.
+  bool _racketTennisSwap(int team) {
+    final swap = state
+        .racketTennisActions(team, 0)
+        .where(
+          (a) =>
+              a.kind == TennisCellActionKind.pickReceiveRight ||
+              a.kind == TennisCellActionKind.fixReceiver,
+        );
+    return swap.isNotEmpty && racketApplyTennisAction(swap.first);
+  }
+
+  bool _setTennisCourt(TennisCourtState? next) {
+    if (next == null || next == state.tennisCourt) return false;
+    _racketRemember();
+    state = state.copyWith(tennisCourt: next, errorMessage: null);
+    _persistTennisCourt();
+    return true;
+  }
+
+  /// Saves the tennis doubles court state when it differs from the server
+  /// copy. Saves run one after another and each sends the newest state.
+  void _persistTennisCourt() {
+    if (!_tennisDoubles || state.isMatchComplete) return;
+    if (state.tennisCourt == _tennisCourtServer) return;
+    _tennisCourtSaves++;
+    _tennisCourtChain = _tennisCourtChain
+        .then((_) => _saveTennisCourt())
+        .whenComplete(() => _tennisCourtSaves--);
+  }
+
+  Future<void> _saveTennisCourt() async {
+    final next = state.tennisCourt;
+    if (_isDisposed || next == _tennisCourtServer) return;
+    try {
+      await ref
+          .read(matchRepositoryProvider)
+          .updateCourtState(arg.matchId, next.toJson());
+      _tennisCourtServer = next;
+      _tennisCourtErrorShown = false;
+    } catch (error) {
+      // Keep the change on this device; the next step retries the save.
+      _log.warning('tennis court state not saved: $error');
+      if (_isDisposed || _tennisCourtErrorShown) return;
+      _tennisCourtErrorShown = true;
+      state = state.copyWith(errorMessage: _l10n.pickleballCourtSaveError);
+    }
   }
 
   // ════════════════ COMMON ════════════════

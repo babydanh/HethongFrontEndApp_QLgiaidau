@@ -81,8 +81,8 @@ class RacketCourtView extends StatelessWidget {
   final VoidCallback? onSwitchEnds;
   final VoidCallback? onMenu;
 
-  /// Non-null only while the first server can still be picked: a tap on a
-  /// player chooses who serves first.
+  /// Non-null while a tap on a player is handled by the panel: choosing the
+  /// first server, or (tennis doubles) the serve/receive menu.
   final void Function(int team, int playerIndex)? onPickServer;
   final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
@@ -177,6 +177,8 @@ class _InfoRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               child: Text(
                 banner,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: _ink,
                   fontSize: 12.5,
