@@ -9,7 +9,7 @@ library;
 
 const _kind = 'TENNIS';
 const _version = 1;
-const _maxSets = 5;
+const _maxSets = 10;
 
 const Object _unset = Object();
 

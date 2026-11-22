@@ -12,7 +12,7 @@
   "sets": [ { "serveFirst": { "team1": 0, "team2": null }, "receiveRight": { "team1": null, "team2": 1 } } ],
   "gameFix": null, "decidingReceiver": null, "endsFlipped": false }
 ```
-`firstServerTeam` 1|2|null (null = đội 1); `sets[i]` theo số set đã xong, 1..5; giá trị null = người 0; `gameFix`/`decidingReceiver` `{set, game, team, playerIndex}` hoặc null; `endsFlipped` true = đội 1 ở nửa trên. Server gán thêm `updatedAt`/`updatedBy` (client bỏ qua).
+`firstServerTeam` 1|2|null (null = đội 1); `sets[i]` theo số set đã xong, 1..10; giá trị null = người 0; `gameFix`/`decidingReceiver` `{set, game, team, playerIndex}` hoặc null; `endsFlipped` true = đội 1 ở nửa trên. Server gán thêm `updatedAt`/`updatedBy` (client bỏ qua).
 
 ### Service thuần `tennis_serve_state.dart`
 

@@ -422,4 +422,16 @@ void main() {
       expect(m.server, 'B1');
     },
   );
+
+  test(
+    'TC-TENNIS-SERVE-22 server pick still works in set 10 (maxMatchSets)',
+    () {
+      const set10 = TennisScoreInput(setIndex: 9, gamesBefore: 90);
+      final picked = tennisPickServer(set10, const TennisCourtState(), 1, 1);
+      expect(picked, isNotNull);
+      expect(tennisServeOf(set10, picked!).playerIndex, 1);
+      final reloaded = TennisCourtState.fromJson(picked.toJson());
+      expect(tennisServeOf(set10, reloaded).playerIndex, 1);
+    },
+  );
 }
