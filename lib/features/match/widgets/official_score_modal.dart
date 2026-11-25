@@ -92,9 +92,9 @@ class OfficialScorePage extends ConsumerStatefulWidget {
   ConsumerState<OfficialScorePage> createState() => _OfficialScorePageState();
 }
 
-/// Strict (not Lite) badminton and tennis score on a court.
-bool _usesRacketCourt(SportRuleKind kind, bool isLite) =>
-    !isLite && (kind == SportRuleKind.badminton || kind == SportRuleKind.tennis);
+/// Badminton and tennis score on a court, strict and Lite alike.
+bool _usesRacketCourt(SportRuleKind kind) =>
+    kind == SportRuleKind.badminton || kind == SportRuleKind.tennis;
 
 class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   int? _selectedPenaltySide;
@@ -218,8 +218,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     // Pickleball scores on the court itself: points, set and match controls
     // all sit on it, so the shared bottom bar is not drawn.
     final courtMode = kind == SportRuleKind.pickleball;
-    // Strict badminton / tennis: a court with drag targets, no tab swiping.
-    final racketCourt = _usesRacketCourt(kind, isLite);
+    // Badminton / tennis: a court with drag targets, no tab swiping.
+    final racketCourt = _usesRacketCourt(kind);
 
     // Sideways, the pickleball court runs to both edges, also under the
     // camera inset on either side: its controls stay clear of the hole.
@@ -937,9 +937,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     bool isLite,
     bool canScore,
   ) {
-    // Strict badminton and tennis score on a court too; Lite cards keep the
-    // plain panels.
-    final racketCourt = _usesRacketCourt(kind, isLite);
+    // Badminton and tennis score on a court too, Lite included.
+    final racketCourt = _usesRacketCourt(kind);
     // Pickleball: the court carries the score and every set / match control.
     final scorePanel = kind == SportRuleKind.pickleball
         ? PickleballCourtPanel(

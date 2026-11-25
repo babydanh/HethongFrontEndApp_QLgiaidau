@@ -1,5 +1,7 @@
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/racket_court_panel.dart';
 import 'package:flutter/material.dart';
@@ -203,6 +205,95 @@ void main() {
     expect(_read(tester).winnerTeam, 1);
     await shooter.snap('tennis-super-tiebreak-10-8-thang');
   });
+
+  testWidgets(
+    'TC-CBD-APP-08 tennis doi: chon nguoi giao, 4 nguoi luan phien giao',
+    (tester) async {
+      final shooter = BamDiemShooter(tester, binding);
+      await pumpPanel(
+        tester,
+        _panel,
+        _seed(doubles: true),
+        doubles: true,
+        writes: _DoublesWrites(),
+      );
+      // The referee taps a player of the serving team to start.
+      expect(find.text('Tap a player to choose who serves.'), findsOneWidget);
+      await shooter.snap('tennis-doi-chon-nguoi-giao');
+
+      await tapAndSettle(tester, find.text('An'));
+      _expectCourt(tester, server: 'An', receiver: 'Chi');
+      expect(find.text('Tap a player to choose who serves.'), findsNothing);
+
+      // Game 1, An serves: the receiver alternates right court, left court.
+      await _point(tester, teamA: true);
+      expect(_scores(tester), ['15', '0']);
+      _expectCourt(tester, server: 'An', receiver: 'Dung');
+      for (var i = 0; i < 3; i++) {
+        await _point(tester, teamA: true);
+      }
+      expect(_sets(tester), [(1, 0, false)]);
+
+      // Game 2: team B serves for the first time and picks its own server.
+      expect(find.text('Tap a player to choose who serves.'), findsOneWidget);
+      await tapAndSettle(tester, find.text('Dung'));
+      _expectCourt(tester, server: 'Dung', receiver: 'An');
+      for (var i = 0; i < 3; i++) {
+        await _point(tester, teamA: true);
+        await _point(tester, teamA: false);
+      }
+      expect(_scores(tester), ['40', '40']);
+      expect(find.text('Deuce'), findsOneWidget);
+      await shooter.snap('tennis-doi-deuce');
+      await _point(tester, teamA: false);
+      expect(_scores(tester), ['40', 'Ad']);
+      await _point(tester, teamA: false);
+      expect(_sets(tester), [(1, 1, false)]);
+
+      // Game 3: team A already chose, so An's partner serves without asking.
+      expect(find.text('Tap a player to choose who serves.'), findsNothing);
+      _expectCourt(tester, server: 'Binh', receiver: 'Chi');
+      for (var i = 0; i < 4; i++) {
+        await _point(tester, teamA: true);
+      }
+      expect(_sets(tester), [(2, 1, false)]);
+
+      // Game 4: Dung's partner serves.
+      _expectCourt(tester, server: 'Chi', receiver: 'An');
+      for (var i = 0; i < 4; i++) {
+        await _point(tester, teamA: false);
+      }
+      expect(_sets(tester), [(2, 2, false)]);
+
+      // Game 5: the order starts again from An.
+      _expectCourt(tester, server: 'An', receiver: 'Chi');
+      await shooter.snap('tennis-doi-vong-giao-lai-an');
+    },
+  );
+
+  testWidgets('TC-CBD-APP-09 tennis Lite (luat noi): van la san, khong tu chot set', (
+    tester,
+  ) async {
+    final shooter = BamDiemShooter(tester, binding);
+    await pumpPanel(
+      tester,
+      _panel,
+      _seed(lite: true, sets: const [SetScoreData(score1: 6, score2: 5)]),
+    );
+    // Lite keeps the court: serve chip, 15-30-40 and the game count.
+    _expectBoard(tester, '0', '0', serverIsB: true);
+    await shooter.snap('tennis-lite-6-5');
+    await _point(tester, teamA: true);
+    _expectBoard(tester, '15', '0', serverIsB: true);
+    for (var i = 0; i < 3; i++) {
+      await _point(tester, teamA: true);
+    }
+    // 7-5 would close a strict set; Lite waits for the referee to close it.
+    expect(_sets(tester), [(7, 5, false)]);
+    _expectBoard(tester, '0', '0', serverIsB: false);
+    expect(_read(tester).isMatchComplete, isFalse);
+    await shooter.snap('tennis-lite-7-5-chua-chot');
+  });
 }
 
 const _panel = RacketCourtPanel(params: bamDiemParams);
@@ -211,6 +302,8 @@ const _panel = RacketCourtPanel(params: bamDiemParams);
 ScorePanelState _seed({
   Map<String, dynamic> format = const {},
   List<SetScoreData> sets = const [],
+  bool doubles = false,
+  bool lite = false,
 }) => ScorePanelState(
   config: resolveSportConfig({
     'kind': 'TENNIS',
@@ -218,7 +311,41 @@ ScorePanelState _seed({
     'format': format,
   }, SportRuleKind.tennis),
   finishedSets: sets,
+  tennisDoubles: doubles,
+  isLite: lite,
 );
+
+/// Doubles also saves who serves and receives after every choice.
+class _DoublesWrites extends BamDiemWrites {
+  @override
+  Future<MatchModel> updateCourtState(
+    String matchId,
+    Map<String, dynamic> courtState,
+  ) async => bamDiemMatch(doubles: true);
+}
+
+/// Checks which player the "SERVE" and "RECEIVE" chips sit next to.
+void _expectCourt(
+  WidgetTester tester, {
+  required String server,
+  required String receiver,
+}) {
+  expect(_nearestPlayer(tester, find.textContaining('SERVE')), server);
+  expect(_nearestPlayer(tester, find.text('RECEIVE')), receiver);
+}
+
+String _nearestPlayer(WidgetTester tester, Finder chip) {
+  expect(chip, findsOneWidget);
+  final at = tester.getCenter(chip);
+  double distance(String name) =>
+      (tester.getCenter(find.text(name)) - at).distance;
+  return const [
+    'An',
+    'Binh',
+    'Chi',
+    'Dung',
+  ].reduce((a, b) => distance(a) <= distance(b) ? a : b);
+}
 
 /// Taps the "+" of team A or team B.
 Future<void> _point(WidgetTester tester, {required bool teamA}) => tapAndSettle(
@@ -234,9 +361,8 @@ List<String> _scores(WidgetTester tester) {
       .evaluate()
       .map((e) => (e.widget as Text).data!)
       .toList();
-  return _read(tester).racketPick.endsFlipped
-      ? [texts[1], texts[0]]
-      : texts;
+  // Doubles keeps the ends in the tennis court state.
+  return _read(tester).racketEndsFlipped ? [texts[1], texts[0]] : texts;
 }
 
 /// Checks both big scores and which side the "● SERVE" chip is on: team A is

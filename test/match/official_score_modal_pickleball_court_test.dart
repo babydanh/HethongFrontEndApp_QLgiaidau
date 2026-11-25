@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.d
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/racket_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -70,12 +71,18 @@ SportConfig _config(SportRuleKind kind, SportScoringModel model, bool open) =>
       tiebreakAt: 0,
     );
 
-MatchModel _match(String sportKey, {bool clubMatch = false}) =>
+MatchModel _match(
+  String sportKey, {
+  bool clubMatch = false,
+  bool lite = false,
+}) =>
     MatchModel.fromJson({
       'id': 'match-1',
       if (!clubMatch) 'tournamentId': 'tournament-1',
       'status': 'LIVE',
       'sport': sportKey,
+      // The page reads Lite from the match rules, not from the panel state.
+      if (lite) 'sportRules': {'isLite': true},
       'team1Members': ['Lan Anh', 'Minh'],
       'team2Members': ['Bảo', 'Hà'],
     }, 'match-1');
@@ -105,11 +112,12 @@ Future<void> _pump(
   bool? canScore,
   AuthNotifier Function()? authOverride,
   bool clubMatch = false,
+  TennisGameState? tennis,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final match = _match(sportKey, clubMatch: clubMatch);
+  final match = _match(sportKey, clubMatch: clubMatch, lite: lite);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -126,6 +134,7 @@ Future<void> _pump(
               pickleball: const PickleballServeState(),
               rally: const RallySetState(currentP1: 4, currentP2: 2),
               finishedSets: finishedSets,
+              tennis: tennis,
             ),
           ),
         ),
@@ -220,6 +229,39 @@ void main() {
       expect(find.text('Pickleball side-out'), findsOneWidget);
       // The dialog title row overflows with the wide test font only.
       expect(tester.takeException(), isA<FlutterError>());
+    });
+  });
+
+  group('TC-RACKET-LITE Lite tennis and badminton score on the court', () {
+    testWidgets('TC-RACKET-LITE-01 Lite tennis opens the court panel', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        sportKey: 'TENNIS',
+        kind: SportRuleKind.tennis,
+        model: SportScoringModel.tennisSet,
+        lite: true,
+        tennis: const TennisGameState(),
+      );
+
+      expect(find.byType(RacketCourtPanel), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('TC-RACKET-LITE-02 Lite badminton opens the court panel', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        sportKey: 'BADMINTON',
+        kind: SportRuleKind.badminton,
+        model: SportScoringModel.rallyPointSet,
+        lite: true,
+      );
+
+      expect(find.byType(RacketCourtPanel), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 
