@@ -34,7 +34,7 @@ class _AddTeamScreenState extends ConsumerState<AddTeamScreen> {
     super.initState();
     if (widget.teamToEdit != null) {
       _nameController.text = widget.teamToEdit!.name;
-      _emailController.text = widget.teamToEdit!.contactEmail;
+      _emailController.text = widget.teamToEdit!.contactEmail ?? '';
       for (final member in widget.teamToEdit!.members) {
         _memberControllers.add(TextEditingController(text: member));
       }

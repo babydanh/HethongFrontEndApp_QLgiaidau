@@ -37,11 +37,12 @@ class AddAthleteSearchCandidate extends AddAthleteCandidate {
   const AddAthleteSearchCandidate({
     required super.userId,
     required super.fullName,
-    required this.email,
+    this.email,
     required this.sources,
   });
 
-  final String email;
+  /// Null for phone-only accounts; masked unless the caller may see it.
+  final String? email;
   final List<AddAthleteSource> sources;
 
   factory AddAthleteSearchCandidate.fromJson(Map<String, dynamic> json) {
@@ -50,10 +51,11 @@ class AddAthleteSearchCandidate extends AddAthleteCandidate {
         .map((item) => addAthleteSourceFromApi(item?.toString()))
         .whereType<AddAthleteSource>()
         .toList(growable: false);
+    final email = json['email']?.toString().trim() ?? '';
     return AddAthleteSearchCandidate(
       userId: base.userId,
       fullName: base.fullName,
-      email: json['email']?.toString() ?? '',
+      email: email.isEmpty ? null : email,
       sources: sources,
     );
   }

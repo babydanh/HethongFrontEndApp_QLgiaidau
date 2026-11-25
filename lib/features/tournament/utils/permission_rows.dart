@@ -6,7 +6,7 @@ enum RefereeAction { none, revoke, resend, remove }
 class PermissionRow {
   const PermissionRow({
     required this.name,
-    required this.email,
+    this.email,
     required this.userId,
     required this.role,
     this.avatarUrl = '',
@@ -16,7 +16,9 @@ class PermissionRow {
   });
 
   final String name;
-  final String email;
+
+  /// Null when the account has no email; masked for non-admin viewers.
+  final String? email;
   final String userId;
 
   /// Profile photo URL from the staff/referee payload; empty when unset.
@@ -40,7 +42,7 @@ List<PermissionRow> buildPermissionRows(
   for (final member in staff)
     PermissionRow(
       name: _name(member),
-      email: _text(member['email']),
+      email: _textOrNull(member['email']),
       userId: _userId(member, const ['userId', 'user_id', 'id']),
       role: _text(member['role']).toUpperCase(),
       avatarUrl: _avatarUrl(member),
@@ -48,7 +50,7 @@ List<PermissionRow> buildPermissionRows(
   for (final referee in referees)
     PermissionRow(
       name: _name(referee),
-      email: _text(referee['email']),
+      email: _textOrNull(referee['email']),
       // A referee invite is keyed by its record id, so no `id` fallback here.
       userId: _userId(referee, const ['userId', 'user_id']),
       role: 'REFEREE',
@@ -67,6 +69,11 @@ RefereeAction _actionFor(String status) => switch (status.toUpperCase()) {
 };
 
 String _text(Object? value) => value?.toString().trim() ?? '';
+
+String? _textOrNull(Object? value) {
+  final text = _text(value);
+  return text.isEmpty ? null : text;
+}
 
 String _name(Map<String, dynamic> person) {
   final nested = person['user'];

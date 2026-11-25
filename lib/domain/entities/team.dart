@@ -20,7 +20,7 @@ class Team {
   final String photoUrl;
   final String qrCode;
   final String approvalStatus;
-  final String contactEmail;
+  final String? contactEmail;
   final DateTime createdAt;
   final bool isPaid;
 
@@ -39,7 +39,7 @@ class Team {
     this.photoUrl = '',
     this.qrCode = '',
     this.approvalStatus = 'PENDING_APPROVAL',
-    this.contactEmail = '',
+    this.contactEmail,
     this.isPaid = false,
     this.eloPoints,
     required this.createdAt,
@@ -141,7 +141,7 @@ class Team {
           json['teamStatus']?.toString().toUpperCase() ??
           json['status']?.toString().toUpperCase() ??
           'PENDING_APPROVAL',
-      contactEmail: json['contactEmail'] ?? '',
+      contactEmail: json['contactEmail']?.toString(),
       isPaid: json['isPaid'] == true ||
           json['is_paid'] == true ||
           json['paymentStatus'] == 'COMPLETED',
