@@ -45,7 +45,7 @@ final userProfileProvider = FutureProvider<UserProfile>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) {
     final l10n = lookupAppLocalizations(ref.read(localeProvider));
-    return UserProfile(id: '', fullName: l10n.userGuestFallback, email: '');
+    return UserProfile(id: '', fullName: l10n.userGuestFallback);
   }
 
   try {

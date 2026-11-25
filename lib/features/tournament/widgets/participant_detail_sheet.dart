@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -505,7 +506,7 @@ class _ParticipantDetailSheetState
         .firstWhere((value) => value.isNotEmpty, orElse: () => '');
     final divisionName = widget.divisionName;
     final subtitle = [
-      if (phone.isNotEmpty) _phoneShown ? phone : _maskPhone(phone),
+      if (phone.isNotEmpty) _phoneShown ? phone : maskPhone(phone)!,
       if (divisionName != null && divisionName.isNotEmpty) divisionName,
     ].join(' · ');
     return Row(
@@ -539,11 +540,6 @@ class _ParticipantDetailSheetState
       ],
     );
   }
-
-  /// `0901123123` -> `0901 *** 123`; short values are fully hidden.
-  String _maskPhone(String phone) => phone.length < 8
-      ? '***'
-      : '${phone.substring(0, 4)} *** ${phone.substring(phone.length - 3)}';
 
   /// Design 3 rows: check-in, fee paid and the internal note (opens its editor).
   Widget _switchRows(BuildContext context) {

@@ -841,7 +841,7 @@ class _TournamentPermissionsState
         if (isReferee) _refereePill(l10n, row.status ?? ''),
         if (hasAction)
           IconButton(
-            key: Key('permissions-row-menu-${row.userId}-${row.email}'),
+            key: Key('permissions-row-menu-${row.userId}-${row.email ?? ''}'),
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 28, height: 28),
@@ -987,7 +987,8 @@ class _TournamentPermissionsState
 
   Future<void> _resend(PermissionRow row) async {
     final l10n = AppLocalizations.of(context)!;
-    if (row.email.isEmpty) return;
+    final email = row.email;
+    if (email == null) return;
     final confirmed = await confirmTournamentManagementAction(
       context,
       title: l10n.tournamentManagementResend,
@@ -998,7 +999,7 @@ class _TournamentPermissionsState
     await _runMutation(
       () => ref
           .read(tournamentManagementRepositoryProvider)
-          .addReferee(widget.tournamentId, row.email),
+          .addReferee(widget.tournamentId, email),
       l10n.tournamentManagementRefereeInviteResent,
     );
   }

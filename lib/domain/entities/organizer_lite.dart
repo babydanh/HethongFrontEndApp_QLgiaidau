@@ -3,7 +3,9 @@ class OrganizerLiteReferee {
   final String userId;
   final String status;
   final String fullName;
-  final String email;
+
+  /// Null when the referee has no email (phone-only account); may be masked.
+  final String? email;
   final String avatarUrl;
 
   const OrganizerLiteReferee({
@@ -11,7 +13,7 @@ class OrganizerLiteReferee {
     required this.userId,
     required this.status,
     required this.fullName,
-    required this.email,
+    this.email,
     required this.avatarUrl,
   });
 
@@ -21,11 +23,16 @@ class OrganizerLiteReferee {
       userId: json['userId']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
       fullName: json['fullName']?.toString() ?? 'Trọng tài',
-      email: json['email']?.toString() ?? '',
+      email: _nonBlank(json['email']),
       avatarUrl: json['avatarUrl']?.toString() ?? '',
     );
   }
 
   bool get isAccepted => status.toUpperCase() == 'ACCEPTED';
   bool get isInvited => status.toUpperCase() == 'INVITED';
+}
+
+String? _nonBlank(Object? value) {
+  final text = value?.toString().trim() ?? '';
+  return text.isEmpty ? null : text;
 }

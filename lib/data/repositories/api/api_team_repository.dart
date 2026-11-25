@@ -166,7 +166,7 @@ class ApiTeamRepository implements ITeamRepository {
         .toList();
     final payload = <String, dynamic>{
       'teamName': team.name,
-      'contactPhone': team.contactEmail.isNotEmpty
+      'contactPhone': team.contactEmail?.isNotEmpty == true
           ? team.contactEmail
           : '0900000000',
       if (memberIds.isNotEmpty)

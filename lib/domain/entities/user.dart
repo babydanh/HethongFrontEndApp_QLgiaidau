@@ -6,6 +6,10 @@ class UserProfile {
   final String? coverUrl;
   final String? bio;
   final String? phoneNumber;
+
+  /// Login phone (`users.phone`, E.164 `+84…`); null when the account has
+  /// none. Distinct from the contact [phoneNumber] kept in the profile.
+  final String? loginPhone;
   final String? dateOfBirth;
   final String? gender;
   final String? address;
@@ -31,6 +35,7 @@ class UserProfile {
     this.coverUrl,
     this.bio,
     this.phoneNumber,
+    this.loginPhone,
     this.dateOfBirth,
     this.gender,
     this.address,
@@ -72,6 +77,7 @@ class UserProfile {
       coverUrl: p['coverUrl']?.toString(),
       bio: p['bio']?.toString(),
       phoneNumber: p['phoneNumber']?.toString(),
+      loginPhone: p['phone']?.toString(),
       dateOfBirth: p['dateOfBirth']?.toString(),
       gender: p['gender']?.toString(),
       address: p['address']?.toString(),
@@ -110,6 +116,7 @@ class UserProfile {
       if (coverUrl != null) 'coverUrl': coverUrl,
       if (bio != null) 'bio': bio,
       if (phoneNumber != null) 'phoneNumber': phoneNumber,
+      if (loginPhone != null) 'phone': loginPhone,
       if (dateOfBirth != null) 'dateOfBirth': dateOfBirth,
       if (gender != null) 'gender': gender,
       if (address != null) 'address': address,
@@ -136,6 +143,7 @@ class UserProfile {
     String? coverUrl,
     String? bio,
     String? phoneNumber,
+    String? loginPhone,
     String? dateOfBirth,
     String? gender,
     String? address,
@@ -158,6 +166,7 @@ class UserProfile {
       coverUrl: coverUrl ?? this.coverUrl,
       bio: bio ?? this.bio,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      loginPhone: loginPhone ?? this.loginPhone,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       gender: gender ?? this.gender,
       address: address ?? this.address,
