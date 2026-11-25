@@ -318,6 +318,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailLabel => 'Email Address';
 
   @override
+  String get identifierLabel => 'Email or phone number';
+
+  @override
   String get passwordLabel => 'Password';
 
   @override
@@ -3107,20 +3110,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPassword_description =>
-      'Enter the email address associated with your account to receive a password reset link.';
+      'Enter your account\'s email or phone number to receive a password reset link.';
 
   @override
   String get forgotPassword_emailTip =>
       'The system will send a verification code or link to your email. Please also check your Spam folder.';
 
   @override
-  String get forgotPassword_emailHint => 'enter@email.com';
+  String get forgotPassword_emailHint => 'enter@email.com or 0912345678';
 
   @override
-  String get forgotPassword_emailRequired => 'Please enter your email address';
+  String get forgotPassword_emailRequired =>
+      'Please enter your email or phone number';
 
   @override
-  String get forgotPassword_emailInvalid => 'Invalid email format';
+  String get forgotPassword_emailInvalid => 'Invalid email or phone number';
 
   @override
   String get forgotPassword_submitting => 'Sending...';
@@ -3168,6 +3172,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get forgotPassword_errorGeneric =>
       'Could not send password reset email';
+
+  @override
+  String get forgotPassword_phoneNotice =>
+      'If the account has an email, the reset link is sent to that email. No email yet: contact support.';
 
   @override
   String get notification_markAllReadError => 'Could not mark all as read.';
@@ -3386,13 +3394,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginRegister_fullNameRequired => 'Please enter your full name';
 
   @override
-  String get loginRegister_emailHint => 'example@email.com';
+  String get loginRegister_emailHint => 'you@example.com or 0912345678';
 
   @override
-  String get loginRegister_emailRequired => 'Please enter your email';
+  String get loginRegister_emailRequired =>
+      'Please enter your email or phone number';
 
   @override
-  String get loginRegister_emailInvalid => 'Invalid email address';
+  String get loginRegister_emailInvalid => 'Invalid email or phone number';
 
   @override
   String get loginRegister_passwordHint => '••••••••';
@@ -11665,7 +11674,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorParserGoogleUnavailable =>
-      'Google Sign-In is unavailable in this app version. Use email sign-in or try again later.';
+      'Google Sign-In is unavailable in this app version. Use email or phone sign-in, or try again later.';
 
   @override
   String get errorParserGoogleSignInFailed =>
@@ -11742,7 +11751,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter complete bank account details to receive the refund.';
 
   @override
-  String get errorParserInvalidCredentials => 'Incorrect email or password.';
+  String get errorParserInvalidCredentials =>
+      'Incorrect email/phone number or password.';
 
   @override
   String get errorParserForbidden =>
@@ -11783,6 +11793,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorParserEmailInvalid => 'Invalid email address.';
 
   @override
+  String get errorParserPhoneRegistered =>
+      'This phone number is already registered. Use another number or sign in.';
+
+  @override
+  String get errorParserIdentifierRequired =>
+      'Please enter an email or phone number.';
+
+  @override
+  String get errorParserIdentifierInvalid => 'Invalid email or phone number.';
+
+  @override
   String get errorParserPasswordMin =>
       'Password must be at least 6 characters.';
 
@@ -11794,7 +11815,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorParserInvalidCredentialsMessage =>
-      'Incorrect email or password.';
+      'Incorrect email/phone number or password.';
 
   @override
   String get errorParserGoogleAccount =>

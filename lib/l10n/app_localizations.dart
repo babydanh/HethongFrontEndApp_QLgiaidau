@@ -680,6 +680,12 @@ abstract class AppLocalizations {
   /// **'Địa chỉ Email'**
   String get emailLabel;
 
+  /// No description provided for @identifierLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hoặc SĐT'**
+  String get identifierLabel;
+
   /// No description provided for @passwordLabel.
   ///
   /// In vi, this message translates to:
@@ -5849,7 +5855,7 @@ abstract class AppLocalizations {
   /// No description provided for @forgotPassword_description.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập địa chỉ email liên kết với tài khoản của bạn để nhận liên kết khôi phục mật khẩu.'**
+  /// **'Nhập email hoặc số điện thoại của tài khoản để nhận liên kết khôi phục mật khẩu.'**
   String get forgotPassword_description;
 
   /// No description provided for @forgotPassword_emailTip.
@@ -5861,19 +5867,19 @@ abstract class AppLocalizations {
   /// No description provided for @forgotPassword_emailHint.
   ///
   /// In vi, this message translates to:
-  /// **'nhap@email.com'**
+  /// **'nhap@email.com hoặc 0912345678'**
   String get forgotPassword_emailHint;
 
   /// No description provided for @forgotPassword_emailRequired.
   ///
   /// In vi, this message translates to:
-  /// **'Vui lòng nhập địa chỉ email'**
+  /// **'Vui lòng nhập email hoặc số điện thoại'**
   String get forgotPassword_emailRequired;
 
   /// No description provided for @forgotPassword_emailInvalid.
   ///
   /// In vi, this message translates to:
-  /// **'Email không hợp lệ'**
+  /// **'Email hoặc số điện thoại không hợp lệ'**
   String get forgotPassword_emailInvalid;
 
   /// No description provided for @forgotPassword_submitting.
@@ -5953,6 +5959,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không thể gửi email khôi phục mật khẩu'**
   String get forgotPassword_errorGeneric;
+
+  /// No description provided for @forgotPassword_phoneNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu tài khoản đã thêm email, link đặt lại được gửi tới email đó. Chưa thêm email: liên hệ hỗ trợ.'**
+  String get forgotPassword_phoneNotice;
 
   /// No description provided for @notification_markAllReadError.
   ///
@@ -6353,19 +6365,19 @@ abstract class AppLocalizations {
   /// No description provided for @loginRegister_emailHint.
   ///
   /// In vi, this message translates to:
-  /// **'example@email.com'**
+  /// **'email@vidu.com hoặc 0912345678'**
   String get loginRegister_emailHint;
 
   /// No description provided for @loginRegister_emailRequired.
   ///
   /// In vi, this message translates to:
-  /// **'Vui lòng nhập email'**
+  /// **'Vui lòng nhập email hoặc số điện thoại'**
   String get loginRegister_emailRequired;
 
   /// No description provided for @loginRegister_emailInvalid.
   ///
   /// In vi, this message translates to:
-  /// **'Địa chỉ email không hợp lệ'**
+  /// **'Email hoặc số điện thoại không hợp lệ'**
   String get loginRegister_emailInvalid;
 
   /// No description provided for @loginRegister_passwordHint.
@@ -21187,7 +21199,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorParserGoogleUnavailable.
   ///
   /// In vi, this message translates to:
-  /// **'Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc thử lại sau.'**
+  /// **'Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc số điện thoại, hoặc thử lại sau.'**
   String get errorParserGoogleUnavailable;
 
   /// No description provided for @errorParserGoogleSignInFailed.
@@ -21307,7 +21319,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorParserInvalidCredentials.
   ///
   /// In vi, this message translates to:
-  /// **'Email hoặc mật khẩu không chính xác.'**
+  /// **'Email/số điện thoại hoặc mật khẩu không chính xác.'**
   String get errorParserInvalidCredentials;
 
   /// No description provided for @errorParserForbidden.
@@ -21370,6 +21382,24 @@ abstract class AppLocalizations {
   /// **'Địa chỉ email không hợp lệ.'**
   String get errorParserEmailInvalid;
 
+  /// No description provided for @errorParserPhoneRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.'**
+  String get errorParserPhoneRegistered;
+
+  /// No description provided for @errorParserIdentifierRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập email hoặc số điện thoại.'**
+  String get errorParserIdentifierRequired;
+
+  /// No description provided for @errorParserIdentifierInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hoặc số điện thoại không hợp lệ.'**
+  String get errorParserIdentifierInvalid;
+
   /// No description provided for @errorParserPasswordMin.
   ///
   /// In vi, this message translates to:
@@ -21391,7 +21421,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorParserInvalidCredentialsMessage.
   ///
   /// In vi, this message translates to:
-  /// **'Email hoặc mật khẩu không đúng.'**
+  /// **'Email/số điện thoại hoặc mật khẩu không đúng.'**
   String get errorParserInvalidCredentialsMessage;
 
   /// No description provided for @errorParserGoogleAccount.

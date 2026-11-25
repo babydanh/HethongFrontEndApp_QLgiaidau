@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
 import 'package:dio/dio.dart';
@@ -304,20 +305,6 @@ class ApiUserRepository implements IUserRepository {
       return fallback;
     }
 
-    const viMap = {
-      'Email already exists':
-          'Email này đã được đăng ký. Vui lòng dùng email khác hoặc đăng nhập.',
-      'email should not be empty': 'Vui lòng nhập địa chỉ email.',
-      'email must be an email': 'Địa chỉ email không hợp lệ.',
-      'password must be longer than or equal to 6 characters':
-          'Mật khẩu phải có ít nhất 6 ký tự.',
-      'password should not be empty': 'Vui lòng nhập mật khẩu.',
-      'fullName should not be empty': 'Vui lòng nhập họ và tên.',
-      'Invalid credentials': 'Email hoặc mật khẩu không đúng.',
-      'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.':
-          'Tài khoản này đã đăng ký qua Google. Vui lòng đăng nhập bằng Google.',
-    };
-
-    return viMap[msg] ?? msg;
+    return ErrorParser.translateMessage(msg, _l10n);
   }
 }

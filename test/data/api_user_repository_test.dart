@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -142,7 +145,8 @@ void main() {
   });
 
   group('error translation', () {
-    test('known Nest messages are shown in Vietnamese', () async {
+    test('known Nest messages are shown localized', () async {
+      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
       final (repo, _) = _setup({
         'PATCH /users/profile': const FakeReply(400, {
           'message': ['email must be an email', 'other'],
@@ -154,11 +158,11 @@ void main() {
 
       expect(
         await _failureOf(repo.updateProfile({})),
-        'Địa chỉ email không hợp lệ.',
+        l10n.errorParserEmailInvalid,
       );
       expect(
         await _failureOf(repo.changePassword('a', 'b')),
-        'Email hoặc mật khẩu không đúng.',
+        l10n.errorParserInvalidCredentialsMessage,
       );
     });
 

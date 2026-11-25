@@ -215,15 +215,16 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  /// Đăng nhập bằng Email & Mật khẩu
-  Future<bool> loginWithEmailPassword(String email, String password) async {
-    _log.info('Đăng nhập bằng email: $email via NestJS Mobile API');
+  /// Đăng nhập bằng email hoặc SĐT và mật khẩu
+  Future<bool> loginWithPassword(String identifier, String password) async {
+    // Never log the raw identifier (PII).
+    _log.info('Đăng nhập bằng mật khẩu via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
       final session = await ref
           .read(loginWithEmailUseCaseProvider)
-          .call(email: email, password: password);
+          .call(identifier: identifier, password: password);
       final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
@@ -331,19 +332,26 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  /// Đăng ký tài khoản mới bằng Email & Mật khẩu
-  Future<bool> registerWithEmailPassword(
-    String email,
-    String password,
-    String fullName,
-  ) async {
-    _log.info('Đăng ký bằng email: $email via NestJS Mobile API');
+  /// Đăng ký tài khoản mới bằng email hoặc SĐT và mật khẩu
+  Future<bool> registerWithPassword({
+    String? email,
+    String? phone,
+    required String password,
+    required String fullName,
+  }) async {
+    // Never log the raw email/phone (PII).
+    _log.info('Đăng ký bằng mật khẩu via NestJS Mobile API');
     state = state.copyWith(status: AuthStatus.validating);
 
     try {
       final session = await ref
           .read(registerWithEmailUseCaseProvider)
-          .call(email: email, password: password, fullName: fullName);
+          .call(
+            email: email,
+            phone: phone,
+            password: password,
+            fullName: fullName,
+          );
       final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(

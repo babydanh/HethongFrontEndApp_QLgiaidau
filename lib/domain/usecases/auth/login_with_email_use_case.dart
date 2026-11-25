@@ -9,11 +9,11 @@ class LoginWithEmailUseCase {
   LoginWithEmailUseCase(this._authRepository, this._sessionRepository);
 
   Future<AuthSession> call({
-    required String email,
+    required String identifier,
     required String password,
   }) async {
-    final session = await _authRepository.loginWithEmailPassword(
-      email: email,
+    final session = await _authRepository.login(
+      identifier: identifier,
       password: password,
     );
     await _sessionRepository.saveAuthTokens(

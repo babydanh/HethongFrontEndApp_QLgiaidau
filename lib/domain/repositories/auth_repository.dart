@@ -1,13 +1,17 @@
 import 'package:app_quanly_giaidau/domain/entities/auth_session.dart';
 
 abstract class IAuthRepository {
-  Future<AuthSession> loginWithEmailPassword({
-    required String email,
+  /// [identifier] is an email or a phone number, sent as typed; the server
+  /// normalizes it.
+  Future<AuthSession> login({
+    required String identifier,
     required String password,
   });
 
-  Future<AuthSession> registerWithEmailPassword({
-    required String email,
+  /// At least one of [email] and [phone] must be non-blank.
+  Future<AuthSession> register({
+    String? email,
+    String? phone,
     required String password,
     required String fullName,
   });

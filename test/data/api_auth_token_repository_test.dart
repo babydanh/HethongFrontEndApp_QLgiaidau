@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,21 +36,31 @@ void main() {
   );
 
   group('ApiAuthRepository sign-in', () {
-    test('email login posts the credentials and maps the session', () async {
+    test('login posts the identifier and maps the session', () async {
       final (repo, adapter) = _auth({
         'POST /auth/mobile/login': const FakeReply(201, _session),
       });
 
-      final session = await repo.loginWithEmailPassword(
-        email: 'a@b.vn',
-        password: 'pw',
-      );
+      final session = await repo.login(identifier: 'a@b.vn', password: 'pw');
 
       expect(session.accessToken, 'acc');
       expect(session.refreshToken, 'ref');
       expect(session.roles, ['ORGANIZER', 'PLAYER']);
       expect(adapter.requests.single.body, {
-        'email': 'a@b.vn',
+        'identifier': 'a@b.vn',
+        'password': 'pw',
+      });
+    });
+
+    test('TC-APP-PHONE-17 phone login sends the phone as typed', () async {
+      final (repo, adapter) = _auth({
+        'POST /auth/mobile/login': const FakeReply(201, _session),
+      });
+
+      await repo.login(identifier: '0987 654 321', password: 'pw');
+
+      expect(adapter.requests.single.body, {
+        'identifier': '0987 654 321',
         'password': 'pw',
       });
     });
@@ -77,7 +90,7 @@ void main() {
       });
 
       await expectLater(
-        repo.loginWithEmailPassword(email: 'a', password: 'b'),
+        repo.login(identifier: 'a', password: 'b'),
         throwsA(isA<Exception>()),
       );
       await expectLater(
@@ -100,7 +113,7 @@ void main() {
       });
 
       await expectLater(
-        repo.loginWithEmailPassword(email: 'a', password: 'b'),
+        repo.login(identifier: 'a', password: 'b'),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -156,7 +169,7 @@ void main() {
           'POST /auth/mobile/login': const FakeReply(201, _session),
         });
 
-        final session = await repo.registerWithEmailPassword(
+        final session = await repo.register(
           email: 'a@b.vn',
           password: 'pw',
           fullName: 'Nguyễn An',
@@ -172,6 +185,71 @@ void main() {
           'password': 'pw',
           'fullName': 'Nguyễn An',
         });
+        expect(adapter.requests.last.body, {
+          'identifier': 'a@b.vn',
+          'password': 'pw',
+        });
+      },
+    );
+
+    test('TC-APP-PHONE-18 phone registration omits a blank email and signs in '
+        'with the phone', () async {
+      final (repo, adapter) = _auth({
+        'POST /auth/mobile/register': const FakeReply(201, {}),
+        'POST /auth/mobile/login': const FakeReply(201, _session),
+      });
+
+      await repo.register(
+        email: '',
+        phone: '0987654321',
+        password: 'pw',
+        fullName: 'Trần B',
+      );
+
+      expect(adapter.requests.first.body, {
+        'phone': '0987654321',
+        'password': 'pw',
+        'fullName': 'Trần B',
+      });
+      expect(adapter.requests.last.body, {
+        'identifier': '0987654321',
+        'password': 'pw',
+      });
+    });
+
+    test(
+      'TC-APP-PHONE-19 a taken phone and an invalid identifier are translated',
+      () async {
+        final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+        final (repo, _) = _auth({
+          'POST /auth/mobile/register': const FakeReply(409, {
+            'message': 'Phone number already exists',
+          }),
+          'POST /auth/mobile/login': const FakeReply(400, {
+            'message': 'Email or phone number is invalid',
+          }),
+        });
+
+        await expectLater(
+          repo.register(phone: '0987654321', password: 'pw', fullName: 'B'),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains(l10n.errorParserPhoneRegistered),
+            ),
+          ),
+        );
+        await expectLater(
+          repo.login(identifier: 'x', password: 'pw'),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains(l10n.errorParserIdentifierInvalid),
+            ),
+          ),
+        );
       },
     );
 
@@ -183,11 +261,7 @@ void main() {
       });
 
       await expectLater(
-        repo.registerWithEmailPassword(
-          email: 'a@b.vn',
-          password: 'pw',
-          fullName: 'An',
-        ),
+        repo.register(email: 'a@b.vn', password: 'pw', fullName: 'An'),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),

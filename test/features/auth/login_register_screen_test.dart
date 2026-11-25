@@ -33,18 +33,19 @@ class _FakeAuth extends AuthNotifier {
   }
 
   @override
-  Future<bool> loginWithEmailPassword(String email, String password) {
-    loginCalls.add('$email|$password');
+  Future<bool> loginWithPassword(String identifier, String password) {
+    loginCalls.add('$identifier|$password');
     return _finish();
   }
 
   @override
-  Future<bool> registerWithEmailPassword(
-    String email,
-    String password,
-    String fullName,
-  ) {
-    registerCalls.add('$email|$password|$fullName');
+  Future<bool> registerWithPassword({
+    String? email,
+    String? phone,
+    required String password,
+    required String fullName,
+  }) {
+    registerCalls.add('$email|$phone|$password|$fullName');
     return _finish();
   }
 }
@@ -128,6 +129,7 @@ void main() {
 
         expect(find.text(l10n.loginTitle), findsOneWidget);
         expect(find.byType(TextFormField), findsNWidgets(2));
+        expect(find.text(l10n.identifierLabel), findsOneWidget);
         expect(find.text(l10n.loginRegister_forgotPassword), findsOneWidget);
         expect(find.text(l10n.noAccount), findsOneWidget);
       },
@@ -203,6 +205,31 @@ void main() {
       expect(auth.loginCalls, isEmpty);
     });
 
+    testWidgets(
+      'TC-APP-PHONE-13 sđt không phải số di động VN báo không hợp lệ',
+      (tester) async {
+        final auth = await _pump(tester);
+        await _fillLogin(tester, '0123456789', 'matkhau1');
+
+        await _tapSubmit(tester, l10n.loginButton);
+
+        expect(find.text(l10n.loginRegister_emailInvalid), findsOneWidget);
+        expect(auth.loginCalls, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'TC-APP-PHONE-14 email có đuôi tên miền dài hơn 4 ký tự vẫn hợp lệ',
+      (tester) async {
+        final auth = await _pump(tester);
+        await _fillLogin(tester, 'an@club.sports', 'matkhau1');
+
+        await _tapSubmit(tester, l10n.loginButton);
+
+        expect(auth.loginCalls, ['an@club.sports|matkhau1']);
+      },
+    );
+
     testWidgets('mật khẩu dưới 6 ký tự báo độ dài tối thiểu', (tester) async {
       final auth = await _pump(tester);
       await _fillLogin(tester, 'a@b.vn', '12345');
@@ -244,6 +271,18 @@ void main() {
 
         expect(auth.loginCalls, ['nguoi.dung@mail.vn|matkhau1']);
         expect(find.text('LOADING extra=/tournament/abc'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'TC-APP-PHONE-15 đăng nhập bằng sđt gửi nguyên văn đã trim, không hạ chữ',
+      (tester) async {
+        final auth = await _pump(tester, auth: _FakeAuth(succeed: true));
+        await _fillLogin(tester, '  +84 987 654 321 ', 'matkhau1');
+
+        await _tapSubmit(tester, l10n.loginButton);
+
+        expect(auth.loginCalls, ['+84 987 654 321|matkhau1']);
       },
     );
 
@@ -319,8 +358,23 @@ void main() {
 
       await _tapSubmit(tester, l10n.registerButton);
 
-      expect(auth.registerCalls, ['a@b.vn|matkhau1|Nguyễn Văn A']);
+      expect(auth.registerCalls, ['a@b.vn|null|matkhau1|Nguyễn Văn A']);
       expect(auth.loginCalls, isEmpty);
+    });
+
+    testWidgets('TC-APP-PHONE-16 đăng ký bằng sđt gửi phone, không gửi email', (
+      tester,
+    ) async {
+      final auth = await _pump(tester, auth: _FakeAuth(succeed: true));
+      await tester.tap(find.text(l10n.registerNow));
+      await _settle(tester);
+      await tester.enterText(_field(0), 'Trần B');
+      await tester.enterText(_field(1), ' 0987654321 ');
+      await tester.enterText(_field(2), 'matkhau1');
+
+      await _tapSubmit(tester, l10n.registerButton);
+
+      expect(auth.registerCalls, ['null|0987654321|matkhau1|Trần B']);
     });
 
     testWidgets('đổi chế độ xoá thông báo lỗi của lần trước', (tester) async {

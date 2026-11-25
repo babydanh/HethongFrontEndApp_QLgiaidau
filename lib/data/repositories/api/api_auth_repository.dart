@@ -32,15 +32,15 @@ class ApiAuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<AuthSession> loginWithEmailPassword({
-    required String email,
+  Future<AuthSession> login({
+    required String identifier,
     required String password,
   }) async {
-    _log.info('Đăng nhập bằng email qua Mobile API');
+    _log.info('Đăng nhập bằng mật khẩu qua Mobile API');
     try {
       final response = await _dioClient.dio.post(
         '/auth/mobile/login',
-        data: {'email': email, 'password': password},
+        data: {'identifier': identifier, 'password': password},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -49,31 +49,43 @@ class ApiAuthRepository implements IAuthRepository {
 
       throw Exception(_l10n.authCredentialsMissingResponse);
     } catch (e, stack) {
-      _log.error('Lỗi đăng nhập email', e, stack);
+      _log.error('Lỗi đăng nhập bằng mật khẩu', e, stack);
       throw Exception(ErrorParser.parse(e, _l10n.networkConnectionFailed));
     }
   }
 
   @override
-  Future<AuthSession> registerWithEmailPassword({
-    required String email,
+  Future<AuthSession> register({
+    String? email,
+    String? phone,
     required String password,
     required String fullName,
   }) async {
-    _log.info('Đăng ký bằng email qua Mobile API');
+    _log.info('Đăng ký bằng mật khẩu qua Mobile API');
+    final cleanEmail = _nonBlank(email);
+    final cleanPhone = _nonBlank(phone);
     try {
       final response = await _dioClient.dio.post(
         '/auth/mobile/register',
-        data: {'email': email, 'password': password, 'fullName': fullName},
+        data: {
+          'email': ?cleanEmail,
+          'phone': ?cleanPhone,
+          'password': password,
+          'fullName': fullName,
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return await loginWithEmailPassword(email: email, password: password);
+        // Sign in with the identifier the user typed.
+        return await login(
+          identifier: cleanEmail ?? cleanPhone ?? '',
+          password: password,
+        );
       }
 
       throw Exception(_l10n.authRegisterResponseInvalid);
     } catch (e, stack) {
-      _log.error('Lỗi đăng ký email', e, stack);
+      _log.error('Lỗi đăng ký bằng mật khẩu', e, stack);
       throw Exception(ErrorParser.parse(e, _l10n.networkConnectionFailed));
     }
   }
@@ -197,6 +209,11 @@ class ApiAuthRepository implements IAuthRepository {
       _log.error('Lỗi xác minh số điện thoại', e, stack);
       throw Exception(ErrorParser.parse(e, _l10n.networkConnectionFailed));
     }
+  }
+
+  static String? _nonBlank(String? value) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   AuthSession _mapAuthSession(dynamic rawData) {
