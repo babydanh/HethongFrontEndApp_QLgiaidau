@@ -14,8 +14,9 @@ const _forgotPath = '/auth/forgot-password';
 
 Future<FakeApiAdapter> _pump(
   WidgetTester tester,
-  Map<String, FakeReply> routes,
-) async {
+  Map<String, FakeReply> routes, {
+  Locale locale = const Locale('vi'),
+}) async {
   tester.view.physicalSize = const Size(800, 2400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -43,7 +44,7 @@ Future<FakeApiAdapter> _pump(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('vi'),
+        locale: locale,
         theme: ThemeData.light(),
       ),
     ),
@@ -197,6 +198,24 @@ void main() {
       await _submitEmail(tester, 'a@b.vn');
 
       expect(find.text('Đã gửi mail rồi nhé'), findsOneWidget);
+      await _disposeScreen(tester);
+    },
+  );
+
+  testWidgets(
+    'TC-APP-PHONE-41 lời nhắn chung của máy chủ hiện theo ngôn ngữ app',
+    (tester) async {
+      await _pump(tester, {
+        _forgotRoute: const FakeReply(200, {
+          'message':
+              'Nếu tài khoản tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.',
+        }),
+      }, locale: const Locale('en'));
+
+      await _submitEmail(tester, '0912345678');
+
+      final en = lookupAppLocalizations(const Locale('en'));
+      expect(find.text(en.forgotPassword_genericSentMessage), findsOneWidget);
       await _disposeScreen(tester);
     },
   );

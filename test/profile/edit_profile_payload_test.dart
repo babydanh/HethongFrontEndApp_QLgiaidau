@@ -36,6 +36,7 @@ class _FakeRegions implements IRegionRepository {
 class _FakeUsers implements IUserRepository {
   final saved = <Map<String, dynamic>>[];
   final loginPhoneCalls = <String>[];
+  Object? loginPhoneError;
 
   @override
   Future<UserProfile> updateProfile(Map<String, dynamic> data) async {
@@ -49,6 +50,8 @@ class _FakeUsers implements IUserRepository {
     String? currentPassword,
   }) async {
     loginPhoneCalls.add('$phone|$currentPassword');
+    final error = loginPhoneError;
+    if (error != null) throw error;
   }
 
   @override
@@ -141,15 +144,19 @@ Map<String, dynamic> _build({
 
 void main() {
   group('isValidVnPhone', () {
-    test('chấp nhận +84 và 0[35789] kèm 8 số', () {
-      // Backend: '+84' rồi đúng 8 số (không phải 9) nên đây là mẫu hợp lệ.
-      expect(isValidVnPhone('+8491234567'), isTrue);
+    test('chấp nhận +84 hoặc 0 rồi đầu [35789] kèm 8 số', () {
+      // Backend `vn-phone.ts`: ^(?:\+84|0)[35789]\d{8}$ (9 chữ số sau mã).
+      expect(isValidVnPhone('+84912345678'), isTrue);
       expect(isValidVnPhone('0912345678'), isTrue);
       expect(isValidVnPhone('0356789012'), isTrue);
+      expect(isValidVnPhone(' 0912345678 '), isTrue);
     });
 
     test('từ chối đầu số sai, độ dài sai và số bàn', () {
-      expect(isValidVnPhone('+84912345678'), isFalse); // Backend cũng từ chối
+      expect(isValidVnPhone('+8491234567'), isFalse); // thiếu một số
+      // UpdateUserDto kiểm chuỗi thô: không dấu cách, không thiếu dấu '+'.
+      expect(isValidVnPhone('0912 345 678'), isFalse);
+      expect(isValidVnPhone('84912345678'), isFalse);
       expect(isValidVnPhone('01234567890'), isFalse);
       expect(isValidVnPhone('02812345678'), isFalse);
       expect(isValidVnPhone('0212345678'), isFalse);
@@ -386,6 +393,44 @@ void main() {
         expect(find.byKey(const ValueKey('login-phone-input')), findsNothing);
       },
     );
+
+    for (final (code, pick) in [
+      (409, (AppLocalizations l) => l.errorParserPhoneRegistered),
+      (403, (AppLocalizations l) => l.errorParserCurrentPasswordWrong),
+    ]) {
+      testWidgets(
+        'TC-APP-PHONE-39 lỗi $code khi đặt sđt đăng nhập hiện đúng lời nhắn',
+        (tester) async {
+          final users = _FakeUsers();
+          final l10n = await _pumpScreen(
+            tester,
+            users: users,
+            community: _FakeCommunity(),
+          );
+          // The repository throws Exception(<localized Backend message>).
+          users.loginPhoneError = Exception(pick(l10n));
+          final action = find.byKey(
+            const ValueKey('settings-login-phone-action'),
+          );
+          await tester.ensureVisible(action);
+          await tester.tap(action);
+          await tester.pumpAndSettle();
+          await tester.enterText(
+            find.byKey(const ValueKey('login-phone-input')),
+            '0912345678',
+          );
+          await tester.tap(find.text(l10n.settingsLoginPhoneSave));
+          await tester.pumpAndSettle();
+
+          expect(find.text(pick(l10n)), findsOneWidget);
+          expect(find.text(l10n.errorParserFallback), findsNothing);
+          expect(
+            find.byKey(const ValueKey('login-phone-input')),
+            findsOneWidget,
+          );
+        },
+      );
+    }
 
     testWidgets('lỗi tải CLB hiện lỗi và thử lại, không báo không có CLB', (
       tester,

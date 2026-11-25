@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,10 +67,16 @@ class _LoginPhoneDialogState extends ConsumerState<_LoginPhoneDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      messenger.showSnackBar(
-        SnackBar(content: Text(ErrorParser.parse(e, '', l10n))),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(_errorText(e, l10n))));
     }
+  }
+
+  /// The repository rethrows Backend errors as `Exception(<localized text>)`;
+  /// show that text instead of the generic fallback.
+  String _errorText(Object e, AppLocalizations l10n) {
+    if (e is DioException) return ErrorParser.parse(e, '', l10n);
+    final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').trim();
+    return msg.isEmpty ? l10n.errorParserFallback : msg;
   }
 
   @override

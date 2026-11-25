@@ -183,6 +183,25 @@ void main() {
     });
   });
 
+  test(
+    'TC-APP-PHONE-40 a wrong current password is reported localized',
+    () async {
+      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final (repo, _) = _setup({
+        'PATCH /users/profile/login-phone': const FakeReply(403, {
+          'message': 'Mật khẩu hiện tại không chính xác.',
+        }),
+      });
+
+      expect(
+        await _failureOf(
+          repo.setLoginPhone(phone: '0912345678', currentPassword: 'sai'),
+        ),
+        l10n.errorParserCurrentPasswordWrong,
+      );
+    },
+  );
+
   group('error translation', () {
     test('known Nest messages are shown localized', () async {
       final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);

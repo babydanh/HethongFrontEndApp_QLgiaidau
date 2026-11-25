@@ -3170,6 +3170,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password reset email has been sent!';
 
   @override
+  String get forgotPassword_genericSentMessage =>
+      'If the account exists, password reset instructions have been sent.';
+
+  @override
   String get forgotPassword_errorGeneric =>
       'Could not send password reset email';
 
@@ -11822,6 +11826,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorParserPhoneRegistered =>
       'This phone number is already registered. Use another number or sign in.';
+
+  @override
+  String get errorParserCurrentPasswordRequired =>
+      'Please enter your current password.';
+
+  @override
+  String get errorParserCurrentPasswordWrong =>
+      'The current password is incorrect.';
+
+  @override
+  String get errorParserPhoneInvalid => 'Invalid phone number.';
 
   @override
   String get errorParserIdentifierRequired =>

@@ -232,7 +232,8 @@ class ApiUserRepository implements IUserRepository {
 
   @override
   Future<List<UserSearchResult>> searchUsers(String query) async {
-    _log.info('Tìm kiếm người dùng: $query');
+    // The term may be a phone or an email: log only its length.
+    _log.info('Tìm kiếm người dùng (${query.length} ký tự)');
     try {
       final response = await _dioClient.dio.get(
         '/users/search',

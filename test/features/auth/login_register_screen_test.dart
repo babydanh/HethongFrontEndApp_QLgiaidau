@@ -218,6 +218,18 @@ void main() {
       },
     );
 
+    testWidgets('TC-APP-PHONE-42 ô định danh dùng bàn phím chữ, tắt tự sửa', (
+      tester,
+    ) async {
+      await _pump(tester);
+
+      final field = tester.widget<TextField>(
+        find.descendant(of: _field(0), matching: find.byType(TextField)),
+      );
+      expect(field.keyboardType, TextInputType.text);
+      expect(field.autocorrect, isFalse);
+    });
+
     testWidgets(
       'TC-APP-PHONE-14 email có đuôi tên miền dài hơn 4 ký tự vẫn hợp lệ',
       (tester) async {
