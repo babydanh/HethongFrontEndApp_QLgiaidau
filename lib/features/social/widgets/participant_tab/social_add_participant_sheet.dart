@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/logic/social_add_people.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_avatar.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -239,7 +240,9 @@ class _SocialAddParticipantSheetState
             onChanged: _onSearchChanged,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: 'Tìm theo tên hoặc email',
+              hintText: AppLocalizations.of(
+                context,
+              )!.socialAddParticipantSearchHint,
               prefixIcon: const Icon(Icons.search_rounded),
               isDense: true,
               border: OutlineInputBorder(

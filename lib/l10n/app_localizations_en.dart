@@ -12892,7 +12892,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsAddAthleteDirect => 'Enter a name';
 
   @override
-  String get opsAddAthleteSearch => 'Search athletes';
+  String get opsAddAthleteSearch => 'Search by name, email or phone';
+
+  @override
+  String get socialAddParticipantSearchHint => 'Search by name, email or phone';
 
   @override
   String get opsAddAthleteSearchNameHint =>
@@ -14949,13 +14952,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Invited';
 
   @override
-  String get tournamentManagementInviteByEmail => 'Add by email';
+  String get tournamentManagementInviteByEmail => 'Add by email or phone';
 
   @override
-  String get tournamentManagementInviteEmail => 'Email to add';
+  String get tournamentManagementInviteEmail => 'Email or phone to add';
 
   @override
-  String get tournamentManagementInviteEmailInvalid => 'Invalid email.';
+  String get tournamentManagementInviteEmailInvalid =>
+      'Invalid email or phone number.';
 
   @override
   String tournamentManagementInvitedCount(int count) {
@@ -16617,6 +16621,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get opsAddAthleteEmail => 'Email';
+
+  @override
+  String get opsAddAthletePhone => 'Phone';
 
   @override
   String get opsAddAthleteSearchHint =>

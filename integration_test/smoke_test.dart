@@ -17,8 +17,8 @@ void main() {
 
     await pumpUntilFound(
       tester,
-      find.text('Địa chỉ Email'),
-      what: 'nhãn Địa chỉ Email trên màn đăng nhập',
+      find.text('Email hoặc SĐT'),
+      what: 'nhãn Email hoặc SĐT trên màn đăng nhập',
     );
     await pumpUntilFound(
       tester,

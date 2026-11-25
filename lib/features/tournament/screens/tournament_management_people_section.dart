@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -964,20 +965,33 @@ class _TournamentPermissionsState
         _ => l10n.tournamentManagementStatusOther,
       };
 
+  /// Invites by email or phone; the request carries exactly one of the two.
   Future<void> _invite() async {
     if (_isBusy) return;
-    final email = _emailController.text.trim();
-    if (!_looksLikeEmail(email)) {
+    final contact = _emailController.text.trim();
+    final kind = classifyIdentifier(contact);
+    if (kind == ContactKind.invalid) {
       setState(() => _mutationError = 'validation');
       return;
     }
+    final email = kind == ContactKind.email ? contact : null;
+    final phone = kind == ContactKind.phone ? contact : null;
     final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(tournamentManagementRepositoryProvider);
     final asReferee = _role == 'REFEREE';
     final ok = await _runMutation(
       () => asReferee
-          ? repo.addReferee(widget.tournamentId, email)
-          : repo.addStaff(widget.tournamentId, email, _role),
+          ? repo.addReferee(
+              tournamentId: widget.tournamentId,
+              email: email,
+              phone: phone,
+            )
+          : repo.addStaff(
+              tournamentId: widget.tournamentId,
+              email: email,
+              phone: phone,
+              role: _role,
+            ),
       asReferee
           ? l10n.tournamentManagementRefereeInviteSent
           : l10n.tournamentManagementStaffAdded,
@@ -999,7 +1013,7 @@ class _TournamentPermissionsState
     await _runMutation(
       () => ref
           .read(tournamentManagementRepositoryProvider)
-          .addReferee(widget.tournamentId, email),
+          .addReferee(tournamentId: widget.tournamentId, email: email),
       l10n.tournamentManagementRefereeInviteResent,
     );
   }
@@ -1088,11 +1102,6 @@ class _TournamentPermissionsState
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
-  }
-
-  bool _looksLikeEmail(String value) {
-    final at = value.indexOf('@');
-    return at > 0 && at < value.length - 3 && value.indexOf('.', at) > at + 1;
   }
 }
 

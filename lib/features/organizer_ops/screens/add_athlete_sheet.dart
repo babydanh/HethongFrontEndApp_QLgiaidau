@@ -55,6 +55,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     AddAthleteSource.friends,
     AddAthleteSource.club,
     AddAthleteSource.email,
+    AddAthleteSource.phone,
   ];
 
   final _searchController = TextEditingController();
@@ -106,7 +107,13 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 
   bool get _canSubmit =>
       !_mutationInFlight && !_refreshing && !_requiresRefresh;
-  bool get _isEmailQuery => _query.trim().contains('@');
+
+  /// Email and full-phone queries use the account lookup, not FRIENDS/CLUB.
+  bool get _isContactQuery {
+    final query = _query.trim();
+    return query.contains('@') || _searchModeFor(query) == _SearchMode.phone;
+  }
+
   bool get _pairingActive => _canUsePairMode && _pairMode;
 
   /// Nguồn chung của mọi VĐV đang chọn; null nếu không có nguồn nào chung.
@@ -360,7 +367,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     final lavish = LavishColors.of(context);
     final isTeamMissing = _isFootball && _selectedTeamParticipantId == null;
     final query = _query.trim();
-    final emailMode = _isEmailQuery;
+    final emailMode = _isContactQuery;
     final searchable = _searchModeFor(query) != _SearchMode.none;
     final visible = emailMode
         ? (_emailResults ?? const <_SourcedCandidate>[])
@@ -562,6 +569,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       AddAthleteSource.friends => l10n.opsAddAthleteFriends,
       AddAthleteSource.club => l10n.opsAddAthleteClub,
       AddAthleteSource.email => l10n.opsAddAthleteEmail,
+      AddAthleteSource.phone => l10n.opsAddAthletePhone,
     };
   }
 
@@ -1038,7 +1046,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       _loadedCandidateQuery = null;
       _staleNotice = false;
       _loadingCandidates = mode == _SearchMode.names;
-      _searchingEmail = mode == _SearchMode.email;
+      _searchingEmail = mode == _SearchMode.email || mode == _SearchMode.phone;
     });
     if (mode == _SearchMode.none) return;
     _searchTimer = Timer(_searchDebounce, () {
@@ -1051,7 +1059,9 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     if (mode == _SearchMode.names) {
       unawaited(_loadCandidates(query));
     } else if (mode == _SearchMode.email) {
-      unawaited(_searchEmail(query));
+      unawaited(_searchContact(email: query));
+    } else if (mode == _SearchMode.phone) {
+      unawaited(_searchContact(phone: query));
     }
   }
 
@@ -1137,7 +1147,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     }
   }
 
-  Future<void> _searchEmail(String email) async {
+  /// Account lookup by email or phone; results share the email-result state.
+  Future<void> _searchContact({String? email, String? phone}) async {
     final participantId = _selectedTeamParticipantId;
     if (_isFootball && (participantId == null || participantId.isEmpty)) {
       return;
@@ -1157,6 +1168,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           .searchAddAthleteCandidates(
             widget.tournament.id,
             email: email,
+            phone: phone,
             participantId: _isFootball ? participantId : null,
           );
       if (!mounted || requestVersion != _emailRequestVersion) return;
@@ -1202,7 +1214,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 
   Future<void> _reloadAfterMutation({required bool failed}) async {
     final query = _query.trim();
-    if (query.contains('@')) {
+    if (_isContactQuery) {
       if (failed && mounted) setState(() => _emailResults = null);
       return;
     }
@@ -1694,15 +1706,20 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 enum _AddAthleteTab { accounts, direct }
 
 /// Chế độ tìm kiếm theo truy vấn; khớp quy tắc của AddAthleteModal web.
-enum _SearchMode { none, names, email }
+enum _SearchMode { none, names, email, phone }
 
 const _nameSearchMax = 100;
+
+/// A phone of 9-11 digits, separators allowed; shorter digit runs stay a name
+/// search because the Backend matches only a full number for organizers.
+final _phoneQuery = RegExp(r'^\+?(?:[\s.\-()]*\d){9,11}[\s.\-()]*$');
 
 _SearchMode _searchModeFor(String query) {
   if (query.isEmpty) return _SearchMode.names;
   if (query.contains('@')) {
     return query.length >= 2 ? _SearchMode.email : _SearchMode.none;
   }
+  if (_phoneQuery.hasMatch(query)) return _SearchMode.phone;
   return query.length >= 2 && query.length <= _nameSearchMax
       ? _SearchMode.names
       : _SearchMode.none;
