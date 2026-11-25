@@ -6901,6 +6901,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send an OTP to your current phone number';
 
   @override
+  String get settingsRecoveryEmail => 'Recovery email';
+
+  @override
+  String get settingsRecoveryEmailInvalid => 'Invalid email address';
+
+  @override
+  String get settingsEmailNotAdded => 'No email added';
+
+  @override
+  String get settingsLoginPhone => 'Login phone number';
+
+  @override
+  String get settingsLoginPhoneNotSet => 'No login phone number set';
+
+  @override
+  String get settingsLoginPhoneChange => 'Set or change login number';
+
+  @override
+  String get settingsLoginPhoneSubtitle =>
+      'Use this number to sign in instead of email';
+
+  @override
+  String get settingsLoginPhoneSave => 'Save login number';
+
+  @override
+  String get settingsLoginPhoneSaved => 'Login phone number saved';
+
+  @override
   String get settingsStatusLoadError => 'Unable to load status';
 
   @override
@@ -10738,8 +10766,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneVerificationConfirm => 'Verify';
 
   @override
-  String get emailVerificationEmailRequired =>
-      'No email address was found for verification';
+  String get emailVerificationEmailRequired => 'Please add an email first';
 
   @override
   String emailVerificationSendFailed(Object error) {

@@ -13,6 +13,8 @@ String _ymd(DateTime d) =>
 /// - `phoneNumber` chỉ gửi khi không rỗng (Backend từ chối chuỗi rỗng).
 /// - `bio` và `address` luôn gửi, kể cả rỗng, để người dùng xóa được.
 /// - `gender` không gửi khi bị khóa hoặc chưa chọn ([gender] null).
+/// - `email` chỉ gửi khi tài khoản chưa có email và người dùng nhập
+///   [recoveryEmail] (thêm email khôi phục cho tài khoản chỉ có sđt).
 Map<String, dynamic> buildEditProfilePayload({
   required String fullName,
   required String phone,
@@ -22,11 +24,14 @@ Map<String, dynamic> buildEditProfilePayload({
   required String address,
   required String provinceCode,
   required String bio,
+  String? recoveryEmail,
 }) {
   final phoneValue = phone.trim();
+  final emailValue = recoveryEmail?.trim().toLowerCase() ?? '';
   return <String, dynamic>{
     'fullName': fullName.trim(),
     if (phoneValue.isNotEmpty) 'phoneNumber': phoneValue,
+    if (emailValue.isNotEmpty) 'email': emailValue,
     if (dateOfBirth != null) 'dateOfBirth': _ymd(dateOfBirth),
     if (!genderLocked && gender != null) 'gender': gender,
     'address': address.trim(),

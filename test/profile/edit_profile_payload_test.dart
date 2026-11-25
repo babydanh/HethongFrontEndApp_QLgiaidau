@@ -35,11 +35,20 @@ class _FakeRegions implements IRegionRepository {
 
 class _FakeUsers implements IUserRepository {
   final saved = <Map<String, dynamic>>[];
+  final loginPhoneCalls = <String>[];
 
   @override
   Future<UserProfile> updateProfile(Map<String, dynamic> data) async {
     saved.add(data);
     return const UserProfile(id: 'u1');
+  }
+
+  @override
+  Future<void> setLoginPhone({
+    required String phone,
+    String? currentPassword,
+  }) async {
+    loginPhoneCalls.add('$phone|$currentPassword');
   }
 
   @override
@@ -61,11 +70,25 @@ class _FakeCommunity implements ICommunityRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+const _phoneOnly = UserProfile(
+  id: 'u1',
+  fullName: 'Bình Phone',
+  loginPhone: '+84987654321',
+  isEmailVerified: false,
+  isPhoneVerified: false,
+);
+
 Future<AppLocalizations> _pumpScreen(
   WidgetTester tester, {
   required _FakeUsers users,
   required _FakeCommunity community,
   ThemeData? theme,
+  UserProfile profile = const UserProfile(
+    id: 'u1',
+    fullName: 'Alex Player',
+    email: 'alex@example.com',
+    bio: 'cũ',
+  ),
 }) async {
   SharedPreferences.setMockInitialValues({});
   tester.view.physicalSize = const Size(390, 2400);
@@ -76,14 +99,7 @@ Future<AppLocalizations> _pumpScreen(
     ProviderScope(
       overrides: [
         authProvider.overrideWith(_AuthNotifier.new),
-        userProfileProvider.overrideWith(
-          (ref) async => const UserProfile(
-            id: 'u1',
-            fullName: 'Alex Player',
-            email: 'alex@example.com',
-            bio: 'cũ',
-          ),
-        ),
+        userProfileProvider.overrideWith((ref) async => profile),
         userRepositoryProvider.overrideWithValue(users),
         communityRepositoryProvider.overrideWithValue(community),
         regionRepositoryProvider.overrideWithValue(_FakeRegions()),
@@ -110,6 +126,7 @@ Map<String, dynamic> _build({
   String address = '',
   String provinceCode = '',
   String bio = '',
+  String? recoveryEmail,
 }) => buildEditProfilePayload(
   fullName: name,
   phone: phone,
@@ -119,6 +136,7 @@ Map<String, dynamic> _build({
   address: address,
   provinceCode: provinceCode,
   bio: bio,
+  recoveryEmail: recoveryEmail,
 );
 
 void main() {
@@ -229,6 +247,18 @@ void main() {
       expect(_build(gender: 'Nữ')['gender'], 'Nữ');
     });
 
+    test(
+      'TC-APP-PHONE-21 email khôi phục gửi đã trim và hạ chữ, trống thì bỏ',
+      () {
+        expect(
+          _build(recoveryEmail: ' Binh@Mail.VN ')['email'],
+          'binh@mail.vn',
+        );
+        expect(_build(recoveryEmail: '  ').containsKey('email'), isFalse);
+        expect(_build().containsKey('email'), isFalse);
+      },
+    );
+
     test('ngày sinh định dạng YYYY-MM-DD, tỉnh chỉ gửi khi có', () {
       final p = _build(dob: DateTime(2000, 3, 7), provinceCode: '79');
       expect(p['dateOfBirth'], '2000-03-07');
@@ -266,10 +296,96 @@ void main() {
         expect(users.saved, hasLength(1));
         expect(users.saved.single['fullName'], 'Alex Player');
         expect(users.saved.single.containsKey('phoneNumber'), isFalse);
+        // An account that already has an email never re-sends it.
+        expect(users.saved.single.containsKey('email'), isFalse);
         expect(users.saved.single['bio'], '');
         expect(users.saved.single['address'], '');
       });
     }
+
+    testWidgets('TC-APP-PHONE-22 tài khoản chỉ sđt thêm được email khôi phục', (
+      tester,
+    ) async {
+      final users = _FakeUsers();
+      final l10n = await _pumpScreen(
+        tester,
+        users: users,
+        community: _FakeCommunity(),
+        profile: _phoneOnly,
+      );
+      final emailField = find.widgetWithText(
+        TextField,
+        l10n.settingsRecoveryEmail,
+      );
+
+      await tester.enterText(emailField, 'khong-phai-email');
+      await tester.tap(find.text(l10n.settingsSaveButton));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.settingsRecoveryEmailInvalid), findsOneWidget);
+      expect(users.saved, isEmpty);
+
+      await tester.enterText(emailField, 'binh@example.com');
+      await tester.tap(find.text(l10n.settingsSaveButton));
+      await tester.pumpAndSettle();
+      expect(users.saved.single['email'], 'binh@example.com');
+    });
+
+    testWidgets(
+      'TC-APP-PHONE-23 chỉ sđt: header che sđt, ẩn xác minh SĐT và email, '
+      'hiện sđt đăng nhập',
+      (tester) async {
+        final l10n = await _pumpScreen(
+          tester,
+          users: _FakeUsers(),
+          community: _FakeCommunity(),
+          profile: _phoneOnly,
+        );
+
+        expect(find.text('+84 98• ••• 321'), findsOneWidget);
+        expect(find.text(l10n.settingsVerifyPhone), findsNothing);
+        expect(find.text(l10n.settingsVerifyEmail), findsNothing);
+        expect(find.text(l10n.settingsEmailNotAdded), findsOneWidget);
+        expect(find.text(l10n.settingsLoginPhone), findsOneWidget);
+        expect(find.text('0987654321'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'TC-APP-PHONE-24 đặt sđt đăng nhập gửi số và mật khẩu hiện tại',
+      (tester) async {
+        final users = _FakeUsers();
+        final l10n = await _pumpScreen(
+          tester,
+          users: users,
+          community: _FakeCommunity(),
+        );
+        expect(find.text(l10n.settingsLoginPhoneNotSet), findsOneWidget);
+        final action = find.byKey(
+          const ValueKey('settings-login-phone-action'),
+        );
+        await tester.ensureVisible(action);
+        await tester.tap(action);
+        await tester.pumpAndSettle();
+
+        final input = find.byKey(const ValueKey('login-phone-input'));
+        await tester.enterText(input, '0123');
+        await tester.tap(find.text(l10n.settingsLoginPhoneSave));
+        await tester.pumpAndSettle();
+        expect(find.text(l10n.settingsPhoneInvalid), findsOneWidget);
+        expect(users.loginPhoneCalls, isEmpty);
+
+        await tester.enterText(input, ' 0912 345 678 ');
+        await tester.enterText(
+          find.byKey(const ValueKey('login-phone-password')),
+          'matkhau1',
+        );
+        await tester.tap(find.text(l10n.settingsLoginPhoneSave));
+        await tester.pumpAndSettle();
+
+        expect(users.loginPhoneCalls, ['0912 345 678|matkhau1']);
+        expect(find.byKey(const ValueKey('login-phone-input')), findsNothing);
+      },
+    );
 
     testWidgets('lỗi tải CLB hiện lỗi và thử lại, không báo không có CLB', (
       tester,

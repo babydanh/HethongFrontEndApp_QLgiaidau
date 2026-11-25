@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
@@ -306,6 +307,10 @@ class _ProfileRow extends ConsumerWidget {
           ),
           data: (UserProfile profile) {
             final name = profile.fullName?.trim() ?? '';
+            final contact = ownContactLine(
+              email: profile.email,
+              loginPhone: profile.loginPhone,
+            );
             final avatar = profile.avatarUrl;
             final rank = ref.watch(myBestRankingProvider);
             return LavishRow(
@@ -320,7 +325,7 @@ class _ProfileRow extends ConsumerWidget {
                 size: 40,
               ),
               title: name.isNotEmpty ? name : l10n.dashboard_user,
-              subtitle: profile.email,
+              subtitle: contact.isEmpty ? null : contact,
               trailing: [Icon(Icons.chevron_right_rounded, color: c.faint)],
               onTap: () => context.push('/profile'),
             );

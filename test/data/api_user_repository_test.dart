@@ -144,6 +144,45 @@ void main() {
     );
   });
 
+  group('setLoginPhone', () {
+    test(
+      'TC-APP-PHONE-25 PATCHes the phone and the current password',
+      () async {
+        final (repo, adapter) = _setup({
+          'PATCH /users/profile/login-phone': const FakeReply(200, {
+            'data': {
+              'id': 'u1',
+              'phone': '+84912345678',
+              'isPhoneVerified': false,
+            },
+          }),
+        });
+
+        await repo.setLoginPhone(phone: '0912345678', currentPassword: 'pw');
+        await repo.setLoginPhone(phone: '0912345678');
+
+        expect(adapter.requests.map((r) => r.body), [
+          {'phone': '0912345678', 'currentPassword': 'pw'},
+          {'phone': '0912345678'},
+        ]);
+      },
+    );
+
+    test('TC-APP-PHONE-26 a taken phone is reported localized', () async {
+      final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+      final (repo, _) = _setup({
+        'PATCH /users/profile/login-phone': const FakeReply(409, {
+          'message': 'Phone number already exists',
+        }),
+      });
+
+      expect(
+        await _failureOf(repo.setLoginPhone(phone: '0912345678')),
+        l10n.errorParserPhoneRegistered,
+      );
+    });
+  });
+
   group('error translation', () {
     test('known Nest messages are shown localized', () async {
       final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);

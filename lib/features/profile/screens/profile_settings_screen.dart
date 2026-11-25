@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
@@ -121,8 +122,12 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
 
   Widget _accountRow(BuildContext context, UserProfile user) {
     final name = (user.fullName ?? '').trim();
-    final email = (user.email ?? '').trim();
-    final title = name.isNotEmpty ? name : email;
+    // Own email, or the masked login phone for phone-only accounts.
+    final contact = ownContactLine(
+      email: user.email,
+      loginPhone: user.loginPhone,
+    );
+    final title = name.isNotEmpty ? name : contact;
     // Same avatar (photo + tier ring) as the profile page and the "Tôi" tab.
     final ranking = bestRankingOf(
       ref.watch(userRankingsProvider).asData?.value ?? const <PlayerRanking>[],
@@ -139,7 +144,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         size: 44,
       ),
       title: title,
-      subtitle: name.isNotEmpty && email.isNotEmpty ? email : null,
+      subtitle: name.isNotEmpty && contact.isNotEmpty ? contact : null,
       trailing: [_chevron(context)],
       onTap: () {
         HapticFeedback.lightImpact();

@@ -527,7 +527,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           ),
                         ),
                       ),
-                      if (profile.isEmailVerified == true) ...[
+                      if (profile.isEmailVerified == true ||
+                          profile.isPhoneVerified == true) ...[
                         const SizedBox(width: 6),
                         const Icon(
                           Icons.verified_rounded,
@@ -538,7 +539,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ],
                   ),
                 ),
-                if (profile.email != null)
+                // Phone-only accounts have no email handle to show.
+                if ((profile.email ?? '').contains('@'))
                   Text(
                     '@${profile.email!.split('@').first}',
                     style: TextStyle(

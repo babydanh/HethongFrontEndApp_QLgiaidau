@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Gửi OTP tới số điện thoại rồi mở dialog nhập mã xác nhận.
 /// POST /auth/verify-phone/request → POST /auth/verify-phone/confirm
+///
+/// Not reachable from the UI while SMS/OTP is disabled on the Backend
+/// (openspec dang-nhap-sdt-hoac-email); kept for the OTP change.
 Future<void> startPhoneVerificationFlow(
   BuildContext context,
   WidgetRef ref,
