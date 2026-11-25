@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/repositories/pair_move_repository.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -1102,8 +1103,7 @@ List<_GuestContact> _guestContacts(OrganizerOpsParticipant participant) {
     contacts.add(
       _GuestContact(
         slot: slot,
-        key:
-            'guest:${player.fullName.trim()}|${(email ?? '').trim().toLowerCase()}',
+        key: pairMemberKey(fullName: player.fullName, email: email),
         name: player.fullName,
         email: email ?? '',
         phone: phone ?? '',

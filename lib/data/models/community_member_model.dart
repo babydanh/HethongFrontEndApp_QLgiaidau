@@ -49,7 +49,8 @@ class CommunityMemberModel {
           user?['avatar_url']?.toString() ??
           profile?['avatarUrl']?.toString() ??
           profile?['avatar_url']?.toString(),
-      userEmail: user?['email']?.toString(),
+      // Phone-only accounts have no email; blank stays null so labels fall back.
+      userEmail: _nonBlank(user?['email']),
       joinedAt: member['joinedAt']?.toString() ?? '',
       tags:
           (member['tags'] as List<dynamic>?)
@@ -62,6 +63,11 @@ class CommunityMemberModel {
       ),
     );
   }
+}
+
+String? _nonBlank(Object? value) {
+  final text = value?.toString().trim() ?? '';
+  return text.isEmpty ? null : text;
 }
 
 /// One cursor page for the club member directory.

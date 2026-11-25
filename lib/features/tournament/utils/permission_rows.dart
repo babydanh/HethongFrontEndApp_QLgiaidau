@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
+
 /// What the organizer may do with a referee (mirrors Web `PermissionsTab`):
 /// withdraw a pending invite, add a declined one again, remove an added one.
 enum RefereeAction { none, revoke, resend, remove }
@@ -57,16 +59,27 @@ List<PermissionRow> buildPermissionRows(
       avatarUrl: _avatarUrl(referee),
       status: _text(referee['status']).toUpperCase(),
       refereeId: _text(referee['id'] ?? referee['refereeId']),
-      action: _actionFor(_text(referee['status'])),
+      action: _actionFor(
+        _text(referee['status']),
+        _textOrNull(referee['email']),
+      ),
     ),
 ];
 
-RefereeAction _actionFor(String status) => switch (status.toUpperCase()) {
-  'INVITED' => RefereeAction.revoke,
-  'DECLINED' => RefereeAction.resend,
-  'ACCEPTED' => RefereeAction.remove,
-  _ => RefereeAction.none,
-};
+/// A declined invite is re-sent by email, so it needs a real address: the
+/// list shows masked emails (`a••@x.com`) to non-admins, which cannot be used.
+RefereeAction _actionFor(String status, String? email) =>
+    switch (status.toUpperCase()) {
+      'INVITED' => RefereeAction.revoke,
+      'DECLINED' when _isUsableEmail(email) => RefereeAction.resend,
+      'ACCEPTED' => RefereeAction.remove,
+      _ => RefereeAction.none,
+    };
+
+bool _isUsableEmail(String? email) =>
+    email != null &&
+    !email.contains('•') &&
+    classifyIdentifier(email) == ContactKind.email;
 
 String _text(Object? value) => value?.toString().trim() ?? '';
 

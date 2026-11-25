@@ -421,9 +421,9 @@ void main() {
       });
 
       final member = await repository.addStaff(
-        tournamentId,
-        'referee@example.test',
-        'REFEREE',
+        tournamentId: tournamentId,
+        email: 'referee@example.test',
+        role: 'REFEREE',
       );
 
       expect(member, {'id': 'user-2', 'role': 'REFEREE'});
@@ -453,11 +453,37 @@ void main() {
         <String, dynamic>{},
       );
 
-      await repository.addReferee(tournamentId, 'referee@example.test');
+      await repository.addReferee(
+        tournamentId: tournamentId,
+        email: 'referee@example.test',
+      );
 
       expect(backend.only.method, 'POST');
       expect(backend.only.path, '/tournaments/$tournamentId/referees');
       expect(backend.only.data, {'email': 'referee@example.test'});
+    });
+
+    test('TC-APP-PHONE-33 phone invites post only the phone key', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/referees',
+        <String, dynamic>{},
+      );
+      backend.onPost('/tournaments/$tournamentId/staff', <String, dynamic>{});
+
+      await repository.addReferee(
+        tournamentId: tournamentId,
+        phone: '0912345678',
+      );
+      await repository.addStaff(
+        tournamentId: tournamentId,
+        phone: '0912345678',
+        role: 'SPECTATOR',
+      );
+
+      expect(backend.requests.map((r) => r.data), [
+        {'phone': '0912345678'},
+        {'phone': '0912345678', 'role': 'SPECTATOR'},
+      ]);
     });
 
     test('referee removal deletes the referee route', () async {

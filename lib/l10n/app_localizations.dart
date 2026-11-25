@@ -23359,8 +23359,14 @@ abstract class AppLocalizations {
   /// No description provided for @opsAddAthleteSearch.
   ///
   /// In vi, this message translates to:
-  /// **'Tìm vận động viên'**
+  /// **'Tìm theo tên, email hoặc SĐT'**
   String get opsAddAthleteSearch;
+
+  /// No description provided for @socialAddParticipantSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên, email hoặc SĐT'**
+  String get socialAddParticipantSearchHint;
 
   /// No description provided for @opsAddAthleteSearchNameHint.
   ///
@@ -26983,19 +26989,19 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementInviteByEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Thêm qua email'**
+  /// **'Thêm qua email hoặc SĐT'**
   String get tournamentManagementInviteByEmail;
 
   /// No description provided for @tournamentManagementInviteEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Email người được thêm'**
+  /// **'Email hoặc SĐT người được thêm'**
   String get tournamentManagementInviteEmail;
 
   /// No description provided for @tournamentManagementInviteEmailInvalid.
   ///
   /// In vi, this message translates to:
-  /// **'Email không hợp lệ.'**
+  /// **'Email hoặc số điện thoại không hợp lệ.'**
   String get tournamentManagementInviteEmailInvalid;
 
   /// No description provided for @tournamentManagementInvitedCount.
@@ -29913,6 +29919,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Email'**
   String get opsAddAthleteEmail;
+
+  /// No description provided for @opsAddAthletePhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT'**
+  String get opsAddAthletePhone;
 
   /// No description provided for @opsAddAthleteSearchHint.
   ///

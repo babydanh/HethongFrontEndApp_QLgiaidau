@@ -31,9 +31,34 @@ void main() {
     expect(auth.isOrganizer, isFalse);
     await pumpUntilCondition(
       tester,
-      () => find.text('Địa chỉ Email').evaluate().isEmpty,
+      () => find.text('Email hoặc SĐT').evaluate().isEmpty,
       what: 'thoát khỏi màn đăng nhập sau khi đăng nhập thành công',
     );
+  });
+
+  testWidgets('TC-APP-PHONE-36 tài khoản chỉ có SĐT đăng nhập bằng form', (
+    tester,
+  ) async {
+    // Unique per run: 03 + 8 digits from the clock, a valid VN mobile prefix.
+    final stamp = DateTime.now().millisecondsSinceEpoch % 100000000;
+    final phone = '03${stamp.toString().padLeft(8, '0')}';
+    await BackendApi().registerAccount(
+      phone: phone,
+      password: kE2ePassword,
+      fullName: 'E2E Phone $stamp',
+    );
+
+    final container = await pumpApp(tester);
+    await ensureSignedOut(tester, container);
+    container.read(routerProvider).go('/login');
+
+    await loginWithForm(tester, email: phone, password: kE2ePassword);
+    await pumpUntilCondition(
+      tester,
+      () => container.read(authProvider).isAuthenticated,
+      what: 'trạng thái đã đăng nhập của tài khoản chỉ có SĐT',
+    );
+    expect(container.read(authProvider).role, UserRole.viewer);
   });
 
   testWidgets('BTC đăng nhập bằng form và có quyền tổ chức', (tester) async {
@@ -53,7 +78,7 @@ void main() {
     expect(auth.isOrganizer, isTrue);
     await pumpUntilCondition(
       tester,
-      () => find.text('Địa chỉ Email').evaluate().isEmpty,
+      () => find.text('Email hoặc SĐT').evaluate().isEmpty,
       what: 'thoát khỏi màn đăng nhập sau khi đăng nhập thành công',
     );
   });

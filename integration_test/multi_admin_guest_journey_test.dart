@@ -642,7 +642,7 @@ void main() {
         await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
         await tester.pump();
       }
-      await pumpUntil(tester, find.text('Địa chỉ Email'));
+      await pumpUntil(tester, find.text('Email hoặc SĐT'));
       final redirect = _currentUri(tester).queryParameters['redirect'] ?? '';
       expect(
         redirect.contains(code) || redirect.contains(shared.tournamentId),
@@ -903,7 +903,7 @@ Future<void> _openLogin(
   ProviderContainer container,
 ) async {
   container.read(routerProvider).go('/login');
-  await pumpUntil(tester, find.text('Địa chỉ Email'));
+  await pumpUntil(tester, find.text('Email hoặc SĐT'));
   // Form hiện bằng animation (fadeIn trễ 250ms, dài 400ms): chờ hết trước khi nhập hoặc bấm.
   await tester.pump(const Duration(milliseconds: 1500));
 }

@@ -65,10 +65,15 @@ class BackendApi {
 
   final Dio _dio;
 
-  Future<String> login(String email, String password) async {
+  /// [identifier] is an email or a phone number (`POST /auth/mobile/login`).
+  Future<String> login(String identifier, String password) async {
     const path = '/auth/mobile/login';
     final data = _unwrap(
-      await _send('POST', path, data: {'email': email, 'password': password}),
+      await _send(
+        'POST',
+        path,
+        data: {'identifier': identifier, 'password': password},
+      ),
     );
     final token = data is Map ? data['accessToken'] : null;
     if (token is! String || token.isEmpty) {
@@ -79,8 +84,10 @@ class BackendApi {
 
   /// Đăng ký tài khoản mới qua `POST /auth/mobile/register` (công khai, không cần xác thực email).
   /// Dùng làm đồng đội trong ca đăng ký đôi; dữ liệu do test tạo. Trả user id.
+  /// Needs [email] or [phone]; a phone-only account has no email.
   Future<String> registerAccount({
-    required String email,
+    String? email,
+    String? phone,
     required String password,
     required String fullName,
   }) async {
@@ -88,7 +95,12 @@ class BackendApi {
     final body = await _send(
       'POST',
       path,
-      data: {'email': email, 'password': password, 'fullName': fullName},
+      data: {
+        'email': ?email,
+        'phone': ?phone,
+        'password': password,
+        'fullName': fullName,
+      },
     );
     final map = _asMap(path, body);
     final id = map['id'];

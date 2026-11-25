@@ -148,14 +148,14 @@ Future<void> loginWithForm(
 }) async {
   await pumpUntilFound(
     tester,
-    find.text('Địa chỉ Email'),
-    what: 'màn đăng nhập (nhãn Địa chỉ Email)',
+    find.text('Email hoặc SĐT'),
+    what: 'màn đăng nhập (nhãn Email hoặc SĐT)',
   );
   final fields = find.byType(TextFormField);
   expect(
     fields,
     findsNWidgets(2),
-    reason: 'Màn đăng nhập phải có đúng 2 ô: email, mật khẩu',
+    reason: 'Màn đăng nhập phải có đúng 2 ô: email hoặc SĐT, mật khẩu',
   );
   // Form đăng nhập hiện bằng animation (login_register_screen.dart:592: fadeIn trễ 250ms, thời lượng 400ms)
   // và sau route transition. Bấm khi còn đang chuyển thì hit test trượt, nên chờ hết trước khi nhập.

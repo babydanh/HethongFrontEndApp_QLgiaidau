@@ -12850,7 +12850,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsAddAthleteDirect => 'Nhập tên';
 
   @override
-  String get opsAddAthleteSearch => 'Tìm vận động viên';
+  String get opsAddAthleteSearch => 'Tìm theo tên, email hoặc SĐT';
+
+  @override
+  String get socialAddParticipantSearchHint => 'Tìm theo tên, email hoặc SĐT';
 
   @override
   String get opsAddAthleteSearchNameHint =>
@@ -14893,13 +14896,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Đã mời';
 
   @override
-  String get tournamentManagementInviteByEmail => 'Thêm qua email';
+  String get tournamentManagementInviteByEmail => 'Thêm qua email hoặc SĐT';
 
   @override
-  String get tournamentManagementInviteEmail => 'Email người được thêm';
+  String get tournamentManagementInviteEmail =>
+      'Email hoặc SĐT người được thêm';
 
   @override
-  String get tournamentManagementInviteEmailInvalid => 'Email không hợp lệ.';
+  String get tournamentManagementInviteEmailInvalid =>
+      'Email hoặc số điện thoại không hợp lệ.';
 
   @override
   String tournamentManagementInvitedCount(int count) {
@@ -16558,6 +16563,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get opsAddAthleteEmail => 'Email';
+
+  @override
+  String get opsAddAthletePhone => 'SĐT';
 
   @override
   String get opsAddAthleteSearchHint =>

@@ -166,14 +166,15 @@ class ApiTournamentManagementRepository
       _mapList(await _dio.get('/tournaments/$id/staff'));
 
   @override
-  Future<Map<String, dynamic>> addStaff(
-    String id,
-    String email,
-    String role,
-  ) async => _map(
+  Future<Map<String, dynamic>> addStaff({
+    required String tournamentId,
+    String? email,
+    String? phone,
+    required String role,
+  }) async => _map(
     await _dio.post(
-      '/tournaments/$id/staff',
-      data: {'email': email, 'role': role},
+      '/tournaments/$tournamentId/staff',
+      data: {..._inviteeContact(email, phone), 'role': role},
     ),
   );
 
@@ -187,8 +188,22 @@ class ApiTournamentManagementRepository
       _mapList(await _dio.get('/tournaments/$id/referees'));
 
   @override
-  Future<void> addReferee(String id, String email) async {
-    await _dio.post('/tournaments/$id/referees', data: {'email': email});
+  Future<void> addReferee({
+    required String tournamentId,
+    String? email,
+    String? phone,
+  }) async {
+    await _dio.post(
+      '/tournaments/$tournamentId/referees',
+      data: _inviteeContact(email, phone),
+    );
+  }
+
+  /// Exactly one contact key: the email when given, otherwise the phone.
+  Map<String, String> _inviteeContact(String? email, String? phone) {
+    if (email != null) return {'email': email};
+    if (phone != null) return {'phone': phone};
+    throw ArgumentError('An invite needs an email or a phone.');
   }
 
   @override
@@ -315,6 +330,7 @@ class ApiTournamentManagementRepository
     String id, {
     String? name,
     String? email,
+    String? phone,
     String? participantId,
   }) async {
     final response = _map(
@@ -323,6 +339,7 @@ class ApiTournamentManagementRepository
         data: {
           if (name != null) 'name': name,
           if (email != null) 'email': email,
+          if (phone != null) 'phone': phone,
           if (participantId != null) 'participantId': participantId,
         },
       ),

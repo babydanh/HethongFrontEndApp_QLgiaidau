@@ -43,10 +43,23 @@ abstract interface class TournamentManagementRepository {
   Future<TournamentSponsor> archiveSponsor(String id, String sponsorId);
 
   Future<List<Map<String, dynamic>>> getStaff(String id);
-  Future<Map<String, dynamic>> addStaff(String id, String email, String role);
+
+  /// Invites by exactly one of [email] or [phone] (Backend rejects both).
+  Future<Map<String, dynamic>> addStaff({
+    required String tournamentId,
+    String? email,
+    String? phone,
+    required String role,
+  });
   Future<void> removeStaff(String id, String userId);
   Future<List<Map<String, dynamic>>> getReferees(String id);
-  Future<void> addReferee(String id, String email);
+
+  /// Invites by exactly one of [email] or [phone] (Backend rejects both).
+  Future<void> addReferee({
+    required String tournamentId,
+    String? email,
+    String? phone,
+  });
   Future<void> removeReferee(String id, String refereeId);
 
   Future<Map<String, dynamic>> getFeesConfig();
@@ -181,6 +194,7 @@ abstract interface class TournamentManagementRepository {
     String id, {
     String? name,
     String? email,
+    String? phone,
     String? participantId,
   });
   Future<List<AddedAthletePair>> addAthletePairs(

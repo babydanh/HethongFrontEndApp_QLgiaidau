@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _email = 'invitee@example.test';
 const _declinedEmail = 'declined@example.test';
+const _phone = '0912345678';
 
 class _FakeRepo implements TournamentManagementRepository {
   _FakeRepo({this.staff = const [], this.referees = const []});
@@ -21,9 +22,9 @@ class _FakeRepo implements TournamentManagementRepository {
   Completer<void>? holdAddReferee;
   bool failMutations = false;
 
-  final addedReferees = <String>[];
+  final addedReferees = <(String?, String?)>[];
   final removedReferees = <String>[];
-  final addedStaff = <(String, String)>[];
+  final addedStaff = <(String?, String?, String)>[];
   final removedStaff = <String>[];
 
   @override
@@ -33,8 +34,12 @@ class _FakeRepo implements TournamentManagementRepository {
   Future<List<Map<String, dynamic>>> getReferees(String id) async => referees;
 
   @override
-  Future<void> addReferee(String id, String email) async {
-    addedReferees.add(email);
+  Future<void> addReferee({
+    required String tournamentId,
+    String? email,
+    String? phone,
+  }) async {
+    addedReferees.add((email, phone));
     if (failMutations) throw Exception('boom');
     await holdAddReferee?.future;
   }
@@ -46,12 +51,13 @@ class _FakeRepo implements TournamentManagementRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> addStaff(
-    String id,
-    String email,
-    String role,
-  ) async {
-    addedStaff.add((email, role));
+  Future<Map<String, dynamic>> addStaff({
+    required String tournamentId,
+    String? email,
+    String? phone,
+    required String role,
+  }) async {
+    addedStaff.add((email, phone, role));
     if (failMutations) throw Exception('boom');
     return {};
   }
@@ -159,11 +165,11 @@ void main() {
     await tester.pump();
     await tester.tap(send, warnIfMissed: false);
     await tester.pump();
-    expect(repo.addedReferees, [_email]);
+    expect(repo.addedReferees, [(_email, null)]);
 
     repo.holdAddReferee!.complete();
     await tester.pumpAndSettle();
-    expect(repo.addedReferees, [_email]);
+    expect(repo.addedReferees, [(_email, null)]);
     final field = tester.widget<TextField>(
       find.byKey(const Key('permissions-invite-email')),
     );
@@ -180,9 +186,67 @@ void main() {
     await tester.tap(find.byKey(const Key('permissions-invite-send')));
     await tester.pumpAndSettle();
 
-    expect(repo.addedStaff, [(_email, 'CO_ORGANIZER')]);
+    expect(repo.addedStaff, [(_email, null, 'CO_ORGANIZER')]);
     expect(repo.addedReferees, isEmpty);
   });
+
+  testWidgets('TC-APP-PHONE-29 referee invite by phone sends only the phone', (
+    tester,
+  ) async {
+    final repo = _FakeRepo();
+    await _pump(tester, repo);
+
+    await _invite(tester, email: ' $_phone ');
+    await tester.tap(find.byKey(const Key('permissions-invite-send')));
+    await tester.pumpAndSettle();
+
+    expect(repo.addedReferees, [(null, _phone)]);
+    expect(repo.addedStaff, isEmpty);
+  });
+
+  testWidgets('TC-APP-PHONE-30 staff invite by phone sends phone and role', (
+    tester,
+  ) async {
+    final repo = _FakeRepo();
+    await _pump(tester, repo);
+
+    await _invite(tester, email: _phone, role: 'SPECTATOR');
+    await tester.tap(find.byKey(const Key('permissions-invite-send')));
+    await tester.pumpAndSettle();
+
+    expect(repo.addedStaff, [(null, _phone, 'SPECTATOR')]);
+  });
+
+  testWidgets('TC-APP-PHONE-31 invalid phone never reaches the API', (
+    tester,
+  ) async {
+    final repo = _FakeRepo();
+    final l10n = await _pump(tester, repo);
+
+    await _invite(tester, email: '12345');
+    await tester.tap(find.byKey(const Key('permissions-invite-send')));
+    await tester.pumpAndSettle();
+
+    expect(repo.addedReferees, isEmpty);
+    expect(
+      find.text(l10n.tournamentManagementInviteEmailInvalid),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'TC-APP-PHONE-32 declined referee with a masked email offers no resend',
+    (tester) async {
+      final repo = _FakeRepo(
+        referees: [_referee('d1', 'DECLINED', email: 'd••@example.test')],
+      );
+      await _pump(tester, repo);
+
+      expect(find.text('Referee d1'), findsOneWidget);
+      expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+      expect(repo.addedReferees, isEmpty);
+    },
+  );
 
   testWidgets('invalid email never reaches the API and shows an error', (
     tester,
@@ -215,7 +279,7 @@ void main() {
     await tester.tap(_confirmButton());
     await tester.pumpAndSettle();
 
-    expect(repo.addedReferees, [_declinedEmail]);
+    expect(repo.addedReferees, [(_declinedEmail, null)]);
   });
 
   testWidgets('revoke on an invited referee calls removeReferee with its id', (

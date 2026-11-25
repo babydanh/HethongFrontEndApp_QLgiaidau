@@ -1,7 +1,8 @@
 enum AddAthleteSource {
   friends('FRIENDS'),
   club('CLUB'),
-  email('EMAIL');
+  email('EMAIL'),
+  phone('PHONE');
 
   const AddAthleteSource(this.apiValue);
 

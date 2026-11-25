@@ -101,6 +101,9 @@ class _TournamentManagementRepository
   final Object? directError;
   final Map<String, Object> directErrorsByName;
   final emailSearches = <String?>[];
+  final phoneSearches = <String>[];
+  List<AddAthleteSearchCandidate> searchResults =
+      const <AddAthleteSearchCandidate>[];
   final candidateRequests = <Map<String, Object?>>[];
   final candidateAdditions = <Map<String, Object?>>[];
   final directNames = <String>[];
@@ -179,10 +182,15 @@ class _TournamentManagementRepository
     String id, {
     String? name,
     String? email,
+    String? phone,
     String? participantId,
   }) async {
-    emailSearches.add(email);
-    return const <AddAthleteSearchCandidate>[];
+    if (phone != null) {
+      phoneSearches.add(phone);
+    } else {
+      emailSearches.add(email);
+    }
+    return searchResults;
   }
 
   @override
@@ -422,7 +430,8 @@ void main() {
           AddAthleteCandidate(userId: 'shared', fullName: 'Club duplicate'),
           AddAthleteCandidate(userId: 'club', fullName: 'Club athlete'),
         ],
-        AddAthleteSource.email => const <AddAthleteCandidate>[],
+        AddAthleteSource.email ||
+        AddAthleteSource.phone => const <AddAthleteCandidate>[],
       },
     );
     await tester.pumpWidget(
@@ -1008,6 +1017,60 @@ void main() {
     expect(search.controller?.text, 'an.nguyen@example.com');
     expect(repository.emailSearches, ['an.nguyen@example.com']);
     expect(find.byKey(const ValueKey('add-athlete-direct-name')), findsNothing);
+  });
+
+  testWidgets('TC-APP-PHONE-34 a full phone number searches accounts by phone', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository()
+      ..searchResults = [
+        AddAthleteSearchCandidate.fromJson({
+          'userId': 'phone-user',
+          'fullName': 'Phone Athlete',
+          'email': null,
+          'sources': ['PHONE'],
+        }),
+      ];
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    final requestsBefore = repository.candidateRequests.length;
+
+    final search = find.byKey(const ValueKey('add-athlete-search'));
+    await tester.enterText(search, '0912 345 678');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+
+    expect(repository.phoneSearches, ['0912 345 678']);
+    expect(repository.emailSearches, isEmpty);
+    expect(repository.candidateRequests, hasLength(requestsBefore));
+    expect(find.text('Phone Athlete'), findsOneWidget);
+    expect(find.text('Không tìm được tài khoản.'), findsNothing);
+  });
+
+  testWidgets('TC-APP-PHONE-35 a short digit run stays a name search', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository();
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('add-athlete-search')),
+      '0912',
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+
+    expect(repository.phoneSearches, isEmpty);
+    expect(repository.candidateRequests.last['query'], '0912');
   });
   _addAthleteMultiTests();
   _addAthleteLayoutTests();
