@@ -24,6 +24,16 @@ class ErrorParser {
           // Backend reply for a wrong password on both email and phone login.
           'Mật khẩu hoặc email không chính xác.':
               strings.errorParserInvalidCredentialsMessage,
+          'Email/số điện thoại hoặc mật khẩu không chính xác.':
+              strings.errorParserInvalidCredentialsMessage,
+          'Nếu tài khoản tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.':
+              strings.forgotPassword_genericSentMessage,
+          // PATCH /users/profile/login-phone replies.
+          'Số điện thoại không hợp lệ': strings.errorParserPhoneInvalid,
+          'Mật khẩu hiện tại không chính xác.':
+              strings.errorParserCurrentPasswordWrong,
+          'Vui lòng nhập mật khẩu hiện tại.':
+              strings.errorParserCurrentPasswordRequired,
           'Tournament registration is closed':
               strings.errorParserRegistrationClosed,
           'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.':

@@ -3160,6 +3160,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Email khôi phục mật khẩu đã được gửi!';
 
   @override
+  String get forgotPassword_genericSentMessage =>
+      'Nếu tài khoản tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.';
+
+  @override
   String get forgotPassword_errorGeneric =>
       'Không thể gửi email khôi phục mật khẩu';
 
@@ -11785,6 +11789,17 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get errorParserPhoneRegistered =>
       'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.';
+
+  @override
+  String get errorParserCurrentPasswordRequired =>
+      'Vui lòng nhập mật khẩu hiện tại.';
+
+  @override
+  String get errorParserCurrentPasswordWrong =>
+      'Mật khẩu hiện tại không chính xác.';
+
+  @override
+  String get errorParserPhoneInvalid => 'Số điện thoại không hợp lệ.';
 
   @override
   String get errorParserIdentifierRequired =>

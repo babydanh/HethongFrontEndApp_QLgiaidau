@@ -5954,6 +5954,12 @@ abstract class AppLocalizations {
   /// **'Email khôi phục mật khẩu đã được gửi!'**
   String get forgotPassword_sentSuccessMessage;
 
+  /// No description provided for @forgotPassword_genericSentMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu tài khoản tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi.'**
+  String get forgotPassword_genericSentMessage;
+
   /// No description provided for @forgotPassword_errorGeneric.
   ///
   /// In vi, this message translates to:
@@ -21441,6 +21447,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.'**
   String get errorParserPhoneRegistered;
+
+  /// No description provided for @errorParserCurrentPasswordRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mật khẩu hiện tại.'**
+  String get errorParserCurrentPasswordRequired;
+
+  /// No description provided for @errorParserCurrentPasswordWrong.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu hiện tại không chính xác.'**
+  String get errorParserCurrentPasswordWrong;
+
+  /// No description provided for @errorParserPhoneInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại không hợp lệ.'**
+  String get errorParserPhoneInvalid;
 
   /// No description provided for @errorParserIdentifierRequired.
   ///

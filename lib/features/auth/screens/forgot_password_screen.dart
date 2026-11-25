@@ -81,9 +81,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _startCooldown(120);
 
       final l10n = AppLocalizations.of(context)!;
-      final message =
-          response.data?['message']?.toString() ??
-          l10n.forgotPassword_sentSuccessMessage;
+      final serverMessage = response.data?['message']?.toString();
+      final message = serverMessage == null
+          ? l10n.forgotPassword_sentSuccessMessage
+          : ErrorParser.translateMessage(serverMessage, l10n);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -99,7 +100,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       if (e is DioException && e.response?.data != null) {
         final data = e.response?.data;
         if (data is Map && data['message'] != null) {
-          parsedMessage = data['message'].toString();
+          parsedMessage = ErrorParser.translateMessage(
+            data['message'].toString(),
+            l10n,
+          );
         } else {
           parsedMessage = ErrorParser.parse(e);
         }

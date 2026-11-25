@@ -403,7 +403,9 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                           label: l10n.identifierLabel,
                           hint: l10n.loginRegister_emailHint,
                           icon: Icons.person_pin_outlined,
-                          keyboardType: TextInputType.emailAddress,
+                          // Email or phone: a plain keyboard serves both.
+                          keyboardType: TextInputType.text,
+                          autocorrect: false,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
                               return l10n.loginRegister_emailRequired;
@@ -658,6 +660,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool autocorrect = true,
     bool obscureText = false,
     Widget? suffixIcon,
     FormFieldValidator<String>? validator,
@@ -685,6 +688,7 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          autocorrect: autocorrect,
           obscureText: obscureText,
           validator: validator,
           style: TextStyle(color: textPrimaryColor, fontSize: 15.0),

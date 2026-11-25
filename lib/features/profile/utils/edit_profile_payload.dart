@@ -1,9 +1,14 @@
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:flutter/widgets.dart' show StringCharacters;
 
-/// Cùng mẫu với Backend (`users/dto/vn-phone.ts`): `+84` hoặc `0[35789]` + 8 số.
-final RegExp _vnPhone = RegExp(r'^(?:\+84|0[35789])\d{8}$');
-
-bool isValidVnPhone(String value) => _vnPhone.hasMatch(value.trim());
+/// Backend `UpdateUserDto.phoneNumber` checks the raw string against
+/// `vn-phone.ts` (`+84` or `0`, then `[35789]` and 8 digits), so only the
+/// separator-free `0…`/`+84…` forms of a valid number pass.
+bool isValidVnPhone(String value) {
+  final raw = value.trim();
+  final e164 = normalizeVnPhone(raw);
+  return e164 != null && (raw == e164 || raw == '0${e164.substring(3)}');
+}
 
 String _ymd(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
