@@ -241,17 +241,12 @@ Future<void> _openScorePage(
   ProviderContainer container,
   _SeededTennis seeded,
 ) async {
-  container
-      .read(routerProvider)
-      .go(
-        '/organizer/tournaments/${seeded.tournamentId}/ops/match/${seeded.matchId}',
-      );
   final start = find.text('BẮT ĐẦU TRẬN ĐẤU');
-  await pumpUntilFound(
+  await _goUntilFound(
     tester,
+    container,
+    '/organizer/tournaments/${seeded.tournamentId}/ops/match/${seeded.matchId}',
     start,
-    what: 'nút BẮT ĐẦU TRẬN ĐẤU',
-    timeout: const Duration(seconds: 45),
   );
   await tapCentered(tester, start);
   final scorePage = find.byType(OfficialScorePage);
@@ -270,6 +265,35 @@ Future<void> _openScorePage(
     what: 'nút + của đội 1 trên sân vợt',
   );
   _expectNoError(tester);
+}
+
+/// Right after login the router can still move to another page and replace
+/// the first navigation (seen on the first test of a run), so navigate again
+/// every 10 s until [target] shows, for at most 60 s.
+Future<void> _goUntilFound(
+  WidgetTester tester,
+  ProviderContainer container,
+  String route,
+  Finder target,
+) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 60));
+  while (true) {
+    container.read(routerProvider).go(route);
+    final retryAt = DateTime.now().add(const Duration(seconds: 10));
+    while (target.evaluate().isEmpty && DateTime.now().isBefore(retryAt)) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    if (target.evaluate().isNotEmpty) return;
+    if (DateTime.now().isAfter(deadline)) {
+      // Fails and lists the texts on screen.
+      await pumpUntilFound(
+        tester,
+        target,
+        what: '$target sau khi mở $route',
+        timeout: Duration.zero,
+      );
+    }
+  }
 }
 
 void _expectCourtPanel(WidgetTester tester) {
