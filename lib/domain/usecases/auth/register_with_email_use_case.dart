@@ -9,12 +9,14 @@ class RegisterWithEmailUseCase {
   RegisterWithEmailUseCase(this._authRepository, this._sessionRepository);
 
   Future<AuthSession> call({
-    required String email,
+    String? email,
+    String? phone,
     required String password,
     required String fullName,
   }) async {
-    final session = await _authRepository.registerWithEmailPassword(
+    final session = await _authRepository.register(
       email: email,
+      phone: phone,
       password: password,
       fullName: fullName,
     );

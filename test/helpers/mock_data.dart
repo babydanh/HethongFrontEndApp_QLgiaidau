@@ -18,20 +18,30 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 // ============================================================
 // AUTH
 // ============================================================
+/// Login reply; a phone-only account has `email: null` (Backend contract).
 Map<String, dynamic> mockLoginJson({
-  String email = 'test@example.com',
+  String? email = 'test@example.com',
+  String? phone,
   String password = 'password123',
 }) {
   return {
     'accessToken': 'access_token_123',
     'refreshToken': 'refresh_token_456',
     'roles': ['ADMIN'],
-    'user': {'id': 'user-1', 'fullName': 'Nguyen Van A', 'email': email},
+    'user': {
+      'id': 'user-1',
+      'fullName': 'Nguyen Van A',
+      'email': email,
+      'phone': phone,
+      'isEmailVerified': false,
+      'isPhoneVerified': false,
+    },
   };
 }
 
 Map<String, dynamic> mockRegisterJson({
-  String email = 'newuser@example.com',
+  String? email = 'newuser@example.com',
+  String? phone,
   String password = 'password123',
   String fullName = 'Tran Van B',
 }) {
@@ -39,7 +49,12 @@ Map<String, dynamic> mockRegisterJson({
     'accessToken': 'access_token_789',
     'refreshToken': 'refresh_token_012',
     'roles': ['VIEWER'],
-    'user': {'id': 'user-2', 'fullName': fullName, 'email': email},
+    'user': {
+      'id': 'user-2',
+      'fullName': fullName,
+      'email': email,
+      'phone': phone,
+    },
   };
 }
 
@@ -399,7 +414,8 @@ Map<String, dynamic> mockUserProfileJson({
     'id': id,
     'fullName': fullName,
     'email': 'test@example.com',
-    'phone': '0912345678',
+    // Login phone, E.164 as the API returns it.
+    'phone': '+84912345678',
     'gender': 'Nam',
     'address': 'Ha Noi',
     'province': 'Ha Noi',

@@ -113,6 +113,36 @@ void main() {
   });
 
   testWidgets(
+    'TC-APP-PHONE-20 nhập sđt hiện dòng liên hệ hỗ trợ, gửi identifier nguyên văn, '
+    'không hứa gửi tới sđt',
+    (tester) async {
+      final adapter = await _pump(tester, {
+        _forgotRoute: const FakeReply(200, {}),
+      });
+
+      await tester.enterText(find.byType(TextFormField), ' 0987654321 ');
+      await tester.pump();
+      expect(find.text(l10n.forgotPassword_phoneNotice), findsOneWidget);
+
+      await tester.tap(find.byType(ElevatedButton));
+      await _flushDio(tester);
+
+      expect(adapter.postsTo(_forgotPath).single.body, {
+        'identifier': '0987654321',
+      });
+      expect(find.text(l10n.forgotPassword_sentTitle), findsOneWidget);
+      expect(find.text(l10n.forgotPassword_phoneNotice), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is RichText && w.text.toPlainText().contains('0987654321'),
+        ),
+        findsNothing,
+      );
+      await _disposeScreen(tester);
+    },
+  );
+
+  testWidgets(
     'gửi thành công gửi email đã trim và hạ chữ thường rồi hiện màn Đã gửi',
     (tester) async {
       final adapter = await _pump(tester, {
@@ -122,8 +152,9 @@ void main() {
       await _submitEmail(tester, '  Hoa.Tran@Mail.VN ');
 
       expect(adapter.postsTo(_forgotPath).single.body, {
-        'email': 'hoa.tran@mail.vn',
+        'identifier': 'hoa.tran@mail.vn',
       });
+      expect(find.text(l10n.forgotPassword_phoneNotice), findsNothing);
       expect(find.text(l10n.forgotPassword_sentTitle), findsOneWidget);
       expect(find.byType(TextFormField), findsNothing);
       expect(

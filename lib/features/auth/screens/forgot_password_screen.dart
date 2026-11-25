@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -60,12 +61,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       _errorMessage = null;
     });
 
-    final email = _emailCtrl.text.trim().toLowerCase();
+    // Phones are sent as typed (trimmed); the server normalizes them.
+    final raw = _emailCtrl.text.trim();
+    final identifier = _isPhone(raw) ? raw : raw.toLowerCase();
 
     try {
       final response = await ref.read(dioClientProvider).dio.post(
         '/auth/forgot-password',
-        data: {'email': email},
+        data: {'identifier': identifier},
       );
 
       if (!mounted) return;
@@ -274,7 +277,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
           // Email Input
           Text(
-            l10n.emailLabel,
+            l10n.identifierLabel,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -317,13 +320,21 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               if (val == null || val.trim().isEmpty) {
                 return l10n.forgotPassword_emailRequired;
               }
-              if (!RegExp(
-                r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
-              ).hasMatch(val.trim())) {
+              if (classifyIdentifier(val) == ContactKind.invalid) {
                 return l10n.forgotPassword_emailInvalid;
               }
               return null;
             },
+          ),
+          // No SMS yet: a phone only reaches the account's recovery email.
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _emailCtrl,
+            builder: (context, value, _) => _isPhone(value.text)
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _phoneNotice(colors, l10n),
+                  )
+                : const SizedBox.shrink(),
           ),
           const SizedBox(height: 28),
 
@@ -379,6 +390,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
+  bool _isPhone(String raw) => classifyIdentifier(raw) == ContactKind.phone;
+
+  Widget _phoneNotice(AppColorsExtension colors, AppLocalizations l10n) => Text(
+    l10n.forgotPassword_phoneNotice,
+    textAlign: TextAlign.center,
+    style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
+  );
+
   // ═══════════════════════════════════════════════════════════
   //  SENT VIEW — Thông báo thành công + Đếm ngược gửi lại
   // ═══════════════════════════════════════════════════════════
@@ -418,31 +437,34 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 12),
 
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontSize: 14,
-              height: 1.5,
-            ),
-            children: [
-              TextSpan(
-                text: l10n.forgotPassword_checkEmail,
+        if (_isPhone(_emailCtrl.text))
+          _phoneNotice(colors, l10n)
+        else
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
               ),
-              TextSpan(
-                text: _emailCtrl.text.trim(),
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.bold,
+              children: [
+                TextSpan(
+                  text: l10n.forgotPassword_checkEmail,
                 ),
-              ),
-              TextSpan(
-                text: l10n.forgotPassword_checkEmailSuffix,
-              ),
-            ],
+                TextSpan(
+                  text: _emailCtrl.text.trim(),
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(
+                  text: l10n.forgotPassword_checkEmailSuffix,
+                ),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 24),
 
         // Timer Box

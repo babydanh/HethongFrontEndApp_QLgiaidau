@@ -4,6 +4,34 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 
 class ErrorParser {
+  /// Localizes a known Backend message; unknown messages pass through.
+  /// The single place that maps raw Nest/auth messages for every repository.
+  static String translateMessage(String msg, AppLocalizations strings) {
+    return <String, String>{
+          'Email already exists': strings.errorParserEmailRegistered,
+          'Phone number already exists': strings.errorParserPhoneRegistered,
+          'Email or phone number is required':
+              strings.errorParserIdentifierRequired,
+          'Email or phone number is invalid':
+              strings.errorParserIdentifierInvalid,
+          'email should not be empty': strings.errorParserEmailRequired,
+          'email must be an email': strings.errorParserEmailInvalid,
+          'password must be longer than or equal to 6 characters':
+              strings.errorParserPasswordMin,
+          'password should not be empty': strings.errorParserPasswordRequired,
+          'fullName should not be empty': strings.errorParserFullNameRequired,
+          'Invalid credentials': strings.errorParserInvalidCredentialsMessage,
+          // Backend reply for a wrong password on both email and phone login.
+          'Mật khẩu hoặc email không chính xác.':
+              strings.errorParserInvalidCredentialsMessage,
+          'Tournament registration is closed':
+              strings.errorParserRegistrationClosed,
+          'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.':
+              strings.errorParserGoogleAccount,
+        }[msg] ??
+        msg;
+  }
+
   /// Converts DioException and other errors into user-friendly localized text.
   static String parse(
     dynamic error, [
@@ -123,22 +151,7 @@ class ErrorParser {
             return strings.errorParserInvalidSelection;
           }
 
-          final translated = <String, String>{
-            'Email already exists': strings.errorParserEmailRegistered,
-            'email should not be empty': strings.errorParserEmailRequired,
-            'email must be an email': strings.errorParserEmailInvalid,
-            'password must be longer than or equal to 6 characters':
-                strings.errorParserPasswordMin,
-            'password should not be empty': strings.errorParserPasswordRequired,
-            'fullName should not be empty': strings.errorParserFullNameRequired,
-            'Invalid credentials': strings.errorParserInvalidCredentialsMessage,
-            'Tournament registration is closed':
-                strings.errorParserRegistrationClosed,
-            'Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.':
-                strings.errorParserGoogleAccount,
-          }[msg];
-          if (translated != null) return translated;
-          return msg;
+          return translateMessage(msg, strings);
         }
       }
     }

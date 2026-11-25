@@ -313,6 +313,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get emailLabel => 'Địa chỉ Email';
 
   @override
+  String get identifierLabel => 'Email hoặc SĐT';
+
+  @override
   String get passwordLabel => 'Mật khẩu';
 
   @override
@@ -3095,20 +3098,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get forgotPassword_description =>
-      'Nhập địa chỉ email liên kết với tài khoản của bạn để nhận liên kết khôi phục mật khẩu.';
+      'Nhập email hoặc số điện thoại của tài khoản để nhận liên kết khôi phục mật khẩu.';
 
   @override
   String get forgotPassword_emailTip =>
       'Hệ thống sẽ gửi một mã hoặc đường dẫn xác thực tới email của bạn. Vui lòng kiểm tra kỹ cả hộp thư Hòm thư rác (Spam).';
 
   @override
-  String get forgotPassword_emailHint => 'nhap@email.com';
+  String get forgotPassword_emailHint => 'nhap@email.com hoặc 0912345678';
 
   @override
-  String get forgotPassword_emailRequired => 'Vui lòng nhập địa chỉ email';
+  String get forgotPassword_emailRequired =>
+      'Vui lòng nhập email hoặc số điện thoại';
 
   @override
-  String get forgotPassword_emailInvalid => 'Email không hợp lệ';
+  String get forgotPassword_emailInvalid =>
+      'Email hoặc số điện thoại không hợp lệ';
 
   @override
   String get forgotPassword_submitting => 'Đang gửi...';
@@ -3157,6 +3162,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get forgotPassword_errorGeneric =>
       'Không thể gửi email khôi phục mật khẩu';
+
+  @override
+  String get forgotPassword_phoneNotice =>
+      'Nếu tài khoản đã thêm email, link đặt lại được gửi tới email đó. Chưa thêm email: liên hệ hỗ trợ.';
 
   @override
   String get notification_markAllReadError =>
@@ -3373,13 +3382,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get loginRegister_fullNameRequired => 'Vui lòng nhập họ và tên';
 
   @override
-  String get loginRegister_emailHint => 'example@email.com';
+  String get loginRegister_emailHint => 'email@vidu.com hoặc 0912345678';
 
   @override
-  String get loginRegister_emailRequired => 'Vui lòng nhập email';
+  String get loginRegister_emailRequired =>
+      'Vui lòng nhập email hoặc số điện thoại';
 
   @override
-  String get loginRegister_emailInvalid => 'Địa chỉ email không hợp lệ';
+  String get loginRegister_emailInvalid =>
+      'Email hoặc số điện thoại không hợp lệ';
 
   @override
   String get loginRegister_passwordHint => '••••••••';
@@ -11628,7 +11639,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get errorParserGoogleUnavailable =>
-      'Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc thử lại sau.';
+      'Đăng nhập Google chưa khả dụng trên bản ứng dụng này. Vui lòng dùng email hoặc số điện thoại, hoặc thử lại sau.';
 
   @override
   String get errorParserGoogleSignInFailed =>
@@ -11704,7 +11715,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get errorParserInvalidCredentials =>
-      'Email hoặc mật khẩu không chính xác.';
+      'Email/số điện thoại hoặc mật khẩu không chính xác.';
 
   @override
   String get errorParserForbidden =>
@@ -11745,6 +11756,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get errorParserEmailInvalid => 'Địa chỉ email không hợp lệ.';
 
   @override
+  String get errorParserPhoneRegistered =>
+      'Số điện thoại này đã được đăng ký. Vui lòng dùng số khác hoặc đăng nhập.';
+
+  @override
+  String get errorParserIdentifierRequired =>
+      'Vui lòng nhập email hoặc số điện thoại.';
+
+  @override
+  String get errorParserIdentifierInvalid =>
+      'Email hoặc số điện thoại không hợp lệ.';
+
+  @override
   String get errorParserPasswordMin => 'Mật khẩu phải có ít nhất 6 ký tự.';
 
   @override
@@ -11755,7 +11778,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get errorParserInvalidCredentialsMessage =>
-      'Email hoặc mật khẩu không đúng.';
+      'Email/số điện thoại hoặc mật khẩu không đúng.';
 
   @override
   String get errorParserGoogleAccount =>

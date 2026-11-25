@@ -13,6 +13,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/utils/token_generator.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -65,20 +66,22 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
       _errorMessage = null;
     });
 
-    final email = _emailController.text.trim().toLowerCase();
+    // Phones are sent as typed (trimmed); the server normalizes them.
+    final raw = _emailController.text.trim();
+    final isEmail = classifyIdentifier(raw) == ContactKind.email;
+    final identifier = isEmail ? raw.toLowerCase() : raw;
     final password = _passwordController.text;
     final fullName = _fullNameController.text.trim();
 
-    bool success = false;
-    if (_isRegisterMode) {
-      success = await ref
-          .read(authProvider.notifier)
-          .registerWithEmailPassword(email, password, fullName);
-    } else {
-      success = await ref
-          .read(authProvider.notifier)
-          .loginWithEmailPassword(email, password);
-    }
+    final auth = ref.read(authProvider.notifier);
+    final success = _isRegisterMode
+        ? await auth.registerWithPassword(
+            email: isEmail ? identifier : null,
+            phone: isEmail ? null : identifier,
+            password: password,
+            fullName: fullName,
+          )
+        : await auth.loginWithPassword(identifier, password);
 
     if (!mounted) return;
 
@@ -397,17 +400,16 @@ class _LoginRegisterScreenState extends ConsumerState<LoginRegisterScreen> {
                         ),
                         _buildTextInput(
                           controller: _emailController,
-                          label: l10n.emailLabel,
+                          label: l10n.identifierLabel,
                           hint: l10n.loginRegister_emailHint,
-                          icon: Icons.email_outlined,
+                          icon: Icons.person_pin_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
                               return l10n.loginRegister_emailRequired;
                             }
-                            if (!RegExp(
-                              r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$",
-                            ).hasMatch(val.trim())) {
+                            if (classifyIdentifier(val) ==
+                                ContactKind.invalid) {
                               return l10n.loginRegister_emailInvalid;
                             }
                             return null;
