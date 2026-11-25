@@ -27,6 +27,7 @@ Nhãn:
 | Biến môi trường | `.env.example` (mẫu, đã track). `.env` là secret, gitignored: không đọc, không in | sự thật (cấu hình) |
 | Test: vị trí, cấu trúc | `test/` (120 file `*_test.dart`); `test/helpers/mock_data.dart` | sự thật (code) |
 | Deploy iOS | `.github/workflows/deploy-ios.yml` (chỉ `workflow_dispatch`; ghi `.env` từ secret lúc build) | sự thật (cấu hình) |
+| Cloud test (target `app`, `app-e2e`) | `.github/workflows/cloud-test.yml` (chỉ `workflow_dispatch`, gọi bởi `cloud-test-runner.py`); script `scripts/ci-e2e/` | sự thật (cấu hình) |
 | Thiết kế tính năng Xé vé Social | `thiet-ke-xe-ve-social-he-thong-quan-ly-giai-dau.md` | tham khảo |
 | Kế hoạch test, test case | `test_docs/` (xem bảng "Bộ tài liệu" bên dưới) | tham khảo / kế hoạch cũ |
 | Hành vi hệ thống đã chốt qua OpenSpec | `openspec/specs/` (hiện chưa có spec nào) | chuẩn |
@@ -50,7 +51,7 @@ Nhãn:
 ## E2E App (integration_test)
 
 - Vị trí: `integration_test/` gồm `smoke_test.dart`, `auth_flow_test.dart`, `tournament_player_flow_test.dart`, `organizer_flow_test.dart`. Helper dùng chung ở `integration_test/support/` (`app_driver.dart`, `backend_api.dart`).
-- Chạy trên Android emulator API 34 (x86_64) với Backend, Postgres và Redis thật. Job CI: `test-app-e2e` trong `.github/workflows/test-runner.yml` của repo `agent-orchestrator`, dispatch qua skill `cloud-test-runner` với target `app-e2e`. Lệnh dispatch: `python C:/Users/GIGABYTE/.omp/scripts/cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--specs integration_test/<file>_test.dart ...]` (bỏ `--specs` = chạy toàn bộ `integration_test`).
+- Chạy trên Android emulator API 34 (x86_64) với Backend, Postgres và Redis thật. Job CI: `test-app-e2e` trong `.github/workflows/cloud-test.yml` của repo này (từ 2026-11-25; trước đó ở `test-runner.yml` của repo `agent-orchestrator`, đã bị khoá; script Allure ở `scripts/ci-e2e/`), dispatch qua skill `cloud-test-runner` với target `app-e2e`. Lệnh dispatch: `python C:/Users/GIGABYTE/.omp/scripts/cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--specs integration_test/<file>_test.dart ...]` (bỏ `--specs` = chạy toàn bộ `integration_test`).
 - Chạy local (cần emulator và Backend đang chạy sẵn): `flutter test integration_test/smoke_test.dart -d emulator-5554`. URL Backend đổi bằng `--dart-define=E2E_API_BASE_URL=...` (mặc định `http://10.0.2.2:3000/api/v1`).
 - Cleartext HTTP chỉ bật ở bản debug, tới `10.0.2.2` và `localhost` (`android/app/src/debug/res/xml/network_security_config.xml`). Bản release không có ngoại lệ này; job CI kiểm ở bước 13b bằng manifest release đã gộp và `android/app/src/main/res/xml/network_security_config.xml`.
 - Tài khoản seed chỉ dùng cho CI (`backend_api.dart`). Kết quả từng lượt và lỗi app đã biết: `openspec/changes/app-e2e-integration/tasks.md` và `findings.md`.

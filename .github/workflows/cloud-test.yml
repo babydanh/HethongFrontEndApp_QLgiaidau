@@ -1,0 +1,503 @@
+name: Cloud Test (App)
+# Gọi bởi ~/.omp/scripts/cloud-test-runner.py (target app / app-e2e). Port từ test-runner.yml của repo agent-orchestrator
+# (đã bị GitHub khoá 2026-11-25): repo này chỉ tự test chính nó. Tên lượt mang mã yêu cầu để script local nhận đúng lượt.
+run-name: "test ${{ inputs.target_project }} web=${{ inputs.web_ref || inputs.custom_branch || 'main' }} #${{ inputs.request_id || github.run_id }}"
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    # Cùng tên input với test-runner.yml: script local gửi y hệt, thiếu input nào thì dispatch bị từ chối (422).
+    inputs:
+      target_project:
+        description: 'Chọn job: app (analyze + test) hoặc app-e2e (integration_test trên emulator)'
+        required: true
+        type: choice
+        default: 'app'
+        options:
+          - 'app'
+          - 'app-e2e'
+      custom_branch:
+        description: 'Nhánh App muốn kiểm tra (để trống = main)'
+        required: false
+        default: ''
+      backend_ref:
+        description: 'Nhánh/SHA của Backend cho app-e2e (để trống = main)'
+        required: false
+        default: ''
+      web_ref:
+        description: 'Không dùng ở repo App; giữ để script local gửi cùng bộ input'
+        required: false
+        default: ''
+      app_ref:
+        description: 'Nhánh/SHA của App cho app-e2e (để trống = custom_branch, rồi main)'
+        required: false
+        default: ''
+      specs:
+        description: 'app-e2e: chỉ chạy các file này (cách nhau bằng dấu cách), vd integration_test/smoke_test.dart. Để trống = toàn bộ'
+        required: false
+        default: ''
+      request_id:
+        description: 'Mã yêu cầu duy nhất do cloud-test-runner.py tạo (để nhận đúng lượt chạy khi chạy song song)'
+        required: false
+        default: ''
+      fail_fast:
+        description: 'Không dùng ở repo App; giữ để script local gửi cùng bộ input'
+        required: false
+        default: 'false'
+      seed:
+        description: 'Không dùng ở repo App (app-e2e luôn nạp seed:data); giữ để script local gửi cùng bộ input'
+        required: false
+        default: ''
+      no_report:
+        description: 'true = không tạo/lưu kho báo cáo Allure của app-e2e. Kết quả vẫn có trong log'
+        required: false
+        default: 'false'
+
+# Mỗi yêu cầu một nhóm riêng: nhiều session chạy song song, không lượt nào huỷ lượt của session khác.
+concurrency:
+  group: cloud-test-${{ inputs.request_id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  test-app:
+    name: 📱 Test Flutter App (Dart Analyze & Widget)
+    if: inputs.target_project == 'app'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: 1. Checkout Flutter App Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.custom_branch || 'main' }}
+
+      - name: 2. Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          # App pubspec needs Dart ^3.10.3; 3.29.x ships Dart 3.7. Same line as the dev machine (3.47, Dart 3.13).
+          flutter-version: '3.47.x'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:'
+
+      - name: 3. Run Flutter Analyze & Tests (Báo lỗi thật, không nuốt lỗi)
+        run: |
+          # pubspec bundles .env as an asset; the repo ships only .env.example (no secrets).
+          [ -f .env ] || cp .env.example .env
+          flutter pub get
+          # Errors fail the job; the ~200 existing info/warning lints are reported, not fatal.
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          flutter test
+
+  test-app-e2e:
+    name: 📱🧪 E2E Flutter App (emulator Android API 34 + Backend thật)
+    if: inputs.target_project == 'app-e2e'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    # Postgres + Redis: Backend thật cần cả hai.
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: your_password
+          POSTGRES_DB: tournament_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 1. Setup Node.js 22 LTS & PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 2. Setup Java 17 (Gradle của Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Backend là repo private khác: cần QLGD_CI_TOKEN. Lấy backend_ref hoặc main, KHÔNG lấy custom_branch (nhánh App).
+      - name: 3. Checkout Backend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/HethongBackendApi_QuanlyGiaiDau
+          token: ${{ secrets.QLGD_CI_TOKEN }}
+          ref: ${{ inputs.backend_ref || 'main' }}
+          path: backend
+          # Do not leave the PAT in backend/.git/config while pnpm install/build runs an arbitrary backend_ref.
+          persist-credentials: false
+
+      # App là repo này (token mặc định). Lấy app_ref, rồi custom_branch (--branch của script), rồi main.
+      - name: 4. Checkout App
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.app_ref || inputs.custom_branch || 'main' }}
+          path: app
+          # Later steps only run `git rev-parse` here (no auth needed).
+          persist-credentials: false
+
+      # Script CI (Allure, cắt video) lấy từ ref của chính workflow, không từ app_ref: nhánh App cũ có thể chưa có thư mục này.
+      - name: 4a. Checkout script CI (scripts/ci-e2e)
+        uses: actions/checkout@v4
+        with:
+          path: ci
+          sparse-checkout: scripts/ci-e2e
+
+      # Cache ~/.gradle: build APK lạnh mất 509s (run 39116901048). setup-gradle lưu cache cả khi job đỏ (post-if: !cancelled()),
+      # khác setup-java cache: gradle (chỉ lưu khi xanh). 'basic' = cache GitHub Actions mã nguồn mở; mặc định 'enhanced' là dịch vụ thương mại.
+      # Phải đặt SAU checkout App: bản basic băm app/android/**/*.gradle* làm khóa ngay lúc chạy (run 39120169623 lỗi "No file matched").
+      - name: 4b. Cache Gradle (setup-gradle)
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: 5. Kiểm tra danh sách spec đầu vào
+        env:
+          E2E_SPECS: ${{ inputs.specs }}
+        run: |
+          for s in $E2E_SPECS; do
+            case "$s" in
+              integration_test/*_test.dart) ;;
+              *) echo "::error::Spec không hợp lệ cho app-e2e: $s (phải là integration_test/<tên>_test.dart)"; exit 1 ;;
+            esac
+            case "$s" in
+              *..*) echo "::error::Spec chứa '..': $s"; exit 1 ;;
+            esac
+          done
+
+      # Luôn nạp seed:data: app-e2e cần quyền ADMIN để duyệt giải qua API: bước 7 tạo tài khoản E2E riêng e2eadmin (chỉ vai ADMIN, tách khỏi chủ giải để giải tạo ra vẫn ở trạng thái chờ duyệt).
+      - name: 6. Backend migrate, seed, khởi động NestJS
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: postgres
+          DB_PASSWORD: your_password
+          DB_DATABASE: tournament_db
+          DB_SSL: false
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_ACCESS_SECRET: test-jwt-access-secret-key-32chars
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-32chars
+        run: |
+          cd backend
+          pnpm install --frozen-lockfile --prefer-offline || pnpm install --prefer-offline
+          pnpm build
+          node run-prod-migration.js
+          node run-prod-migration.js
+          pnpm verify:football-schema
+          pnpm seed:prod
+          pnpm seed:data
+          PORT=3000 pnpm start:prod > "$RUNNER_TEMP/backend.log" 2>&1 &
+          echo "Backend khởi động, log: $RUNNER_TEMP/backend.log"
+
+      - name: 7. Chờ Backend và tạo tài khoản E2E
+        run: |
+          npx --yes wait-on@9.5.1 tcp:localhost:3000 --timeout 120000
+          for account in "admin1@gmail.com:E2E Organizer" "user8@gmail.com:E2E Player" "e2eadmin@gmail.com:E2E Admin"; do
+            email="${account%%:*}"; name="${account#*:}"
+            code=$(curl -s -o /tmp/register.json -w '%{http_code}' -X POST http://localhost:3000/api/v1/auth/register \
+              -H 'Content-Type: application/json' \
+              -d "{\"email\":\"$email\",\"password\":\"123456\",\"fullName\":\"$name\"}")
+            if [ "$code" != "201" ] && [ "$code" != "409" ]; then
+              echo "::error::Tạo tài khoản E2E $email lỗi HTTP $code"; cat /tmp/register.json; exit 1
+            fi
+            echo "Tài khoản E2E $email: HTTP $code"
+          done
+          PGPASSWORD=your_password psql -h localhost -U postgres -d tournament_db -v ON_ERROR_STOP=1 <<'SQL'
+          UPDATE users SET is_email_verified = true WHERE email IN ('admin1@gmail.com', 'user8@gmail.com', 'e2eadmin@gmail.com');
+          INSERT INTO roles (name, slug, description) VALUES ('ORGANIZER', 'organizer', 'Ban tổ chức') ON CONFLICT DO NOTHING;
+          INSERT INTO user_to_roles (user_id, role_id)
+            SELECT u.id, r.id FROM users u JOIN roles r ON r.name = 'ORGANIZER' WHERE u.email = 'admin1@gmail.com'
+            ON CONFLICT DO NOTHING;
+          INSERT INTO roles (name, slug, description) VALUES ('ADMIN', 'admin', 'Administrator') ON CONFLICT DO NOTHING;
+          INSERT INTO user_to_roles (user_id, role_id)
+            SELECT u.id, r.id FROM users u JOIN roles r ON r.name = 'ADMIN' WHERE u.email = 'e2eadmin@gmail.com'
+            ON CONFLICT DO NOTHING;
+          SQL
+
+      - name: 8. Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          # App cần Dart ^3.10.3; cùng dòng 3.47 với máy dev.
+          flutter-version: '3.47.x'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:'
+
+      - name: 9. Tạo .env từ .env.example (chỉ đổi API_BASE_URL và APP_API_KEY)
+        working-directory: app
+        run: |
+          cp .env.example .env
+          sed -i 's|^API_BASE_URL=.*|API_BASE_URL=http://10.0.2.2:3000/api/v1|' .env
+          sed -i 's|^APP_API_KEY=.*|APP_API_KEY=|' .env
+          grep -q '^API_BASE_URL=' .env || echo 'API_BASE_URL=http://10.0.2.2:3000/api/v1' >> .env
+          grep -q '^APP_API_KEY=' .env || echo 'APP_API_KEY=' >> .env
+          grep '^API_BASE_URL=' .env
+
+      - name: 10. Flutter pub get
+        working-directory: app
+        run: flutter pub get
+
+      # Build debug cần google-services.json: plugin Gradle áp cứng và file này gitignored.
+      # File giả chỉ để Gradle chạy; Firebase lỗi khi khởi tạo và app đã bắt lỗi đó (push_notification_service.dart:37-107).
+      - name: 10b. Tạo google-services.json giả cho build debug (không commit)
+        working-directory: app
+        run: |
+          cat > android/app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "e2e-placeholder",
+              "storage_bucket": "e2e-placeholder.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                  "android_client_info": { "package_name": "vn.vnsport.quanlygiaidau" }
+                },
+                "oauth_client": [],
+                "api_key": [ { "current_key": "e2e-placeholder-key" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+
+      # NDK 28.2 và CMake 3.22.1 do AGP tải vào SDK khi build APK lạnh: riêng NDK tốn ~5 phút (run 39118510032, bước 13).
+      # Cache thư mục SDK của runner. Bước 13a lưu cache sau khi APK đã build (NDK đã cài đủ), kể cả khi test đỏ.
+      - name: 10c. Xác định thư mục Android SDK
+        id: sdk
+        run: |
+          echo "dir=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_OUTPUT"
+
+      - name: 10d. Khôi phục NDK và CMake từ cache
+        id: ndk-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ steps.sdk.outputs.dir }}/ndk
+            ${{ steps.sdk.outputs.dir }}/cmake
+          key: ${{ runner.os }}-android-ndk-cmake-${{ hashFiles('app/android/**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-ndk-cmake-
+
+      - name: 11. Bật KVM cho emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Script ghi ra file để emulator-runner chỉ gọi một dòng lệnh (multi-line trong 'script' chạy từng dòng riêng).
+      - name: 12. Ghi script chạy E2E
+        run: |
+          cat > "$RUNNER_TEMP/run-e2e.sh" <<'SH'
+          #!/usr/bin/env bash
+          # Chạy trong thư mục app (working-directory của emulator-runner).
+          mkdir -p app-e2e-report
+          echo "MỐC $(date -u +%H:%M:%S) UTC: emulator sẵn sàng; khởi động mất $(( $(date +%s) - ${E2E_BOOT_T0:-$(date +%s)} )) s (gồm cài SDK/AVD và boot)"
+          if [ -n "${E2E_SPECS:-}" ]; then
+            read -r -a SPECS_ARR <<< "$E2E_SPECS"
+            TEST_TIMEOUT_S=2400
+          else
+            SPECS_ARR=(integration_test)
+            # Cả bộ: mỗi file build + cài APK (~1 phút) rồi chạy; run 43621672147 hết 2400 s khi mới xong 17/33 file.
+            TEST_TIMEOUT_S=9600
+          fi
+          echo "Thiết bị đang chạy:"; adb devices
+          # timeout 40 phút (chạy theo --specs; cả bộ 160 phút): run 39103144997 treo sau khi cài APK, không có dòng test nào (>50 phút). Quá hạn thì RC khác 0; bước 13b/13c vẫn chạy (if: always()).
+          T_TEST0=$(date +%s)
+          echo "MỐC $(date -u +%H:%M:%S) UTC: bắt đầu flutter test (mỗi file test: Gradle assembleDebug, cài APK, chạy)"
+          # Ảnh [[SHOT ...]] (base64) không vào log job và artifact app-e2e-report (giữ log gọn, như khi chạy ở repo public):
+          # - JSON đầy đủ (có ảnh) ghi vào app-e2e-private/ (không upload), để bước Allure đổi thành allure-results.
+          # - stdout/log chữ lọc bỏ dòng [[SHOT: log của job và flutter-test.log không chứa ảnh.
+          # --file-reporter giữ reporter expanded ở stdout nên dòng "+N ~M -K:" mà script bên dưới đọc không đổi.
+          mkdir -p app-e2e-private/video
+          # Quay màn hình emulator liên tục thành các đoạn <= 170 giây (seg_<epoch_ms>.mp4), để bước Allure cắt video
+          # riêng cho từng ca (cả ca đạt). Video chỉ ở app-e2e-private/ (không upload), vào kho private cùng báo cáo.
+          touch "$RUNNER_TEMP/rec.on"
+          (
+            while [ -f "$RUNNER_TEMP/rec.on" ]; do
+              T=$(date +%s%3N)
+              adb shell screenrecord --size 540x960 --bit-rate 1500000 --time-limit 170 "/sdcard/seg_$T.mp4" >/dev/null 2>&1
+              adb pull "/sdcard/seg_$T.mp4" "app-e2e-private/video/seg_$T.mp4" >/dev/null 2>&1 || true
+              adb shell rm -f "/sdcard/seg_$T.mp4" >/dev/null 2>&1 || true
+            done
+          ) &
+          REC_PID=$!
+          RUN_START_MS=$(date +%s%3N)
+          echo "$RUN_START_MS" > app-e2e-private/run-start-ms.txt
+          timeout --kill-after=60 "$TEST_TIMEOUT_S" flutter test --no-pub -d emulator-5554 --reporter expanded \
+            --file-reporter json:app-e2e-private/flutter-test.json "${SPECS_ARR[@]}" 2>&1 \
+            | grep --line-buffered -v '\[\[SHOT' | tee app-e2e-report/flutter-test.log
+          RC=${PIPESTATUS[0]}
+          # Dừng quay: bỏ cờ rồi gửi SIGINT cho screenrecord để nó đóng file mp4 đúng cách, chờ vòng lặp kéo đoạn cuối về.
+          rm -f "$RUNNER_TEMP/rec.on"
+          adb shell 'kill -2 $(pidof screenrecord)' >/dev/null 2>&1 || true
+          wait "$REC_PID" 2>/dev/null || true
+          echo "MỐC video: $(ls app-e2e-private/video 2>/dev/null | wc -l) đoạn quay màn hình"
+          T_TEST1=$(date +%s)
+          GRADLE_S=$(grep -oE "assembleDebug'[^0-9]*[0-9]+\.[0-9]+s" app-e2e-report/flutter-test.log | grep -oE "[0-9]+\.[0-9]+" | awk '{s+=$1} END {printf "%.0f", s}')
+          echo "MỐC $(date -u +%H:%M:%S) UTC: flutter test xong sau $((T_TEST1 - T_TEST0)) s; Gradle assembleDebug cộng dồn ${GRADLE_S:-0} s (phần còn lại: cài APK và chạy test)"
+          # Dòng "Tests: ..." để cloud-test-runner.py phân loại kết quả (flutter test không in dòng này).
+          python3 - app-e2e-report/flutter-test.log <<'PY'
+          import re, sys
+          text = open(sys.argv[1], errors="replace").read()
+          rows = re.findall(r"^\d+:\d{2}(?::\d{2})? \+(\d+)(?: ~(\d+))?(?: -(\d+))?:", text, re.M)
+          if rows:
+              passed, skipped, failed = rows[-1]
+              print(f"Tests: {int(passed or 0)} passed, {int(failed or 0)} failed, {int(skipped or 0)} skipped")
+          PY
+          # Ảnh màn hình cuối và logcat: bằng chứng khi test không lưu ảnh ra đĩa.
+          adb exec-out screencap -p > app-e2e-report/emulator-cuoi.png || true
+          # logcat có cả các dòng print của test (ảnh base64): lọc trước khi vào artifact.
+          adb logcat -d -t 3000 | grep -v '\[\[SHOT' > app-e2e-report/logcat.txt || true
+          exit "$RC"
+          SH
+          chmod +x "$RUNNER_TEMP/run-e2e.sh"
+          echo "E2E_BOOT_T0=$(date +%s)" >> "$GITHUB_ENV"
+          echo "MỐC $(date -u +%H:%M:%S) UTC: trước khi khởi động emulator (bước 13)"
+
+      - name: 13. Chạy integration_test trên emulator Android API 34 (x86_64)
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_SPECS: ${{ inputs.specs }}
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          working-directory: app
+          script: bash "$RUNNER_TEMP/run-e2e.sh"
+
+      # Bước 13a: lưu NDK/CMake nếu lượt này chưa có cache và APK đã build xong (NDK đã cài đủ). Chạy cả khi test đỏ.
+      # Khóa lấy từ bước 10d (tính TRƯỚC build): build sinh thêm *.gradle* trong app/android nên băm lại ở đây ra khóa khác.
+      - name: 13a. Lưu NDK và CMake vào cache
+        if: always() && steps.ndk-cache.outputs.cache-hit != 'true' && hashFiles('app/build/app/outputs/flutter-apk/app-debug.apk') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ steps.sdk.outputs.dir }}/ndk
+            ${{ steps.sdk.outputs.dir }}/cmake
+          key: ${{ steps.ndk-cache.outputs.cache-primary-key }}
+
+      # Task 2.1: manifest và resource release không có ngoại lệ cleartext tới 10.0.2.2/localhost.
+      # Không dùng flutter build apk --release: compileReleaseJavaWithJavac lỗi vì GeneratedPluginRegistrant
+      # tham chiếu integration_test (dev dependency). Gradle merge release không compile Java nên không bị lỗi đó.
+      - name: 13b. Kiểm cấu hình mạng bản release (task 2.1)
+        if: always()
+        working-directory: app
+        run: |
+          cd android
+          [ -f gradlew ] || { echo "::error::Không có gradlew sau build debug"; exit 1; }
+          # bash, không phải sh: gradlew là script bash; sh (dash trên ubuntu) lỗi "Syntax error: (" (run 39101569603).
+          bash ./gradlew :app:processReleaseManifest :app:mergeReleaseResources --no-daemon --console=plain
+          cd ..
+          # Module app ghi vào build/app; plugin ghi vào build/<plugin>/. Chỉ tìm trong build/app/intermediates; android/app/build làm dự phòng.
+          MANIFEST=$(find build/app/intermediates android/app/build/intermediates -path '*merged*manifest*release*' -name AndroidManifest.xml 2>/dev/null | head -1)
+          if [ -z "$MANIFEST" ]; then echo "::error::Không tìm thấy manifest release đã gộp"; exit 1; fi
+          echo "Manifest release: $MANIFEST"
+          if ! grep -q 'networkSecurityConfig' "$MANIFEST"; then echo "::error::Manifest release thiếu networkSecurityConfig"; exit 1; fi
+          grep -o 'networkSecurityConfig="[^"]*"' "$MANIFEST"
+          COUNT=0
+          while IFS= read -r f; do
+            COUNT=$((COUNT + 1))
+            echo "Kiểm resource release: $f"
+            if grep -q '10\.0\.2\.2\|localhost' "$f"; then echo "::error::Bản release chứa ngoại lệ debug: $f"; exit 1; fi
+          done < <(find build/app/intermediates android/app/build/intermediates -path '*release*' -name 'network_security_config.xml' 2>/dev/null)
+          if [ "$COUNT" -eq 0 ]; then echo "::error::Không thấy network_security_config.xml trong resource release"; exit 1; fi
+          echo "Task 2.1 OK: $COUNT file network_security_config release, không có 10.0.2.2/localhost."
+
+      # Task 5.2: phân tích tĩnh integration_test. Chạy sau bước test (always) để không chặn emulator; lỗi vẫn làm job đỏ.
+      - name: 13c. Phân tích tĩnh integration_test (task 5.2)
+        if: always()
+        working-directory: app
+        run: flutter analyze --no-pub integration_test
+
+      - name: 14. Gom backend.log vào báo cáo (chạy cả khi lỗi)
+        if: always()
+        run: |
+          mkdir -p app/app-e2e-report
+          cp "$RUNNER_TEMP/backend.log" app/app-e2e-report/backend.log || echo "Không có backend.log"
+
+      # Allure: report/ảnh/video vào repo kho private qlgd-e2e-archive (allure_archive.py kiểm private trước khi tải lên),
+      # KHÔNG upload-artifact. Lưu kho lỗi không đổi kết quả test (continue-on-error).
+      - name: 14a. Cài ffmpeg để cắt video từng ca
+        if: always() && inputs.no_report != 'true'
+        continue-on-error: true
+        run: command -v ffmpeg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+
+      - name: 14b. Đổi JSON của flutter test thành allure-results (kèm video từng ca)
+        if: always() && inputs.no_report != 'true'
+        continue-on-error: true
+        run: |
+          if [ -f app/app-e2e-private/flutter-test.json ]; then
+            VIDEO_ARGS=()
+            if [ -d app/app-e2e-private/video ] && [ -f app/app-e2e-private/run-start-ms.txt ]; then
+              VIDEO_ARGS=(--video-dir app/app-e2e-private/video --run-start-ms "$(cat app/app-e2e-private/run-start-ms.txt)")
+            fi
+            python3 ci/scripts/ci-e2e/flutter_json_to_allure.py app/app-e2e-private/flutter-test.json app/allure-results "${VIDEO_ARGS[@]}"
+            echo "Video đính vào Allure: $(ls app/allure-results/*-attachment.mp4 2>/dev/null | wc -l) clip"
+          else
+            echo "Không có flutter-test.json (test chưa chạy tới), bỏ qua Allure"
+          fi
+
+      # Repo kho là repo private khác của org: cần QLGD_CI_TOKEN (ghi contents qlgd-e2e-archive).
+      - name: 14c. Lấy history Allure từ repo kho
+        if: always() && inputs.no_report != 'true' && hashFiles('app/allure-results/*-result.json') != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.QLGD_CI_TOKEN }}
+        run: >-
+          python3 ci/scripts/ci-e2e/allure_archive.py --repo "$GITHUB_REPOSITORY_OWNER/qlgd-e2e-archive"
+          history --project qlgd-app-e2e --dest app/allure-results
+
+      - name: 14d. Generate Allure Report Dashboard
+        if: always() && inputs.no_report != 'true' && hashFiles('app/allure-results/*-result.json') != ''
+        continue-on-error: true
+        run: npx --yes allure-commandline@2.46.1 generate app/allure-results --clean -o app/allure-report
+
+      - name: 14e. Lưu kho Allure (repo private)
+        if: always() && inputs.no_report != 'true' && hashFiles('app/allure-report/index.html') != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.QLGD_CI_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          E2E_BRANCH: ${{ inputs.app_ref || inputs.custom_branch || 'main' }}
+        run: >-
+          python3 ci/scripts/ci-e2e/allure_archive.py --repo "$GITHUB_REPOSITORY_OWNER/qlgd-e2e-archive"
+          publish --project qlgd-app-e2e
+          --report app/allure-report
+          --run-id "$GITHUB_RUN_ID" --run-url "$RUN_URL" --branch "$E2E_BRANCH" --commit "$(git -C app rev-parse --short=7 HEAD)"
+
+      - name: 15. Upload app-e2e-report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-e2e-report
+          path: app/app-e2e-report/
+          if-no-files-found: warn
