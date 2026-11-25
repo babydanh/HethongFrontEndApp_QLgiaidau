@@ -6891,6 +6891,34 @@ class AppLocalizationsVi extends AppLocalizations {
       'Gửi mã OTP tới số điện thoại đang dùng';
 
   @override
+  String get settingsRecoveryEmail => 'Email khôi phục';
+
+  @override
+  String get settingsRecoveryEmailInvalid => 'Email không hợp lệ';
+
+  @override
+  String get settingsEmailNotAdded => 'Chưa thêm email';
+
+  @override
+  String get settingsLoginPhone => 'Số điện thoại đăng nhập';
+
+  @override
+  String get settingsLoginPhoneNotSet => 'Chưa đặt số điện thoại đăng nhập';
+
+  @override
+  String get settingsLoginPhoneChange => 'Đặt hoặc đổi số đăng nhập';
+
+  @override
+  String get settingsLoginPhoneSubtitle =>
+      'Dùng số này để đăng nhập thay cho email';
+
+  @override
+  String get settingsLoginPhoneSave => 'Lưu số đăng nhập';
+
+  @override
+  String get settingsLoginPhoneSaved => 'Đã lưu số điện thoại đăng nhập';
+
+  @override
   String get settingsStatusLoadError => 'Không thể tải trạng thái';
 
   @override
@@ -10710,8 +10738,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phoneVerificationConfirm => 'Xác minh';
 
   @override
-  String get emailVerificationEmailRequired =>
-      'Không tìm thấy email để xác minh';
+  String get emailVerificationEmailRequired => 'Vui lòng thêm email trước';
 
   @override
   String emailVerificationSendFailed(Object error) {

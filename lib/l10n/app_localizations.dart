@@ -12818,6 +12818,60 @@ abstract class AppLocalizations {
   /// **'Gửi mã OTP tới số điện thoại đang dùng'**
   String get settingsVerifyPhoneSubtitle;
 
+  /// No description provided for @settingsRecoveryEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email khôi phục'**
+  String get settingsRecoveryEmail;
+
+  /// No description provided for @settingsRecoveryEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ'**
+  String get settingsRecoveryEmailInvalid;
+
+  /// No description provided for @settingsEmailNotAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thêm email'**
+  String get settingsEmailNotAdded;
+
+  /// No description provided for @settingsLoginPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại đăng nhập'**
+  String get settingsLoginPhone;
+
+  /// No description provided for @settingsLoginPhoneNotSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đặt số điện thoại đăng nhập'**
+  String get settingsLoginPhoneNotSet;
+
+  /// No description provided for @settingsLoginPhoneChange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt hoặc đổi số đăng nhập'**
+  String get settingsLoginPhoneChange;
+
+  /// No description provided for @settingsLoginPhoneSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng số này để đăng nhập thay cho email'**
+  String get settingsLoginPhoneSubtitle;
+
+  /// No description provided for @settingsLoginPhoneSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu số đăng nhập'**
+  String get settingsLoginPhoneSave;
+
+  /// No description provided for @settingsLoginPhoneSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu số điện thoại đăng nhập'**
+  String get settingsLoginPhoneSaved;
+
   /// No description provided for @settingsStatusLoadError.
   ///
   /// In vi, this message translates to:
@@ -19647,7 +19701,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailVerificationEmailRequired.
   ///
   /// In vi, this message translates to:
-  /// **'Không tìm thấy email để xác minh'**
+  /// **'Vui lòng thêm email trước'**
   String get emailVerificationEmailRequired;
 
   /// No description provided for @emailVerificationSendFailed.

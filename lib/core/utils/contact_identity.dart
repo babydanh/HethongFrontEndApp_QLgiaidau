@@ -22,6 +22,15 @@ String? normalizeVnPhone(String? raw) {
   return '+84${digits.substring(digits.length - 9)}';
 }
 
+/// The account owner's own phone in national form: `+84987654321` ->
+/// `0987654321`. Unparseable values are returned unchanged; never use this
+/// for someone else's phone (use [maskPhone]).
+String? formatNationalPhone(String? v) {
+  if (v == null || v.isEmpty) return null;
+  final e164 = normalizeVnPhone(v);
+  return e164 == null ? v : '0${e164.substring(3)}';
+}
+
 /// Input containing `@` is an email; otherwise it must be a VN mobile number.
 ContactKind classifyIdentifier(String raw) {
   final trimmed = raw.trim();
@@ -58,4 +67,11 @@ String displayContact({String? email, String? phone}) {
   final trimmedEmail = email?.trim() ?? '';
   if (trimmedEmail.isNotEmpty) return maskEmail(trimmedEmail)!;
   return maskPhone(phone?.trim()) ?? '';
+}
+
+/// Header line for the signed-in user's own account: their email as stored,
+/// else their login phone masked like [displayContact].
+String ownContactLine({String? email, String? loginPhone}) {
+  final trimmed = email?.trim() ?? '';
+  return trimmed.isNotEmpty ? trimmed : displayContact(phone: loginPhone);
 }

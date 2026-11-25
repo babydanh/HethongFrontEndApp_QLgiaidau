@@ -113,7 +113,8 @@ void main() {
 
     expect(find.text(l10n.settingsVerificationStatus.toUpperCase()), findsOneWidget);
     expect(find.text(l10n.settingsVerifyEmail), findsOneWidget);
-    expect(find.text(l10n.settingsVerifyPhone), findsOneWidget);
+    // Phone verification stays hidden while SMS/OTP is disabled.
+    expect(find.text(l10n.settingsVerifyPhone), findsNothing);
 
     await _tapTab(tester, l10n.settingsSecurityTab);
 

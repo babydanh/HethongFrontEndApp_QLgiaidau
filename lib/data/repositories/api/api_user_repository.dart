@@ -206,6 +206,31 @@ class ApiUserRepository implements IUserRepository {
   }
 
   @override
+  Future<void> setLoginPhone({
+    required String phone,
+    String? currentPassword,
+  }) async {
+    _log.info('Đặt số điện thoại đăng nhập qua API');
+    try {
+      await _dioClient.dio.patch(
+        '/users/profile/login-phone',
+        data: {'phone': phone, 'currentPassword': ?currentPassword},
+      );
+    } catch (e, stack) {
+      _log.error('Lỗi đặt số điện thoại đăng nhập', e, stack);
+      if (e is DioException) {
+        throw Exception(
+          _parseNestJsError(
+            e.response?.data,
+            e.message ?? _l10n.networkConnectionFailed,
+          ),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<UserSearchResult>> searchUsers(String query) async {
     _log.info('Tìm kiếm người dùng: $query');
     try {

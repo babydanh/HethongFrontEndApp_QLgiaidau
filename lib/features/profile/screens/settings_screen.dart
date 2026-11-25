@@ -14,8 +14,9 @@ import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/edit_profile_payload.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
-import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/login_phone_flow.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -147,7 +148,12 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
   final _bioCtrl = TextEditingController();
 
   String? _nameError;
+  String? _emailError;
   String? _phoneError;
+
+  /// Phone-only accounts may add a first (recovery) email here; an existing
+  /// email stays read-only.
+  bool _canAddEmail = false;
   String? _addressError;
   String? _bioError;
   String? _saveError;
@@ -488,17 +494,26 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
     final phoneError = phone.isNotEmpty && !isValidVnPhone(phone)
         ? l10n.settingsPhoneInvalid
         : null;
+    final email = _emailCtrl.text.trim();
+    final emailError =
+        _canAddEmail &&
+            email.isNotEmpty &&
+            classifyIdentifier(email) != ContactKind.email
+        ? l10n.settingsRecoveryEmailInvalid
+        : null;
     final addressError = _addressCtrl.text.length > 255
         ? l10n.settingsAddressMax
         : null;
     final bioError = _bioCtrl.text.length > 500 ? l10n.settingsBioMax : null;
     setState(() {
       _nameError = nameError;
+      _emailError = emailError;
       _phoneError = phoneError;
       _addressError = addressError;
       _bioError = bioError;
     });
     return nameError == null &&
+        emailError == null &&
         phoneError == null &&
         addressError == null &&
         bioError == null;
@@ -525,9 +540,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
         address: _addressCtrl.text,
         provinceCode: _provinceCode,
         bio: _bioCtrl.text,
+        recoveryEmail: _canAddEmail ? _emailCtrl.text : null,
       );
 
       await ref.read(userRepositoryProvider).updateProfile(payload);
+      // The account now has an email, which stays read-only from here on.
+      if (payload.containsKey('email') && mounted) {
+        setState(() => _canAddEmail = false);
+      }
 
       _log.success('Cập nhật hồ sơ thành công');
       ref.invalidate(userProfileProvider);
@@ -569,6 +589,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
         if (!_initialized) {
           _nameCtrl.text = profile.fullName ?? '';
           _emailCtrl.text = profile.email ?? '';
+          _canAddEmail = (profile.email ?? '').trim().isEmpty;
           _phoneCtrl.text = profile.phoneNumber ?? '';
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
@@ -582,7 +603,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
         return _buildForm(
           profile.avatarUrl,
           profile.coverUrl,
-          profile.email,
+          ownContactLine(email: profile.email, loginPhone: profile.loginPhone),
           profile.fullName,
           genderLocked,
         );
@@ -601,7 +622,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
   Widget _buildForm(
     String? avatarUrl,
     String? coverUrl,
-    String? email,
+    String contact,
     String? fullName,
     bool genderLocked,
   ) {
@@ -615,7 +636,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildCoverAndAvatar(c, avatarUrl, coverUrl, email, fullName),
+                _buildCoverAndAvatar(c, avatarUrl, coverUrl, contact, fullName),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
                   child: Column(
@@ -629,9 +650,14 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
                       ),
                       const SizedBox(height: 12),
                       LavishTextField(
-                        label: l10n.emailLabel,
+                        label: _canAddEmail
+                            ? l10n.settingsRecoveryEmail
+                            : l10n.emailLabel,
                         controller: _emailCtrl,
-                        enabled: false,
+                        enabled: _canAddEmail,
+                        keyboardType: TextInputType.emailAddress,
+                        errorText: _emailError,
+                        onChanged: (_) => setState(() => _emailError = null),
                       ),
                       const SizedBox(height: 12),
                       LavishTextField(
@@ -698,7 +724,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
     LavishColors c,
     String? avatarUrl,
     String? coverUrl,
-    String? email,
+    String contact,
     String? fullName,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -830,7 +856,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
                   ),
                 ),
                 Text(
-                  email ?? '',
+                  contact,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: c.muted),
@@ -1238,46 +1264,52 @@ class _VerificationSection extends ConsumerWidget {
       children: [
         LavishGroupHeader(l10n.settingsVerificationStatus),
         ...profileAsync.when(
-          data: (profile) => [
-            _verifyRow(
-              context,
-              icon: Icons.email_outlined,
-              title: l10n.emailLabel,
-              verified: profile.isEmailVerified == true,
-              value: profile.email,
-            ),
-            _verifyRow(
-              context,
-              icon: Icons.phone_android_rounded,
-              title: l10n.infoPhone,
-              verified: profile.isPhoneVerified == true,
-              value: profile.phoneNumber ?? l10n.settingsPhoneNotUpdated,
-            ),
-            if (profile.isEmailVerified != true)
-              _actionRow(
+          data: (profile) {
+            final hasEmail = (profile.email ?? '').trim().isNotEmpty;
+            return [
+              _verifyRow(
                 context,
-                icon: Icons.mark_email_unread_rounded,
-                title: l10n.settingsVerifyEmail,
-                subtitle: l10n.settingsVerifyEmailSubtitle,
-                onTap: () => startEmailVerificationFlow(
+                icon: Icons.email_outlined,
+                title: l10n.emailLabel,
+                verified: profile.isEmailVerified == true,
+                value: hasEmail ? profile.email : l10n.settingsEmailNotAdded,
+              ),
+              _verifyRow(
+                context,
+                icon: Icons.phone_android_rounded,
+                title: l10n.settingsLoginPhone,
+                verified: profile.isPhoneVerified == true,
+                value:
+                    formatNationalPhone(profile.loginPhone) ??
+                    l10n.settingsLoginPhoneNotSet,
+              ),
+              KeyedSubtree(
+                key: const ValueKey('settings-login-phone-action'),
+                child: _actionRow(
                   context,
-                  ref,
-                  profile.email ?? '',
+                  icon: Icons.phonelink_lock_rounded,
+                  title: l10n.settingsLoginPhoneChange,
+                  subtitle: l10n.settingsLoginPhoneSubtitle,
+                  onTap: () => startLoginPhoneFlow(context),
                 ),
               ),
-            if (profile.isPhoneVerified != true)
-              _actionRow(
-                context,
-                icon: Icons.sms_rounded,
-                title: l10n.settingsVerifyPhone,
-                subtitle: l10n.settingsVerifyPhoneSubtitle,
-                onTap: () => startPhoneVerificationFlow(
+              // No email yet: add one in the email field above first.
+              if (hasEmail && profile.isEmailVerified != true)
+                _actionRow(
                   context,
-                  ref,
-                  profile.phoneNumber ?? '',
+                  icon: Icons.mark_email_unread_rounded,
+                  title: l10n.settingsVerifyEmail,
+                  subtitle: l10n.settingsVerifyEmailSubtitle,
+                  onTap: () => startEmailVerificationFlow(
+                    context,
+                    ref,
+                    profile.email ?? '',
+                  ),
                 ),
-              ),
-          ],
+              // Phone verification (startPhoneVerificationFlow) stays hidden
+              // while SMS/OTP is disabled on the Backend.
+            ];
+          },
           loading: () => [const LavishRowSkeleton(count: 2)],
           error: (_, _) => [
             LavishErrorState(

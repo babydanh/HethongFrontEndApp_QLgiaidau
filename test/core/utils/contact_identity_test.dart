@@ -53,6 +53,15 @@ void main() {
     });
   });
 
+  group('formatNationalPhone', () {
+    test('TC-APP-PHONE-27 own login phone shown as 0XXXXXXXXX', () {
+      expect(formatNationalPhone('+84987654321'), '0987654321');
+      expect(formatNationalPhone(null), isNull);
+      expect(formatNationalPhone(''), isNull);
+      expect(formatNationalPhone('12345'), '12345');
+    });
+  });
+
   group('maskPhone', () {
     test('TC-APP-PHONE-05 keeps country code, 2 first and 3 last digits', () {
       expect(maskPhone('+84987654321'), '+84 98• ••• 321');
@@ -99,6 +108,17 @@ void main() {
         '+84 98• ••• 321',
       );
       expect(displayContact(), '');
+    });
+  });
+
+  group('ownContactLine', () {
+    test('TC-APP-PHONE-28 own email as is, else the masked login phone', () {
+      expect(
+        ownContactLine(email: 'an@example.com', loginPhone: '0987654321'),
+        'an@example.com',
+      );
+      expect(ownContactLine(loginPhone: '+84987654321'), '+84 98• ••• 321');
+      expect(ownContactLine(email: ' '), '');
     });
   });
 

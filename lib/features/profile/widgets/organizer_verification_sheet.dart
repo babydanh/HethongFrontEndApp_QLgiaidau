@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/contact_identity.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -379,7 +380,9 @@ class _OrganizerVerificationSheetState
                       border: Border.all(color: colors.border),
                     ),
                     child: Text(
-                      userProfile?.email ?? '—',
+                      userProfile?.email ??
+                          formatNationalPhone(userProfile?.loginPhone) ??
+                          '—',
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,

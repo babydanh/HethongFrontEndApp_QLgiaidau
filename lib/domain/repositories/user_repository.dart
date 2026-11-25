@@ -7,6 +7,10 @@ abstract class IUserRepository {
   Future<UserProfile> uploadCover(List<int> bytes, String fileName);
   Future<void> changePassword(String oldPassword, String newPassword);
 
+  /// Sets or changes the login phone. PATCH /users/profile/login-phone
+  /// [currentPassword] is required when the account has a password.
+  Future<void> setLoginPhone({required String phone, String? currentPassword});
+
   /// Xóa tài khoản hiện tại. POST /users/delete-account
   Future<void> deleteAccount(String password);
 
