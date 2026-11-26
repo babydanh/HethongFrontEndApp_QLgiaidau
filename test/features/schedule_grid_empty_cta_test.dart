@@ -45,6 +45,7 @@ Future<void> _pump(
   String userId = 'owner-1',
   bool lite = false,
   bool hostGrantsScheduling = false,
+  bool hostGrantsDragOnly = false,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -77,9 +78,11 @@ Future<void> _pump(
                 'operatingStart': '07:00',
                 'operatingEnd': '10:00',
               },
-              onScheduleDrop: hostGrantsScheduling
+              onScheduleDrop: hostGrantsScheduling || hostGrantsDragOnly
                   ? (matchId, courtId, courtName, scheduledAt) {}
                   : null,
+              // Court hours are what a host grants to someone who manages courts.
+              onOpenScheduleSettings: hostGrantsScheduling ? () {} : null,
             ),
           ),
         ),
@@ -155,4 +158,15 @@ void main() {
       expect(find.byKey(cta), findsOneWidget);
     },
   );
+
+  testWidgets('TC-REF-MODE-APP-22 a referee host (drag only) gets no Tạo sân', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      userId: 'referee-not-creator',
+      hostGrantsDragOnly: true,
+    );
+    expect(find.byKey(cta), findsNothing);
+  });
 }

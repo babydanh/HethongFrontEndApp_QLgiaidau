@@ -5348,6 +5348,8 @@
   "opsDivision": "Nội dung",
   "opsOrganizerOnly": "Không gian vận hành",
   "opsNoPermission": "Bạn không có quyền vận hành giải đấu này.",
+  "refereeModeNotice": "Bạn đang xem với vai Trọng tài: được đổi giờ, sân và nhập kết quả trận. Việc khác do ban tổ chức thực hiện.",
+  "dashboard_refereeTournaments": "Giải làm trọng tài",
   "opsLoadFailed": "Không thể tải dữ liệu vận hành giải.",
   "opsRetry": "Thử lại",
   "opsEmptyDivision": "Giải đấu chưa có nội dung nào.",

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -68,6 +69,7 @@ Widget _app(List<MatchModel> matches) => ProviderScope(
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('vi'),
     home: TournamentManagementHubScreen(
+      role: ManageRole.manager,
       tournament: _tournament(),
       actionRouteBase: '/admin/tournament/$_tid',
       opsWorkspaceRoute: '/organizer/tournaments/$_tid/ops',

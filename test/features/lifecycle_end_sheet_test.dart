@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -105,6 +106,7 @@ Widget _organizerApp(
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
         home: TournamentManagementHubScreen(
+          role: ManageRole.manager,
           tournament: _inProgressTournament(),
           actionRouteBase: '/organizer/tournaments/tournament-1/manage',
           opsWorkspaceRoute: '/organizer/tournaments/tournament-1/ops',

@@ -337,8 +337,9 @@ class _TournamentScheduleCourtGridState
                 ScheduleManagerBar(
                   tournamentId: widget.tournamentId,
                   createCourtCta: true,
-                  // The ops screen only passes onScheduleDrop to users it lets schedule.
-                  hostGrantsManage: widget.onScheduleDrop != null,
+                  // Only hosts that let the user set court hours manage courts;
+                  // a referee may drag matches (onScheduleDrop) but not this.
+                  hostGrantsManage: widget.onOpenScheduleSettings != null,
                 ),
               ],
             ),
