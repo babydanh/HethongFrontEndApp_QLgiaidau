@@ -5,9 +5,12 @@ Sân thi đấu thường có camera IP (Dahua...) chỉ có địa chỉ nội 
 1. Màn "Camera IP" (mở từ bảng camera của giải): chọn camera PUSH, nhập IP, hãng, username, mật khẩu, cổng RTSP, luồng chính/phụ; nút Bắt đầu/Dừng; hiện trạng thái (đang kết nối, đang phát, lỗi).
 2. Bộ chuyển luồng: dựng URL RTSP theo hãng, chạy FFmpeg chuyển gói (`-c copy`) RTSP→RTMP lên `rtmpServer` + `rtmpStreamKey` lấy từ route stream-key AQP đã có (`ICameraAdminRepository.createStreamKey/getStreamKey`).
 3. Giữ phát khi tắt màn hình (dịch vụ nền Android) và tự nối lại khi rớt mạng.
+4. Hai camera cùng một giải chạy độc lập (mỗi camera một tiến trình, một cái lỗi không làm dừng cái kia).
+5. Cấu hình hai camera được nhớ theo từng giải, lưu mã hoá trên tablet (không lên server).
 
 ## Out of scope
-- Backend và Web: không sửa, không thêm endpoint (route camera PUSH + stream key đã có).
+- Backend và Web: không sửa, không thêm endpoint (route camera PUSH, stream key và trạng thái online/offline của camera đã có; Web đã có `CameraWall` hiện trạng thái; trình duyệt không kéo được RTSP trong LAN nên Web không chạy bộ chuyển luồng).
+- Không sửa cấu hình trên camera: app chỉ đọc luồng bằng IP/user/pass người dùng nhập.
 - Camera cần mã hoá lại H.265 → H.264 (chỉ báo lỗi rõ, hướng dẫn đổi luồng phụ H.264).
 - iOS (tablet sân là Android); lưu mật khẩu camera lâu dài (chỉ giữ trong bộ nhớ phiên).
 - Tab camera đang sửa ở worktree `camera-san-gon-app`: chỉ thêm một điểm vào, không đổi bố cục tab.

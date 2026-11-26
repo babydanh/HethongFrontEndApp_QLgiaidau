@@ -57,8 +57,10 @@ class CameraBridgeState {
   final int attempt;
 }
 
-final ffmpegRunnerProvider = Provider<FfmpegRunner>(
-  (ref) => throw UnimplementedError('No FFmpeg runner is wired in yet'),
+/// Makes one FFmpeg runner per camera, so two cameras never share a process.
+final ffmpegRunnerFactoryProvider = Provider<FfmpegRunner Function()>(
+  (ref) =>
+      () => throw UnimplementedError('No FFmpeg runner is wired in yet'),
 );
 
 /// Waits between reconnect attempts; replaced in tests.
@@ -66,8 +68,10 @@ final bridgeDelayProvider = Provider<Future<void> Function(Duration)>(
   (ref) => Future<void>.delayed,
 );
 
+/// One bridge per camera id; the family keeps each alive while the user moves
+/// between screens.
 final cameraBridgeProvider =
-    NotifierProvider<CameraBridgeNotifier, CameraBridgeState>(
+    NotifierProvider.family<CameraBridgeNotifier, CameraBridgeState, String>(
       CameraBridgeNotifier.new,
     );
 
@@ -80,6 +84,9 @@ Duration cameraBridgeBackoff(int attempt) {
 }
 
 class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
+  CameraBridgeNotifier(this.cameraId);
+
+  final String cameraId;
   FfmpegRunner? _runner;
 
   /// Bumped by every start and stop; a loop that sees another value is stale.
@@ -123,7 +130,7 @@ class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
 
     final runId = ++_runId;
     _attempt = 0;
-    _runner = ref.read(ffmpegRunnerProvider);
+    _runner = ref.read(ffmpegRunnerFactoryProvider)();
     state = const CameraBridgeState(status: BridgeStatus.connecting);
     await _loop(rtspUrl, rtmpUrl, runId);
   }

@@ -41,15 +41,30 @@ const _params = BridgeStartParams(
   rtmpStreamKey: 'key123',
 );
 
+const _cam = 'cam-1';
+
 Future<void> pump() => Future<void>.delayed(Duration.zero);
 
-({ProviderContainer container, FakeFfmpegRunner runner, List<Duration> delays})
+({
+  ProviderContainer container,
+  FakeFfmpegRunner runner,
+  List<FakeFfmpegRunner> runners,
+  List<Duration> delays,
+})
 _setup() {
+  // The first camera gets [runner]; every other camera gets a fresh fake.
   final runner = FakeFfmpegRunner();
+  final runners = <FakeFfmpegRunner>[runner];
+  var created = 0;
   final delays = <Duration>[];
   final container = ProviderContainer(
     overrides: [
-      ffmpegRunnerProvider.overrideWithValue(runner),
+      ffmpegRunnerFactoryProvider.overrideWithValue(() {
+        if (created++ == 0) return runner;
+        final next = FakeFfmpegRunner();
+        runners.add(next);
+        return next;
+      }),
       bridgeDelayProvider.overrideWithValue((d) async {
         delays.add(d);
         await pump();
@@ -57,19 +72,19 @@ _setup() {
     ],
   );
   addTearDown(container.dispose);
-  return (container: container, runner: runner, delays: delays);
+  return (container: container, runner: runner, runners: runners, delays: delays);
 }
 
 void main() {
   group('CameraBridgeNotifier', () {
     test('TC-CAMBR-10 start builds both urls, goes connecting then live', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       await pump();
 
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.connecting);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.connecting);
       expect(s.runner.runs, hasLength(1));
       expect(
         s.runner.runs.single.rtsp,
@@ -79,12 +94,12 @@ void main() {
 
       s.runner.current.add(const BridgeLive());
       await pump();
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.live);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.live);
     });
 
     test('TC-CAMBR-11 double start runs a single ffmpeg process', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       unawaited(notifier.start(_params));
@@ -95,11 +110,11 @@ void main() {
 
     test('TC-CAMBR-12 blank host fails without running ffmpeg', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       await notifier.start(_params.copyWith(host: ' '));
 
-      final state = s.container.read(cameraBridgeProvider);
+      final state = s.container.read(cameraBridgeProvider(_cam));
       expect(state.status, BridgeStatus.error);
       expect(state.failure, BridgeFailure.invalidInput);
       expect(s.runner.runs, isEmpty);
@@ -107,7 +122,7 @@ void main() {
 
     test('TC-CAMBR-13 auth failure stops without retrying', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       await pump();
@@ -115,7 +130,7 @@ void main() {
       await pump();
       await pump();
 
-      final state = s.container.read(cameraBridgeProvider);
+      final state = s.container.read(cameraBridgeProvider(_cam));
       expect(state.status, BridgeStatus.error);
       expect(state.failure, BridgeFailure.auth);
       expect(s.runner.runs, hasLength(1));
@@ -124,7 +139,7 @@ void main() {
 
     test('TC-CAMBR-14 a dropped stream is retried with backoff, one process at a time', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       await pump();
@@ -138,16 +153,16 @@ void main() {
 
       expect(s.delays, [const Duration(seconds: 2)]);
       expect(s.runner.runs, hasLength(2));
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.connecting);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.connecting);
 
       s.runner.current.add(const BridgeLive());
       await pump();
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.live);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.live);
     });
 
     test('TC-CAMBR-15 stop returns to idle and stops retrying', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       await pump();
@@ -158,14 +173,14 @@ void main() {
       await pump();
       await pump();
 
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.idle);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.idle);
       expect(s.runner.stops, 1);
       expect(s.runner.runs, hasLength(1));
     });
 
     test('TC-CAMBR-16 start works again after an error', () async {
       final s = _setup();
-      final notifier = s.container.read(cameraBridgeProvider.notifier);
+      final notifier = s.container.read(cameraBridgeProvider(_cam).notifier);
 
       unawaited(notifier.start(_params));
       await pump();
@@ -177,7 +192,64 @@ void main() {
       await pump();
 
       expect(s.runner.runs, hasLength(2));
-      expect(s.container.read(cameraBridgeProvider).status, BridgeStatus.connecting);
+      expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.connecting);
+    });
+  });
+
+  group('two cameras of one tournament', () {
+    test('TC-CAMBR-20 each camera runs and stops on its own', () async {
+      final s = _setup();
+      final cam1 = s.container.read(cameraBridgeProvider('cam-1').notifier);
+      final cam2 = s.container.read(cameraBridgeProvider('cam-2').notifier);
+
+      unawaited(cam1.start(_params));
+      unawaited(cam2.start(_params.copyWith(host: '192.168.1.51')));
+      await pump();
+
+      expect(s.runners, hasLength(2));
+      expect(s.runners[0].runs.single.rtsp, contains('@192.168.1.50:'));
+      expect(s.runners[1].runs.single.rtsp, contains('@192.168.1.51:'));
+
+      s.runners[0].current.add(const BridgeLive());
+      s.runners[1].current.add(const BridgeLive());
+      await pump();
+
+      await cam1.stop();
+      await pump();
+
+      expect(
+        s.container.read(cameraBridgeProvider('cam-1')).status,
+        BridgeStatus.idle,
+      );
+      expect(
+        s.container.read(cameraBridgeProvider('cam-2')).status,
+        BridgeStatus.live,
+      );
+      expect(s.runners[0].stops, 1);
+      expect(s.runners[1].stops, 0);
+    });
+
+    test('TC-CAMBR-21 one camera failing does not stop the other', () async {
+      final s = _setup();
+      final cam1 = s.container.read(cameraBridgeProvider('cam-1').notifier);
+      final cam2 = s.container.read(cameraBridgeProvider('cam-2').notifier);
+
+      unawaited(cam1.start(_params));
+      unawaited(cam2.start(_params));
+      await pump();
+      s.runners[1].current.add(const BridgeLive());
+      s.runners[0].current.add(const BridgeFailed(BridgeFailure.auth));
+      await pump();
+      await pump();
+
+      expect(
+        s.container.read(cameraBridgeProvider('cam-1')).status,
+        BridgeStatus.error,
+      );
+      expect(
+        s.container.read(cameraBridgeProvider('cam-2')).status,
+        BridgeStatus.live,
+      );
     });
   });
 
