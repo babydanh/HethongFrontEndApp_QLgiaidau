@@ -37254,6 +37254,192 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký giải của bạn không còn hiệu lực nên bạn đã rời phòng giải.'**
   String get chatRoomEvictedNotice;
+
+  /// No description provided for @cameraBridge_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera IP'**
+  String get cameraBridge_title;
+
+  /// No description provided for @cameraBridge_cameraN.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera {n}'**
+  String cameraBridge_cameraN(int n);
+
+  /// No description provided for @cameraBridge_fieldHost.
+  ///
+  /// In vi, this message translates to:
+  /// **'IP camera'**
+  String get cameraBridge_fieldHost;
+
+  /// No description provided for @cameraBridge_fieldBrand.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãng camera'**
+  String get cameraBridge_fieldBrand;
+
+  /// No description provided for @cameraBridge_fieldPort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cổng RTSP'**
+  String get cameraBridge_fieldPort;
+
+  /// No description provided for @cameraBridge_fieldUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản'**
+  String get cameraBridge_fieldUser;
+
+  /// No description provided for @cameraBridge_fieldPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu'**
+  String get cameraBridge_fieldPassword;
+
+  /// No description provided for @cameraBridge_showPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mật khẩu'**
+  String get cameraBridge_showPassword;
+
+  /// No description provided for @cameraBridge_hidePassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get cameraBridge_hidePassword;
+
+  /// No description provided for @cameraBridge_brandDahua.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dahua'**
+  String get cameraBridge_brandDahua;
+
+  /// No description provided for @cameraBridge_brandHikvision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hikvision'**
+  String get cameraBridge_brandHikvision;
+
+  /// No description provided for @cameraBridge_streamMain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luồng chính'**
+  String get cameraBridge_streamMain;
+
+  /// No description provided for @cameraBridge_streamSub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luồng phụ'**
+  String get cameraBridge_streamSub;
+
+  /// No description provided for @cameraBridge_start.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu'**
+  String get cameraBridge_start;
+
+  /// No description provided for @cameraBridge_stop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng'**
+  String get cameraBridge_stop;
+
+  /// No description provided for @cameraBridge_addCamera2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm camera 2'**
+  String get cameraBridge_addCamera2;
+
+  /// No description provided for @cameraBridge_removeCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ camera'**
+  String get cameraBridge_removeCamera;
+
+  /// No description provided for @cameraBridge_statusIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa kết nối'**
+  String get cameraBridge_statusIdle;
+
+  /// No description provided for @cameraBridge_statusConnecting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kết nối'**
+  String get cameraBridge_statusConnecting;
+
+  /// No description provided for @cameraBridge_statusLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang phát'**
+  String get cameraBridge_statusLive;
+
+  /// No description provided for @cameraBridge_statusError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi'**
+  String get cameraBridge_statusError;
+
+  /// No description provided for @cameraBridge_hostRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập IP camera, ví dụ 192.168.1.50'**
+  String get cameraBridge_hostRequired;
+
+  /// No description provided for @cameraBridge_portInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cổng từ 1 đến 65535'**
+  String get cameraBridge_portInvalid;
+
+  /// No description provided for @cameraBridge_userRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tài khoản camera'**
+  String get cameraBridge_userRequired;
+
+  /// No description provided for @cameraBridge_passwordRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập mật khẩu camera'**
+  String get cameraBridge_passwordRequired;
+
+  /// No description provided for @cameraBridge_errorAuth.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sai tài khoản hoặc mật khẩu camera.'**
+  String get cameraBridge_errorAuth;
+
+  /// No description provided for @cameraBridge_errorUnreachable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thấy camera. Máy này phải dùng chung wifi với camera.'**
+  String get cameraBridge_errorUnreachable;
+
+  /// No description provided for @cameraBridge_errorCodec.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera đang phát H.265. Hãy chọn luồng phụ (H.264).'**
+  String get cameraBridge_errorCodec;
+
+  /// No description provided for @cameraBridge_errorInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin camera chưa đúng.'**
+  String get cameraBridge_errorInvalid;
+
+  /// No description provided for @cameraBridge_errorOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đẩy được hình lên. Đang thử nối lại.'**
+  String get cameraBridge_errorOther;
+
+  /// No description provided for @cameraBridge_errorSetup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa lấy được khoá phát của giải. Thử lại sau.'**
+  String get cameraBridge_errorSetup;
 }
 
 class _AppLocalizationsDelegate

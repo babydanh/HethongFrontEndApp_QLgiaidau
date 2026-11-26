@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -20836,4 +20837,103 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatRoomEvictedNotice =>
       'Your registration is no longer valid, so you have left the tournament room.';
+
+  @override
+  String get cameraBridge_title => 'IP camera';
+
+  @override
+  String cameraBridge_cameraN(int n) {
+    return 'Camera $n';
+  }
+
+  @override
+  String get cameraBridge_fieldHost => 'Camera IP';
+
+  @override
+  String get cameraBridge_fieldBrand => 'Camera brand';
+
+  @override
+  String get cameraBridge_fieldPort => 'RTSP port';
+
+  @override
+  String get cameraBridge_fieldUser => 'Username';
+
+  @override
+  String get cameraBridge_fieldPassword => 'Password';
+
+  @override
+  String get cameraBridge_showPassword => 'Show password';
+
+  @override
+  String get cameraBridge_hidePassword => 'Hide password';
+
+  @override
+  String get cameraBridge_brandDahua => 'Dahua';
+
+  @override
+  String get cameraBridge_brandHikvision => 'Hikvision';
+
+  @override
+  String get cameraBridge_streamMain => 'Main stream';
+
+  @override
+  String get cameraBridge_streamSub => 'Sub stream';
+
+  @override
+  String get cameraBridge_start => 'Start';
+
+  @override
+  String get cameraBridge_stop => 'Stop';
+
+  @override
+  String get cameraBridge_addCamera2 => 'Add camera 2';
+
+  @override
+  String get cameraBridge_removeCamera => 'Remove camera';
+
+  @override
+  String get cameraBridge_statusIdle => 'Not connected';
+
+  @override
+  String get cameraBridge_statusConnecting => 'Connecting';
+
+  @override
+  String get cameraBridge_statusLive => 'Live';
+
+  @override
+  String get cameraBridge_statusError => 'Error';
+
+  @override
+  String get cameraBridge_hostRequired =>
+      'Enter the camera IP, e.g. 192.168.1.50';
+
+  @override
+  String get cameraBridge_portInvalid => 'Port must be 1 to 65535';
+
+  @override
+  String get cameraBridge_userRequired => 'Enter the camera username';
+
+  @override
+  String get cameraBridge_passwordRequired => 'Enter the camera password';
+
+  @override
+  String get cameraBridge_errorAuth => 'Wrong camera username or password.';
+
+  @override
+  String get cameraBridge_errorUnreachable =>
+      'Camera not found. This device must be on the same wifi as the camera.';
+
+  @override
+  String get cameraBridge_errorCodec =>
+      'The camera sends H.265. Pick the sub stream (H.264).';
+
+  @override
+  String get cameraBridge_errorInvalid => 'The camera details are not valid.';
+
+  @override
+  String get cameraBridge_errorOther => 'Could not push the video. Retrying.';
+
+  @override
+  String get cameraBridge_errorSetup =>
+      'Could not get the tournament\'s push key. Try again later.';
 }
