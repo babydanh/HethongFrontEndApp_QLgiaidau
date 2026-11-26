@@ -2407,6 +2407,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final videoPlayer = LiveVideoBox(
       key: _videoKey,
       matchId: widget.matchId,
+      matchStatus: match.status,
       showStreamStats: _canSeeStreamStats(effectiveId),
       fill: landscape,
       fullscreen: landscape,

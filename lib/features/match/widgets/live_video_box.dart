@@ -8,10 +8,10 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final matchPlaybackProvider = FutureProvider.family<MatchPlaybackModel?, String>((
-  ref,
-  matchId,
-) async {
+// autoDispose: opening the match again asks again; a cached "no stream yet"
+// answer must not outlive the screen.
+final matchPlaybackProvider = FutureProvider.autoDispose
+    .family<MatchPlaybackModel?, String>((ref, matchId) async {
   final repository = ref.watch(matchPlaybackRepositoryProvider);
   try {
     final playback = await repository.getMatchPlayback(matchId);
@@ -23,25 +23,21 @@ final matchPlaybackProvider = FutureProvider.family<MatchPlaybackModel?, String>
   }
 });
 
-final matchReplayProvider = FutureProvider.family<MatchReplay?, String>((
-  ref,
-  matchId,
-) async {
+final matchReplayProvider = FutureProvider.autoDispose
+    .family<MatchReplay?, String>((ref, matchId) async {
   final repository = ref.watch(matchPlaybackRepositoryProvider);
   // Ask again when the live stream appears or goes: an earlier "no recording
   // yet" answer must not stick once the match has moved on.
   ref.watch(
     matchPlaybackProvider(matchId).select((v) => v.asData?.value?.playbackUrl),
   );
-  try {
-    final replay = await repository.getMatchReplay(matchId);
-    // Files to play, or a Facebook/YouTube watch link the embed can show.
-    final playable =
-        replay.segments.isNotEmpty || LiveEmbed.parse(replay.externalUrl).isOk;
-    return replay.available && playable ? replay : null;
-  } on Object {
-    return null;
-  }
+  // A failed lookup throws on purpose: Riverpod retries it with backoff,
+  // where a caught null would stick as "no recording" for the whole screen.
+  final replay = await repository.getMatchReplay(matchId);
+  // Files to play, or a Facebook/YouTube watch link the embed can show.
+  final playable =
+      replay.segments.isNotEmpty || LiveEmbed.parse(replay.externalUrl).isOk;
+  return replay.available && playable ? replay : null;
 });
 
 /// Khung video của trận: phát luồng trực tiếp hoặc bản ghi khi có sẵn.
@@ -62,9 +58,14 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.onReplayPositionChanged,
     this.preferReplay = false,
     this.onToggleReplay,
+    this.matchStatus,
   });
 
   final String matchId;
+
+  /// The match status the screen shows. When it changes (the match starts or
+  /// ends) the live and recording answers are fetched again, as on the Web.
+  final String? matchStatus;
 
   /// Forwarded to whichever player shows: true while its control bar is up.
   final ValueChanged<bool>? onControlsVisibleChanged;
@@ -101,6 +102,18 @@ class LiveVideoBox extends ConsumerStatefulWidget {
 class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
   String? _resolvedFor;
   String? _url;
+
+  @override
+  void didUpdateWidget(covariant LiveVideoBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.matchStatus == widget.matchStatus) return;
+    // Providers must not change while the tree builds: refresh right after.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(matchPlaybackProvider(widget.matchId));
+      ref.invalidate(matchReplayProvider(widget.matchId));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
