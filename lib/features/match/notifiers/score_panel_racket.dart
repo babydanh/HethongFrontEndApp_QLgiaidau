@@ -163,11 +163,15 @@ extension ScorePanelRacket on ScorePanelState {
     return swaps.isEven ? starter : 1 - starter;
   }
 
-  /// The four court cells for the current score.
-  List<RacketCourtCell> racketCells({required bool doubles}) =>
+  /// The four court cells for the current score. [serverRight] overrides the
+  /// side the server stands on (the referee picked a player in place).
+  List<RacketCourtCell> racketCells({
+    required bool doubles,
+    bool? serverRight,
+  }) =>
       racketCourtCells(
         serverTeam: racketServerTeam,
-        serverRight: racketServerRight,
+        serverRight: serverRight ?? racketServerRight,
         serverPlayerIndex: racketServerPlayerIndex(doubles: doubles),
         doubles: doubles,
         team1RightPlayer: _rightPlayerOf(1),

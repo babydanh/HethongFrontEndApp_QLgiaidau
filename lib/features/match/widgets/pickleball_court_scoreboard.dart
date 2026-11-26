@@ -116,6 +116,11 @@ class CourtScoreboard extends StatelessWidget {
     // rows keep clear of it.
     final inset = MediaQuery.paddingOf(context);
     final clearOfCutout = EdgeInsets.only(left: inset.left, right: inset.right);
+    // The score buttons get the same margin on both sides, so they stay
+    // centred on the court instead of sliding away from a one-sided cutout.
+    final centredClearOfCutout = EdgeInsets.symmetric(
+      horizontal: math.max(inset.left, inset.right),
+    );
     return ColoredBox(
       color: _surface,
       child: Column(
@@ -140,7 +145,7 @@ class CourtScoreboard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: clearOfCutout,
+            padding: centredClearOfCutout,
             child: _BottomBar(
               leftTeam: left,
               rightTeam: right,

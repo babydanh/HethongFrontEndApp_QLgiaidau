@@ -439,6 +439,23 @@ void main() {
       }
     });
 
+    testWidgets('TC-CBD-PB-07 camera hole on one side only: the score buttons '
+        'stay centred on the court', (tester) async {
+      const inset = FakeViewPadding(top: 47, right: 47);
+      tester.view.viewPadding = inset;
+      tester.view.padding = inset;
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      final plus = [
+        for (final tip in ['Add point for team 1', 'Add point for team 2'])
+          tester.getRect(find.byTooltip(tip)),
+      ];
+      // Outermost plus of each pair: the gap to each screen edge is equal.
+      final left = plus.map((r) => r.left).reduce((a, b) => a < b ? a : b);
+      final right = plus.map((r) => r.right).reduce((a, b) => a > b ? a : b);
+      expect(left + right, closeTo(800, 0.5));
+    });
+
     testWidgets('wide landscape: no margin above or below the scoreboard', (
       tester,
     ) async {
@@ -583,13 +600,29 @@ void main() {
   testWidgets('other sports keep the shared bottom bar', (tester) async {
     await _pump(
       tester,
-      sportKey: 'BADMINTON',
-      kind: SportRuleKind.badminton,
+      sportKey: 'TABLE_TENNIS',
+      kind: SportRuleKind.tableTennis,
       model: SportScoringModel.rallyPointSet,
     );
 
     expect(find.byType(PickleballCourtView), findsNothing);
     expect(find.byType(FilterChip), findsOneWidget);
     expect(find.text('Override'), findsOneWidget);
+  });
+
+  // TC-RACKET-MODAL-01: badminton and tennis score on the court like
+  // pickleball, so the shared bottom bar (override chip) is gone.
+  testWidgets('TC-RACKET-MODAL-01 badminton court has no shared bottom bar', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      sportKey: 'BADMINTON',
+      kind: SportRuleKind.badminton,
+      model: SportScoringModel.rallyPointSet,
+    );
+
+    expect(find.byType(RacketCourtPanel), findsOneWidget);
+    expect(find.byType(FilterChip), findsNothing);
   });
 }

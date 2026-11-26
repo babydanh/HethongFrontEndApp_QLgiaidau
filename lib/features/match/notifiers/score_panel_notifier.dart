@@ -1103,13 +1103,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool racketCorrectServer(int team, int playerIndex) {
     if (!state.isRacket || state.isMatchComplete) return false;
     if (_tennisDoubles) {
+      // The other team can be made to serve too (wrong toss), like singles.
       return _setTennisCourt(
         tennisSetServer(
-          state.racketTennisInput,
-          state.tennisCourt,
-          team,
-          playerIndex,
-        ),
+              state.racketTennisInput,
+              state.tennisCourt,
+              team,
+              playerIndex,
+            ) ??
+            tennisTakeServe(
+              state.racketTennisInput,
+              state.tennisCourt,
+              team,
+              playerIndex,
+            ),
       );
     }
     if (state.racketCanPickFirstServer) {

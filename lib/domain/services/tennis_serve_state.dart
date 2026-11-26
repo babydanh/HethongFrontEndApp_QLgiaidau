@@ -263,6 +263,10 @@ enum TennisHint { pickServer, swapReceiver, decidingReceiver }
 enum TennisCellActionKind {
   pickServer,
   correctServer,
+
+  /// The tapped player's team is not serving: hand it the serve now (the app
+  /// offers it next to [tennisCellActions]; see [tennisTakeServe]).
+  takeServe,
   pickReceiveRight,
   fixReceiver,
   decidingReceiver,
@@ -486,6 +490,23 @@ TennisCourtState? tennisSetServer(
       : tennisPickServer(s, c, team, player);
 }
 
+/// Referee correction: [team] should be serving now although the rules give
+/// the serve to the other team (the toss was entered the wrong way round).
+/// Flips who served first, then puts [player] in place, as singles does.
+/// Null when [team] already serves (use [tennisSetServer]) or the flip would
+/// not hand the serve to [team].
+TennisCourtState? tennisTakeServe(
+  TennisScoreInput s,
+  TennisCourtState c,
+  int team,
+  int player,
+) {
+  if (_serverTeam(s, c) == team) return null;
+  final flipped = c.copyWith(firstServerTeam: _other(_firstTeam(c)));
+  if (_serverTeam(s, flipped) != team) return null;
+  return tennisCorrectServer(s, flipped, team, player);
+}
+
 /// A tap picks the server at once (no menu): before anyone was chosen, or
 /// when [team] serves now and has not chosen for this set yet.
 bool tennisQuickPick(TennisScoreInput s, TennisCourtState c, int team) {
@@ -556,6 +577,12 @@ TennisCourtState? tennisApplyAction(
     a.playerIndex,
   ),
   TennisCellActionKind.correctServer => tennisCorrectServer(
+    s,
+    c,
+    a.team,
+    a.playerIndex,
+  ),
+  TennisCellActionKind.takeServe => tennisTakeServe(
     s,
     c,
     a.team,

@@ -41,6 +41,13 @@ class RacketCourtView extends StatelessWidget {
     this.onSwitchEnds,
     this.onMenu,
     this.onPickServer,
+    this.onFinishSet,
+    this.finishSetEnabled = true,
+    this.onPickWinner,
+    this.pickWinnerEnabled = true,
+    this.onForceWin,
+    this.onToggleOverride,
+    this.overrideEnabled = false,
     this.sportIcon = 'tennis',
   });
 
@@ -79,6 +86,17 @@ class RacketCourtView extends StatelessWidget {
   final void Function(int team, int playerIndex)? onPickServer;
   final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
+
+  /// Set / match controls drawn on the net; a null callback hides its icon.
+  final VoidCallback? onFinishSet;
+  final bool finishSetEnabled;
+  final VoidCallback? onPickWinner;
+  final bool pickWinnerEnabled;
+
+  /// ⋯ menu items: quick win and the override switch (Strict only).
+  final VoidCallback? onForceWin;
+  final VoidCallback? onToggleOverride;
+  final bool overrideEnabled;
 
   /// Mark in the corner of the court: 'tennis' or 'badminton'.
   final String sportIcon;
@@ -166,10 +184,17 @@ class RacketCourtView extends StatelessWidget {
                 menu: CourtMenuActions(
                   onUndo: interactive && canUndo ? onUndo : null,
                   onPickServer: interactive ? onMenu : null,
+                  onForceWin: onForceWin,
+                  onToggleOverride: onToggleOverride,
+                  overrideEnabled: overrideEnabled,
                 ),
+                onFinishSet: onFinishSet,
+                finishSetEnabled: finishSetEnabled,
+                onPickWinner: onPickWinner,
+                pickWinnerEnabled: pickWinnerEnabled,
               ),
               onSwitchEnds: interactive ? onSwitchEnds : null,
-              overrideEnabled: false,
+              overrideEnabled: overrideEnabled,
               startedAt: null,
               setNumber: null,
               motion: motion,

@@ -424,6 +424,47 @@ void main() {
   );
 
   test(
+    'TC-TENNIS-SERVE-23 take serve: the other team serves now, rotation goes on',
+    () {
+      final m = _Sim();
+      m.point(1);
+      expect(m.server, startsWith('A'));
+      // The serving team is not handled here (tennisSetServer does it).
+      expect(tennisTakeServe(m.input, m.court, 1, 0), isNull);
+      m.apply(tennisTakeServe(m.input, m.court, 2, 1));
+      expect(m.server, 'B2');
+      m.game(2);
+      expect(m.server, startsWith('A'));
+    },
+  );
+
+  test(
+    'TC-TENNIS-SERVE-24 take-serve action hands the serve to a receiving player',
+    () {
+      final m = _Sim();
+      m.game(1);
+      expect(m.server, startsWith('B'));
+      // Team 1 receives now: tapping a player offers no server change itself.
+      expect(
+        _kinds(m, 1, 0),
+        isNot(contains(TennisCellActionKind.takeServe)),
+      );
+      m.apply(
+        tennisApplyAction(
+          m.input,
+          m.court,
+          const TennisCellAction(
+            TennisCellActionKind.takeServe,
+            team: 1,
+            playerIndex: 1,
+          ),
+        ),
+      );
+      expect(m.server, 'A2');
+    },
+  );
+
+  test(
     'TC-TENNIS-SERVE-22 server pick still works in set 10 (maxMatchSets)',
     () {
       const set10 = TennisScoreInput(setIndex: 9, gamesBefore: 90);

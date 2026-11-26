@@ -215,11 +215,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                   scoreAccess: scoreAccess,
                 )));
 
-    // Pickleball scores on the court itself: points, set and match controls
-    // all sit on it, so the shared bottom bar is not drawn.
-    final courtMode = kind == SportRuleKind.pickleball;
     // Badminton / tennis: a court with drag targets, no tab swiping.
     final racketCourt = _usesRacketCourt(kind);
+    // Pickleball, badminton and tennis score on the court itself: points, set
+    // and match controls all sit on it, so the shared bottom bar is not drawn.
+    final courtMode = kind == SportRuleKind.pickleball || racketCourt;
 
     // Sideways, the pickleball court runs to both edges, also under the
     // camera inset on either side: its controls stay clear of the hole.
@@ -953,7 +953,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
             team2Name: widget.match.team2Name,
           )
         : racketCourt
-        ? RacketCourtPanel(params: params)
+        ? RacketCourtPanel(
+            params: params,
+            isReadOnly: !canScore,
+            onForceWin: widget.onForceWin,
+          )
         : kind == SportRuleKind.tennis
         ? TennisScorePanel(params: params, isReadOnly: !canScore)
         : isLite
@@ -965,7 +969,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         : RallyScorePanel(params: params, isReadOnly: !canScore);
     // The pickleball court (sideways or upright) runs edge to edge; only the
     // warning below keeps a side margin.
-    final sideways = kind == SportRuleKind.pickleball;
+    final sideways = kind == SportRuleKind.pickleball || racketCourt;
     return Padding(
       padding: sideways
           ? EdgeInsets.zero
