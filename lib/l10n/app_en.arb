@@ -8201,5 +8201,6 @@
   "cameraBridge_errorCodec": "The camera sends H.265. Pick the sub stream (H.264).",
   "cameraBridge_errorInvalid": "The camera details are not valid.",
   "cameraBridge_errorOther": "Could not push the video. Retrying.",
-  "cameraBridge_errorSetup": "Could not get the tournament's push key. Try again later."
+  "cameraBridge_errorSetup": "Could not get the tournament's push key. Try again later.",
+  "cameraBridge_errorUnsupported": "This version cannot stream from an IP camera yet."
 }

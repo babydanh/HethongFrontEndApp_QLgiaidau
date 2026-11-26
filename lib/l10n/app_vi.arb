@@ -8231,5 +8231,6 @@
   "cameraBridge_errorCodec": "Camera đang phát H.265. Hãy chọn luồng phụ (H.264).",
   "cameraBridge_errorInvalid": "Thông tin camera chưa đúng.",
   "cameraBridge_errorOther": "Không đẩy được hình lên. Đang thử nối lại.",
-  "cameraBridge_errorSetup": "Chưa lấy được khoá phát của giải. Thử lại sau."
+  "cameraBridge_errorSetup": "Chưa lấy được khoá phát của giải. Thử lại sau.",
+  "cameraBridge_errorUnsupported": "Bản này chưa hỗ trợ phát từ camera IP."
 }

@@ -357,6 +357,7 @@ class _CameraCardState extends ConsumerState<_CameraCard> {
       BridgeFailure.unreachable => l10n.cameraBridge_errorUnreachable,
       BridgeFailure.codec => l10n.cameraBridge_errorCodec,
       BridgeFailure.invalidInput => l10n.cameraBridge_errorInvalid,
+      BridgeFailure.unsupported => l10n.cameraBridge_errorUnsupported,
       _ => l10n.cameraBridge_errorOther,
     };
   }

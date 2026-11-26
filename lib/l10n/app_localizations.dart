@@ -37464,6 +37464,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa lấy được khoá phát của giải. Thử lại sau.'**
   String get cameraBridge_errorSetup;
+
+  /// No description provided for @cameraBridge_errorUnsupported.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản này chưa hỗ trợ phát từ camera IP.'**
+  String get cameraBridge_errorUnsupported;
 }
 
 class _AppLocalizationsDelegate

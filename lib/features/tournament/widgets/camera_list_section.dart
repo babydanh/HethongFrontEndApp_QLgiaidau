@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Every camera of the tournament, one line each: name, mode · court (or
 /// "Chưa gắn sân") and status, with a delete button and an actions menu (edit,
@@ -234,6 +235,18 @@ class _CameraListSectionState extends ConsumerState<CameraListSection> {
             onViewCode: widget.readOnly || !canViewFacebookCode(camera)
                 ? null
                 : () => _viewCode(camera),
+          ),
+        if (!widget.readOnly)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('camera-ip-entry'),
+              onPressed: () => context.push(
+                '/organizer/tournaments/${widget.tournamentId}/camera-ip',
+              ),
+              icon: const Icon(Icons.router_outlined),
+              label: Text(l10n.cameraBridge_title),
+            ),
           ),
       ],
     );
