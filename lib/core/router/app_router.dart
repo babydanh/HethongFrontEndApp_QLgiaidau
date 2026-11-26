@@ -400,7 +400,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return TournamentManagerGuard(
             tournamentId: id,
-            child: OrganizerOpsScreen(
+            managerOnly: true,
+            builder: (_, _) => OrganizerOpsScreen(
               tournamentId: id,
               initialDivisionId: state.uri.queryParameters['divisionId'],
               initialFocusMatchId: state.uri.queryParameters['focusMatchId'],
@@ -410,14 +411,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'bracket',
-            builder: (context, state) {
-              final tournamentId = state.pathParameters['id']!;
-              return BracketViewScreen(
-                tournamentId: tournamentId,
+            builder: (context, state) => _managerOnly(
+              state,
+              BracketViewScreen(
+                tournamentId: state.pathParameters['id']!,
                 divisionId: state.uri.queryParameters['divisionId'],
                 canEditBracket: true,
-              );
-            },
+              ),
+            ),
           ),
           GoRoute(
             path: 'match/:matchId',
@@ -438,7 +439,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return TournamentManagerGuard(
             tournamentId: id,
-            child: TournamentManagementDispatcher(
+            builder: (_, _) => TournamentManagementDispatcher(
               tournamentId: id,
               actionRouteBase: '/organizer/tournaments/$id/manage',
               opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
@@ -451,22 +452,30 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'teams',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return TeamListScreen(
-                tournamentId: id,
-                managementRouteBase: '/organizer/tournaments/$id/manage',
+              return _managerOnly(
+                state,
+                TeamListScreen(
+                  tournamentId: id,
+                  managementRouteBase: '/organizer/tournaments/$id/manage',
+                ),
               );
             },
             routes: [
               GoRoute(
                 path: 'add',
-                builder: (context, state) =>
-                    AddTeamScreen(tournamentId: state.pathParameters['id']!),
+                builder: (context, state) => _managerOnly(
+                  state,
+                  AddTeamScreen(tournamentId: state.pathParameters['id']!),
+                ),
               ),
               GoRoute(
                 path: 'edit',
-                builder: (context, state) => AddTeamScreen(
-                  tournamentId: state.pathParameters['id']!,
-                  teamToEdit: state.extra as Team?,
+                builder: (context, state) => _managerOnly(
+                  state,
+                  AddTeamScreen(
+                    tournamentId: state.pathParameters['id']!,
+                    teamToEdit: state.extra as Team?,
+                  ),
                 ),
               ),
             ],
@@ -475,27 +484,31 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'draw',
             builder: (context, state) {
               final id = state.pathParameters['id']!;
-              return AutoDrawScreen(
-                tournamentId: id,
-                initialDivisionId: state.uri.queryParameters['divisionId'],
-                managementRouteBase: '/organizer/tournaments/$id/manage',
+              return _managerOnly(
+                state,
+                AutoDrawScreen(
+                  tournamentId: id,
+                  initialDivisionId: state.uri.queryParameters['divisionId'],
+                  managementRouteBase: '/organizer/tournaments/$id/manage',
+                ),
               );
             },
           ),
           GoRoute(
             path: 'bracket',
-            builder: (context, state) {
-              final tournamentId = state.pathParameters['id']!;
-              return BracketViewScreen(
-                tournamentId: tournamentId,
+            builder: (context, state) => _managerOnly(
+              state,
+              BracketViewScreen(
+                tournamentId: state.pathParameters['id']!,
                 divisionId: state.uri.queryParameters['divisionId'],
                 canEditBracket: true,
-              );
-            },
+              ),
+            ),
           ),
           GoRoute(
             path: 'swiss-pairing/:divisionId',
-            builder: _swissPairingBuilder,
+            builder: (context, state) =>
+                _managerOnly(state, _swissPairingBuilder(context, state)),
           ),
         ],
       ),
@@ -1332,6 +1345,15 @@ class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
 
 /// Shared by the organizer and admin `swiss-pairing/:divisionId` routes.
 /// Query: `stageId`, `round` (round being paired), `total` (total rounds).
+/// Organizer-only page under a tournament route. go_router builds a nested
+/// route's page on its own, so the parent route's guard does not cover a deep
+/// link to it.
+Widget _managerOnly(GoRouterState state, Widget page) => TournamentManagerGuard(
+  tournamentId: state.pathParameters['id']!,
+  managerOnly: true,
+  builder: (_, _) => page,
+);
+
 Widget _swissPairingBuilder(BuildContext context, GoRouterState state) {
   final query = state.uri.queryParameters;
   return SwissPairingScreen(

@@ -22,8 +22,12 @@ class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
   const TournamentManagementDivisionsSection({
     super.key,
     required this.tournament,
+    this.readOnly = false,
   });
   final Tournament tournament;
+
+  /// View only (referee): no add, edit, menu or "close full division" prompt.
+  final bool readOnly;
 
   @override
   ConsumerState<TournamentManagementDivisionsSection> createState() =>
@@ -76,9 +80,11 @@ class _TournamentManagementDivisionsSectionState
         final divisions = snapshot.data ?? const <Map<String, dynamic>>[];
         // Hạng mục vừa đủ chỗ còn mở: đề nghị đóng sau khi khung hiển thị xong
         // (đối chiếu Web prompt close-full-divisions).
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _maybePromptFullDivisions(divisions),
-        );
+        if (!widget.readOnly) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _maybePromptFullDivisions(divisions),
+          );
+        }
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
@@ -111,10 +117,11 @@ class _TournamentManagementDivisionsSectionState
               )
             else
               ..._divisionRows(l10n, divisions),
-            _AddDivisionTile(
-              label: l10n.tournamentManagementAddDivision,
-              onTap: _isBusy ? null : _addDivision,
-            ),
+            if (!widget.readOnly)
+              _AddDivisionTile(
+                label: l10n.tournamentManagementAddDivision,
+                onTap: _isBusy ? null : _addDivision,
+              ),
           ],
         );
       },
@@ -155,6 +162,7 @@ class _TournamentManagementDivisionsSectionState
       division: division,
       expanded: expanded,
       isBusy: _isBusy,
+      readOnly: widget.readOnly,
       onToggle: () => setState(() => _openDivisionId = expanded ? null : id),
       // Khoá/mở đăng ký chỉ chặn VĐV tự đăng ký, không đụng sơ đồ:
       // làm được mọi lúc trước khi giải kết thúc hoặc bị huỷ.
@@ -449,6 +457,7 @@ class _DivisionTile extends StatelessWidget {
     required this.division,
     required this.expanded,
     required this.isBusy,
+    required this.readOnly,
     required this.canToggleRegistration,
     required this.onToggle,
     required this.onEdit,
@@ -461,6 +470,7 @@ class _DivisionTile extends StatelessWidget {
   final Map<String, dynamic> division;
   final bool expanded;
   final bool isBusy;
+  final bool readOnly;
   final bool canToggleRegistration;
   final VoidCallback onToggle;
   final VoidCallback onEdit;
@@ -568,24 +578,26 @@ class _DivisionTile extends StatelessWidget {
                             text: countLabel,
                             tooltip: l10n.tournamentManagementMaxParticipants,
                           ),
-                          IconButton(
-                            key: ValueKey(
-                              'division-edit-${_divisionId(division)}',
+                          if (!readOnly) ...[
+                            IconButton(
+                              key: ValueKey(
+                                'division-edit-${_divisionId(division)}',
+                              ),
+                              tooltip: l10n.infoEdit,
+                              onPressed: isBusy ? null : onEdit,
+                              icon: const Icon(Icons.edit_outlined, size: 20),
                             ),
-                            tooltip: l10n.infoEdit,
-                            onPressed: isBusy ? null : onEdit,
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                          ),
-                          _DivisionMenu(
-                            division: division,
-                            isBusy: isBusy,
-                            canToggleRegistration: canToggleRegistration,
-                            onConfigureRounds: onConfigureRounds,
-                            onToggleRegistration: onToggleRegistration,
-                            onReopenWithDeadline: onReopenWithDeadline,
-                            onBulkOpen: onBulkOpen,
-                            onDelete: onDelete,
-                          ),
+                            _DivisionMenu(
+                              division: division,
+                              isBusy: isBusy,
+                              canToggleRegistration: canToggleRegistration,
+                              onConfigureRounds: onConfigureRounds,
+                              onToggleRegistration: onToggleRegistration,
+                              onReopenWithDeadline: onReopenWithDeadline,
+                              onBulkOpen: onBulkOpen,
+                              onDelete: onDelete,
+                            ),
+                          ],
                         ],
                       ),
                     ),

@@ -2,22 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_manage_access_provider.dart';
 
-/// Shows [child] only to users who may manage the tournament; everyone else
-/// gets a "no permission" state and the management screens never mount (so
-/// they make no organizer-only API calls).
+/// Builds the page only for users the Backend lets onto the management page,
+/// handing [builder] their [ManageRole]; everyone else gets a "no permission"
+/// state and the management screens never mount (so they make no
+/// organizer-only API calls). [managerOnly] pages also turn referees away.
 class TournamentManagerGuard extends ConsumerWidget {
   const TournamentManagerGuard({
     super.key,
     required this.tournamentId,
-    required this.child,
+    required this.builder,
+    this.managerOnly = false,
   });
 
   final String tournamentId;
-  final Widget child;
+  final Widget Function(BuildContext context, ManageRole role) builder;
+  final bool managerOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,8 +37,12 @@ class TournamentManagerGuard extends ConsumerWidget {
         onRetry: () =>
             ref.invalidate(tournamentManageAccessProvider(tournamentId)),
       ),
-      data: (allowed) =>
-          allowed ? child : _GuardMessage(message: l10n.opsNoPermission),
+      data: (role) {
+        final denied =
+            role == null || (managerOnly && role != ManageRole.manager);
+        if (denied) return _GuardMessage(message: l10n.opsNoPermission);
+        return builder(context, role);
+      },
     );
   }
 }

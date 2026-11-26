@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
@@ -41,12 +42,16 @@ class TournamentManagementHubScreen extends ConsumerStatefulWidget {
   const TournamentManagementHubScreen({
     super.key,
     required this.tournament,
+    required this.role,
     required this.actionRouteBase,
     required this.opsWorkspaceRoute,
     this.liteWorkspaceRoute,
   });
 
   final Tournament tournament;
+
+  /// Who is managing: a referee sees fewer tabs and no organizer-only writes.
+  final ManageRole role;
   final String actionRouteBase;
   final String opsWorkspaceRoute;
   final String? liteWorkspaceRoute;
@@ -71,8 +76,10 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.permissions,
   ];
 
+  /// Tabs shown for [TournamentManagementHubScreen.role], in display order.
+  late final List<ManageHubTab> _tabs = visibleHubTabs(widget.role);
   late final TabController _tabController = TabController(
-    length: _HubTab.values.length,
+    length: _tabs.length,
     vsync: this,
   );
   late final ScrollController _scrollController = ScrollController()
@@ -132,6 +139,16 @@ class _TournamentManagementHubScreenState
     }
   }
 
+  bool _can(ManageAction action) => canManageAction(widget.role, action);
+
+  bool get _isReferee => widget.role == ManageRole.referee;
+
+  /// Jumps to [tab]; a tab this role does not see is ignored.
+  void _goToTab(ManageHubTab tab) {
+    final index = _tabs.indexOf(tab);
+    if (index >= 0) _tabController.animateTo(index);
+  }
+
   void _selectDivision(String id) {
     if (id == _divisionId) return;
     setState(() => _divisionId = id);
@@ -144,7 +161,7 @@ class _TournamentManagementHubScreenState
       _resultsFilter = filter ?? ResultsBoardFilter.all;
       _resultsRequest++;
     });
-    _tabController.animateTo(_HubTab.results.index);
+    _goToTab(ManageHubTab.results);
   }
 
   /// Opens the popup of the tapped progress step (0..3) with fresh numbers.
@@ -187,18 +204,20 @@ class _TournamentManagementHubScreenState
     }
     final divisionId = target.divisionId;
     if (divisionId != null) _selectDivision(divisionId);
-    _tabController.animateTo(_HubTab.values.byName(target.tab.name).index);
+    _goToTab(ManageHubTab.values.byName(target.tab.name));
   }
 
   void _openSection(TournamentManagementSection section) {
+    // Every settings section is organizer-only.
+    if (!_can(ManageAction.editTournament)) return;
     // Divisions have their own tab instead of a settings page.
     if (section == TournamentManagementSection.divisions) {
-      _tabController.animateTo(_HubTab.divisions.index);
+      _goToTab(ManageHubTab.divisions);
       return;
     }
     // Cameras, phones and live sessions all live in the Camera tab.
     if (section == TournamentManagementSection.livestream) {
-      _tabController.animateTo(_HubTab.camera.index);
+      _goToTab(ManageHubTab.camera);
       return;
     }
     final isTablet = !ResponsiveLayout.isMobile(context);
@@ -206,7 +225,7 @@ class _TournamentManagementHubScreenState
       _selectedSection = section;
       if (!isTablet) _openedSection = section;
     });
-    if (isTablet) _tabController.animateTo(_HubTab.settings.index);
+    if (isTablet) _goToTab(ManageHubTab.settings);
   }
 
   /// Edits the tapped item in its own popup instead of opening a page.
@@ -246,15 +265,14 @@ class _TournamentManagementHubScreenState
       context,
     )!.tournamentManagementSaveError;
     try {
-      await ref.read(tournamentManagementRepositoryProvider).updateTournament(
-        id,
-        {
-          'contactInfo': founderVisibilityPatch(
-            widget.tournament.contactInfo,
-            hidden: hidden,
-          ),
-        },
-      );
+      await ref
+          .read(tournamentManagementRepositoryProvider)
+          .updateTournament(id, {
+            'contactInfo': founderVisibilityPatch(
+              widget.tournament.contactInfo,
+              hidden: hidden,
+            ),
+          });
     } on Exception {
       messenger.showSnackBar(SnackBar(content: Text(errorText)));
       return;
@@ -348,7 +366,10 @@ class _TournamentManagementHubScreenState
           onPressed: _closeSection,
         ),
         title: Text(_sectionDetails(l10n, section).title),
-        actions: [_buildOverflowMenu(context, l10n, canFinalize: canFinalize)],
+        actions: [
+          if (_can(ManageAction.editTournament))
+            _buildOverflowMenu(context, l10n, canFinalize: canFinalize),
+        ],
       ),
       body: _buildDetailView(context),
     );
@@ -364,6 +385,7 @@ class _TournamentManagementHubScreenState
     final colors = context.colors;
     final topPadding = MediaQuery.paddingOf(context).top;
     final isClubLite = tournament.isClubLite;
+    final canEdit = _can(ManageAction.editTournament);
     final showsSolidBar = _isCollapsed || isClubLite;
     final iconColor = showsSolidBar ? colors.textPrimary : Colors.white;
     final List<Shadow>? iconShadows = showsSolidBar
@@ -416,13 +438,14 @@ class _TournamentManagementHubScreenState
               child: Text(l10n.managementTitle),
             ),
             actions: [
-              _buildOverflowMenu(
-                context,
-                l10n,
-                canFinalize: canFinalize,
-                iconColor: iconColor,
-                iconShadows: iconShadows,
-              ),
+              if (_can(ManageAction.editTournament))
+                _buildOverflowMenu(
+                  context,
+                  l10n,
+                  canFinalize: canFinalize,
+                  iconColor: iconColor,
+                  iconShadows: iconShadows,
+                ),
             ],
             flexibleSpace: isClubLite
                 ? null
@@ -433,9 +456,10 @@ class _TournamentManagementHubScreenState
                     background: TournamentManagementBanner(
                       tournament: tournament,
                       resolveImageUrl: _resolveImageUrl,
-                      onEdit: () =>
-                          _editPopup(TournamentManagementFocus.branding),
-                      onToggleCardText: _setCardTextHidden,
+                      onEdit: canEdit
+                          ? () => _editPopup(TournamentManagementFocus.branding)
+                          : null,
+                      onToggleCardText: canEdit ? _setCardTextHidden : null,
                     ),
                   ),
           ),
@@ -445,23 +469,27 @@ class _TournamentManagementHubScreenState
         SliverToBoxAdapter(
           child: TournamentManagementSummary(
             tournament: tournament,
-            onEditInformation: () =>
-                _editPopup(TournamentManagementFocus.name),
+            onEditInformation: canEdit
+                ? () => _editPopup(TournamentManagementFocus.name)
+                : null,
           ),
         ),
+        if (_isReferee) const SliverToBoxAdapter(child: _RefereeModeBanner()),
         // Step bar + the one next-step button, as at the top of the Web page.
         SliverToBoxAdapter(
           child: TournamentLifecycleCard(
             tournament: tournament,
-            onStepTap: _openStep,
+            readOnly: !canEdit,
+            onStepTap: canEdit ? _openStep : null,
           ),
         ),
-        SliverToBoxAdapter(
-          child: ResultsReconfirmCard(
-            tournamentId: tournament.id,
-            status: tournament.status,
+        if (canEdit)
+          SliverToBoxAdapter(
+            child: ResultsReconfirmCard(
+              tournamentId: tournament.id,
+              status: tournament.status,
+            ),
           ),
-        ),
         SliverOverlapAbsorber(
           handle: _tabStripOverlapHandle,
           sliver: SliverPersistentHeader(
@@ -470,14 +498,7 @@ class _TournamentManagementHubScreenState
               tabController: _tabController,
               colors: colors,
               tabHeaders: [
-                Tab(text: l10n.tournamentManagementOverview),
-                Tab(text: l10n.tournamentManagementTabDivisions),
-                Tab(text: l10n.tournamentManagementTabAthletes),
-                Tab(text: l10n.tournamentManagementTabBracket),
-                Tab(text: l10n.tournamentManagementSchedule),
-                Tab(text: l10n.tournamentManagementTabResults),
-                Tab(text: l10n.opsCamera),
-                Tab(text: l10n.tournamentManagementTabSettings),
+                for (final tab in _tabs) Tab(text: _tabLabel(l10n, tab)),
               ],
             ),
           ),
@@ -493,90 +514,134 @@ class _TournamentManagementHubScreenState
           return TabBarView(
             controller: _tabController,
             children: [
-              OverviewTab(
-                tournament: tournament,
-                teamCount: teamCount,
-                resolveImageUrl: _resolveImageUrl,
-                hasSliverBanner: true,
-                compact: true,
-                overlapHandles: overlapHandles,
-                onEditInformation: () =>
-                    _openSection(TournamentManagementSection.information),
-                onEditBranding: () =>
-                    _editPopup(TournamentManagementFocus.branding),
-                onEditContact: () =>
-                    _editPopup(TournamentManagementFocus.contact),
-                onEditSchedule: () =>
-                    _editPopup(TournamentManagementFocus.venue),
-                onEditRegistration: () =>
-                    _openSection(TournamentManagementSection.registration),
-                onEditTimelineDate: _editPopup,
-                onEditFinance: () => _editPopup(TournamentManagementFocus.fee),
-                onToggleFounderHidden: _setFounderHidden,
-              ),
-              CustomScrollView(
-                slivers: [
-                  ...overlapHandles.map(
-                    (handle) => SliverOverlapInjector(handle: handle),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: true,
-                    child: PrimaryScrollController.none(
-                      child: TournamentManagementDivisionsSection(
-                        tournament: tournament,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              CustomScrollView(
-                slivers: [
-                  ...overlapHandles.map(
-                    (handle) => SliverOverlapInjector(handle: handle),
-                  ),
-                  SliverToBoxAdapter(
-                    child: TournamentManagementAthletesTab(
-                      tournament: tournament,
-                      selectedDivisionId: _divisionId,
-                      onDivisionChanged: _selectDivision,
-                    ),
-                  ),
-                ],
-              ),
-              CustomScrollView(
-                slivers: [
-                  ...overlapHandles.map(
-                    (handle) => SliverOverlapInjector(handle: handle),
-                  ),
-                  SliverToBoxAdapter(
-                    child: BracketViewScreen(
-                      tournamentId: tournament.id,
-                      isEmbedded: true,
-                      canEditBracket: true,
-                      selectedDivisionId: _divisionId,
-                      onDivisionChanged: _selectDivision,
-                    ),
-                  ),
-                ],
-              ),
-              OrganizerOpsScreen(
-                tournamentId: tournament.id,
-                isEmbedded: true,
-                view: OrganizerOpsView.matches,
-                initialMatchesView: OrganizerOpsMatchesView.grid,
-                selectedDivisionId: _divisionId,
-                onDivisionChanged: (id) {
-                  if (id != null) _selectDivision(id);
-                },
-                overlapHandles: overlapHandles,
-              ),
-              _buildResultsTab(tournament, overlapHandles),
-              _buildCameraTab(tournament, overlapHandles),
-              _buildSettingsTab(context, overlapHandles),
+              for (final tab in _tabs)
+                _buildTabView(context, tab, teamCount, overlapHandles),
             ],
           );
         },
       ),
+    );
+  }
+
+  String _tabLabel(AppLocalizations l10n, ManageHubTab tab) => switch (tab) {
+    ManageHubTab.overview => l10n.tournamentManagementOverview,
+    ManageHubTab.divisions => l10n.tournamentManagementTabDivisions,
+    ManageHubTab.athletes => l10n.tournamentManagementTabAthletes,
+    ManageHubTab.bracket => l10n.tournamentManagementTabBracket,
+    ManageHubTab.schedule => l10n.tournamentManagementSchedule,
+    ManageHubTab.results => l10n.tournamentManagementTabResults,
+    ManageHubTab.camera => l10n.opsCamera,
+    ManageHubTab.settings => l10n.tournamentManagementTabSettings,
+  };
+
+  Widget _buildTabView(
+    BuildContext context,
+    ManageHubTab tab,
+    int teamCount,
+    List<SliverOverlapAbsorberHandle> overlapHandles,
+  ) {
+    final tournament = widget.tournament;
+    return switch (tab) {
+      ManageHubTab.overview => _buildOverviewTab(teamCount, overlapHandles),
+      ManageHubTab.divisions => CustomScrollView(
+        slivers: [
+          ...overlapHandles.map(
+            (handle) => SliverOverlapInjector(handle: handle),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: PrimaryScrollController.none(
+              child: TournamentManagementDivisionsSection(
+                tournament: tournament,
+                readOnly: !_can(ManageAction.editDivisions),
+              ),
+            ),
+          ),
+        ],
+      ),
+      ManageHubTab.athletes => CustomScrollView(
+        slivers: [
+          ...overlapHandles.map(
+            (handle) => SliverOverlapInjector(handle: handle),
+          ),
+          SliverToBoxAdapter(
+            child: TournamentManagementAthletesTab(
+              tournament: tournament,
+              selectedDivisionId: _divisionId,
+              onDivisionChanged: _selectDivision,
+              readOnly: !_can(ManageAction.editParticipants),
+            ),
+          ),
+        ],
+      ),
+      ManageHubTab.bracket => CustomScrollView(
+        slivers: [
+          ...overlapHandles.map(
+            (handle) => SliverOverlapInjector(handle: handle),
+          ),
+          SliverToBoxAdapter(
+            child: BracketViewScreen(
+              tournamentId: tournament.id,
+              isEmbedded: true,
+              canEditBracket: _can(ManageAction.editBracket),
+              // The Backend confirmed an accepted referee: score from the
+              // bracket without waiting for the workspace list.
+              isReferee: _isReferee,
+              selectedDivisionId: _divisionId,
+              onDivisionChanged: _selectDivision,
+            ),
+          ),
+        ],
+      ),
+      ManageHubTab.schedule => OrganizerOpsScreen(
+        tournamentId: tournament.id,
+        isEmbedded: true,
+        view: OrganizerOpsView.matches,
+        initialMatchesView: OrganizerOpsMatchesView.grid,
+        manageRole: widget.role,
+        selectedDivisionId: _divisionId,
+        onDivisionChanged: (id) {
+          if (id != null) _selectDivision(id);
+        },
+        overlapHandles: overlapHandles,
+      ),
+      ManageHubTab.results => _buildResultsTab(tournament, overlapHandles),
+      ManageHubTab.camera => _buildCameraTab(tournament, overlapHandles),
+      ManageHubTab.settings => _buildSettingsTab(context, overlapHandles),
+    };
+  }
+
+  Widget _buildOverviewTab(
+    int teamCount,
+    List<SliverOverlapAbsorberHandle> overlapHandles,
+  ) {
+    if (!_can(ManageAction.editTournament)) {
+      return OverviewTab(
+        tournament: widget.tournament,
+        teamCount: teamCount,
+        resolveImageUrl: _resolveImageUrl,
+        hasSliverBanner: true,
+        compact: true,
+        overlapHandles: overlapHandles,
+      );
+    }
+    return OverviewTab(
+      tournament: widget.tournament,
+      teamCount: teamCount,
+      resolveImageUrl: _resolveImageUrl,
+      hasSliverBanner: true,
+      compact: true,
+      overlapHandles: overlapHandles,
+      onEditInformation: () =>
+          _openSection(TournamentManagementSection.information),
+      onEditBranding: () => _editPopup(TournamentManagementFocus.branding),
+      onEditContact: () => _editPopup(TournamentManagementFocus.contact),
+      onEditSchedule: () => _editPopup(TournamentManagementFocus.venue),
+      onEditRegistration: () =>
+          _openSection(TournamentManagementSection.registration),
+      onEditTimelineDate: _editPopup,
+      onEditFinance: () => _editPopup(TournamentManagementFocus.fee),
+      onToggleFounderHidden: _setFounderHidden,
     );
   }
 
@@ -642,7 +707,7 @@ class _TournamentManagementHubScreenState
     return ListenableBuilder(
       listenable: _tabController,
       builder: (context, _) {
-        if (_tabController.index != _HubTab.camera.index) {
+        if (_tabController.index != _tabs.indexOf(ManageHubTab.camera)) {
           return const SizedBox.shrink();
         }
         return CustomScrollView(
@@ -1208,15 +1273,40 @@ class _TournamentManagementHubScreenState
   }
 }
 
-enum _HubTab {
-  overview,
-  divisions,
-  athletes,
-  bracket,
-  schedule,
-  results,
-  camera,
-  settings,
+/// Role label and the one-line notice of what a referee may do here.
+class _RefereeModeBanner extends StatelessWidget {
+  const _RefereeModeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
+    return Container(
+      key: const ValueKey('referee-mode-banner'),
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.soft(LavishTone.warn),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          LavishPill(l10n.infoReferee, tone: LavishTone.warn),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.refereeModeNotice,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: colors.pillText(LavishTone.warn),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionDetails {

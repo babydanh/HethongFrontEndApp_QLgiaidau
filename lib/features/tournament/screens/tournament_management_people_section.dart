@@ -40,9 +40,13 @@ class TournamentManagementPeopleSection extends StatelessWidget {
     this.embedded = false,
     this.pairFormat = false,
     this.onPresenceChanged,
+    this.readOnly = false,
   });
   final Tournament tournament;
   final bool showRegistration;
+
+  /// View only (referee): no approve, reject, menu, check-in or profile sheet.
+  final bool readOnly;
 
   /// Called after a check-in flip (and again on rollback) so a parent header
   /// can keep its "present x/y" count in step without reloading.
@@ -69,6 +73,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
           embedded: embedded,
           pairFormat: pairFormat,
           onPresenceChanged: onPresenceChanged,
+          readOnly: readOnly,
         )
       : _TournamentPermissions(tournament: tournament);
 }
@@ -81,6 +86,7 @@ class _RegistrationPeople extends ConsumerStatefulWidget {
     this.embedded = false,
     this.pairFormat = false,
     this.onPresenceChanged,
+    this.readOnly = false,
   });
   final Tournament tournament;
   final String? divisionId;
@@ -88,6 +94,7 @@ class _RegistrationPeople extends ConsumerStatefulWidget {
   final bool embedded;
   final bool pairFormat;
   final void Function(String participantId, bool present)? onPresenceChanged;
+  final bool readOnly;
 
   @override
   ConsumerState<_RegistrationPeople> createState() =>
@@ -390,10 +397,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             if (!widget.embedded) const SizedBox(height: 12),
             // Design 2: one filter chip (opens the list with counts) + search.
             Padding(
-              padding: EdgeInsets.only(
-                top: widget.embedded ? 4 : 0,
-                bottom: 8,
-              ),
+              padding: EdgeInsets.only(top: widget.embedded ? 4 : 0, bottom: 8),
               child: Row(
                 children: [
                   _filterMenu(l10n, counts, showPendingPartner),
@@ -414,6 +418,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
               for (final participant in visible) ...[
                 _ParticipantCard(
                   participant: participant,
+                  readOnly: widget.readOnly,
                   pairFormat: widget.pairFormat,
                   showPresence: _showPresence,
                   isPresent: _presence[participant.id] ?? participant.isPresent,
@@ -536,10 +541,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
         border: border,
         enabledBorder: border,
         focusedBorder: border.copyWith(
-          borderSide: const BorderSide(
-            color: LavishColors.accent,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: LavishColors.accent, width: 1.5),
         ),
       ),
     );
@@ -1132,8 +1134,12 @@ class _ParticipantCard extends StatelessWidget {
     required this.isPresent,
     required this.onTogglePresence,
     this.pairFormat = false,
+    this.readOnly = false,
   });
   final OrganizerOpsParticipant participant;
+
+  /// View only: status and check-in state without any action.
+  final bool readOnly;
 
   /// Trạng thái giải: COMPLETED/CANCELLED thì ẩn menu tách cặp (luật Web).
   final String tournamentStatus;
@@ -1153,6 +1159,7 @@ class _ParticipantCard extends StatelessWidget {
   final bool pairFormat;
 
   bool get _canUnpair =>
+      !readOnly &&
       participant.canUnpair &&
       !const {
         'COMPLETED',
@@ -1160,7 +1167,7 @@ class _ParticipantCard extends StatelessWidget {
       }.contains(tournamentStatus.toUpperCase());
 
   bool get _canKick =>
-      canKickParticipant(participant.teamStatus, tournamentStatus);
+      !readOnly && canKickParticipant(participant.teamStatus, tournamentStatus);
 
   @override
   Widget build(BuildContext context) {
@@ -1169,7 +1176,8 @@ class _ParticipantCard extends StatelessWidget {
     final status = participant.teamStatus.toUpperCase();
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
     final statusLabel = switch (status) {
-      'PENDING' || 'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
+      'PENDING' ||
+      'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
       'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
       'COMPLETE' => l10n.tournamentManagementParticipantApproved,
       'REJECTED' => l10n.tournamentManagementParticipantRejected,
@@ -1268,7 +1276,8 @@ class _ParticipantCard extends StatelessWidget {
           button: true,
           label: rowLabel,
           child: InkWell(
-            onTap: onOpenDetail,
+            // The profile sheet edits contacts and payment: organizers only.
+            onTap: readOnly ? null : onOpenDetail,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: header,
@@ -1316,10 +1325,7 @@ class _ParticipantCard extends StatelessWidget {
     return Row(
       children: [
         Text(statusLabel, style: muted),
-        if (fee != null) ...[
-          Text(' · ', style: muted),
-          Flexible(child: fee),
-        ],
+        if (fee != null) ...[Text(' · ', style: muted), Flexible(child: fee)],
       ],
     );
   }
@@ -1333,6 +1339,7 @@ class _ParticipantCard extends StatelessWidget {
     String status,
     bool pending,
   ) {
+    if (pending && readOnly) return const [];
     if (pending) {
       return [
         LavishIconBox(
@@ -1364,7 +1371,7 @@ class _ParticipantCard extends StatelessWidget {
           child: GestureDetector(
             key: ValueKey('participant-checkin-${participant.id}'),
             behavior: HitTestBehavior.opaque,
-            onTap: onTogglePresence,
+            onTap: readOnly ? null : onTogglePresence,
             // 40dp touch target around the design's 26dp circle.
             child: SizedBox(
               width: 40,

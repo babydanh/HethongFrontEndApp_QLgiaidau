@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
@@ -72,6 +73,10 @@ class _TournamentWatchRepository implements ITournamentRepository {
 
   @override
   Stream<Tournament?> watch(String id) => updates;
+
+  @override
+  Future<ManageRole> getManageRole(String tournamentId) async =>
+      ManageRole.manager;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

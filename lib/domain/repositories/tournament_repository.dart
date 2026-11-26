@@ -5,11 +5,16 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
 abstract class ITournamentRepository {
   Future<Tournament?> getById(String id, {String? inviteCode});
   Future<Tournament?> getByInviteCode(String code);
+
+  /// Role on the management page (`GET /tournaments/:id?manage=true`,
+  /// `data.manageRole`). 401/403 surface as a [DioException]: no access.
+  Future<ManageRole> getManageRole(String tournamentId);
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
 
   /// Joins a Lite tournament from its invite code. [divisionId] must be sent
@@ -19,6 +24,7 @@ abstract class ITournamentRepository {
   Future<List<OrganizerOpsParticipant>> getPublicParticipants(
     String tournamentId,
   );
+
   /// [role] (ORGANIZER | CO_ORGANIZER | PARTICIPANT) filters server-side before
   /// paging; null keeps the merged stream.
   Future<TournamentWorkspace> getMyWorkspace({

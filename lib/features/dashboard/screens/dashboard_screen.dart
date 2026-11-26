@@ -733,6 +733,9 @@ class _WorkspaceContent extends StatelessWidget {
         ),
     ];
     final matches = workspace.refereeMatches.take(3).toList();
+    final refereeEntries = _openRefereeTournaments(
+      workspace.refereeTournaments,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -801,6 +804,10 @@ class _WorkspaceContent extends StatelessWidget {
               title: role.$2,
               trailing: [LavishPill('${role.$3}', tone: role.$4)],
             ),
+        if (refereeEntries.isNotEmpty) ...[
+          LavishGroupHeader(l10n.dashboard_refereeTournaments),
+          for (final entry in refereeEntries) _RefereeTournamentRow(entry),
+        ],
         LavishGroupHeader(
           l10n.dashboard_assignedMatches,
           trailing: matches.isEmpty
@@ -819,6 +826,54 @@ class _WorkspaceContent extends StatelessWidget {
           for (final match in matches) _AssignedMatchRow(match),
         _TournamentsSection(workspace),
       ],
+    );
+  }
+}
+
+// The Backend answers 404 to a referee of a tournament in these states.
+const _hiddenFromReferee = {'DRAFT', 'PENDING'};
+
+/// One entry per accepted tournament (a referee may hold several categories).
+List<TournamentRefereeInvite> _openRefereeTournaments(
+  List<TournamentRefereeInvite> invites,
+) {
+  final seen = <String>{};
+  return [
+    for (final invite in invites)
+      if (invite.tournamentId.isNotEmpty &&
+          !_hiddenFromReferee.contains(invite.tournamentStatus.toUpperCase()) &&
+          seen.add(invite.tournamentId))
+        invite,
+  ];
+}
+
+class _RefereeTournamentRow extends StatelessWidget {
+  const _RefereeTournamentRow(this.entry);
+
+  final TournamentRefereeInvite entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return LavishRow(
+      key: ValueKey('referee-tournament-${entry.tournamentId}'),
+      leading: const LavishIconBox(
+        tone: LavishTone.warn,
+        child: Icon(Icons.gavel_rounded),
+      ),
+      title: entry.tournamentName,
+      subtitle: StatusHelper.getTournamentStatusLabel(
+        entry.tournamentStatus,
+        l10n: l10n,
+      ),
+      trailing: [
+        Icon(
+          Icons.chevron_right_rounded,
+          color: LavishColors.of(context).faint,
+        ),
+      ],
+      onTap: () =>
+          context.push('/organizer/tournaments/${entry.tournamentId}/manage'),
     );
   }
 }

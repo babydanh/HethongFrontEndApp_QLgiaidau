@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentRepository implements ITournamentRepository {
@@ -164,6 +165,23 @@ class ApiTournamentRepository implements ITournamentRepository {
       _log.error('Error fetching public sponsors: $tournamentId', e, stack);
       return const [];
     }
+  }
+
+  @override
+  Future<ManageRole> getManageRole(String tournamentId) async {
+    // Permission data: never answer it from the offline GET cache.
+    final response = await _dioClient.dio.get<Object?>(
+      '/tournaments/$tournamentId',
+      queryParameters: const {'manage': 'true'},
+      options: Options(extra: const {'noCache': true}),
+    );
+    final raw = response.data;
+    final data = raw is Map ? raw['data'] : null;
+    // An unexpected body must not default to manager: let the guard retry.
+    if (data is! Map) {
+      throw const FormatException('manage detail without a data object');
+    }
+    return ManageRole.fromApi(data['manageRole']);
   }
 
   @override
