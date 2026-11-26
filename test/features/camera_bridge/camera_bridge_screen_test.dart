@@ -73,8 +73,9 @@ class _FakeRepo implements ICameraAdminRepository {
 }
 
 Future<({AppLocalizations l10n, _FakeRunner runner, _FakeRepo repo})> _pump(
-  WidgetTester tester,
-) async {
+  WidgetTester tester, {
+  bool noRunner = false,
+}) async {
   tester.view.physicalSize = const Size(1200, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -84,7 +85,9 @@ Future<({AppLocalizations l10n, _FakeRunner runner, _FakeRepo repo})> _pump(
     ProviderScope(
       overrides: [
         cameraAdminRepositoryProvider.overrideWithValue(repo),
-        ffmpegRunnerFactoryProvider.overrideWithValue(() => runner),
+        ffmpegRunnerFactoryProvider.overrideWithValue(
+          noRunner ? () => throw UnimplementedError() : () => runner,
+        ),
         bridgeDelayProvider.overrideWithValue((_) async {}),
       ],
       child: MaterialApp(
@@ -207,6 +210,20 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('cameraBridge-2-remove')));
     await tester.pump();
     expect(_field(2, 'host'), findsNothing);
+  });
+
+  testWidgets('TC-CAMBR-37 with no ffmpeg wired in, start explains it', (
+    tester,
+  ) async {
+    final s = await _pump(tester, noRunner: true);
+    await _fill(tester, 1);
+
+    await tester.tap(find.text(s.l10n.cameraBridge_start));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text(s.l10n.cameraBridge_errorUnsupported), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('TC-CAMBR-36 double tap on start runs a single bridge', (
