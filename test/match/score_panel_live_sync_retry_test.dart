@@ -3,17 +3,22 @@ import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _params = (tournamentId: 'tournament-1', matchId: 'match-1');
 
-/// Records every live score write; the first [failures] writes fail the way a
-/// dropped connection or a timeout does.
+const _timeout = ScoreWriteException('Connection timed out', transient: true);
+
+/// Records every live score write; the first [failures] writes fail with
+/// [error] (by default the way a dropped connection or a timeout does).
 class _FlakyWrites extends Fake implements IMatchRepository {
-  _FlakyWrites(this.failures);
+  _FlakyWrites(this.failures, {this.error = _timeout});
 
   int failures;
+  final Object error;
+  int attempts = 0;
   final List<Map<String, dynamic>?> sent = [];
 
   @override
@@ -30,9 +35,10 @@ class _FlakyWrites extends Fake implements IMatchRepository {
     bool useLiteParticipantAccess = false,
     ({String date, String? time})? playedAt,
   }) async {
+    attempts++;
     if (failures > 0) {
       failures--;
-      throw Exception('Connection timed out');
+      throw error;
     }
     final live = scoreDetailsExtras?['liveState'] as Map<String, dynamic>?;
     sent.add(live?['tennisPointState'] as Map<String, dynamic>?);
@@ -126,4 +132,38 @@ void main() {
       });
     },
   );
+
+  // A refused write (no right to score, conflict) fails the same way again:
+  // resending it only hammers the Backend. The warning stays up instead.
+  for (final (id, error) in [
+    (
+      'TC-TENNIS-OVL-APP-09 a 403 refusal',
+      const ScoreWriteException('Bạn không có quyền chấm', statusCode: 403),
+    ),
+    (
+      'TC-TENNIS-OVL-APP-10 a 409 conflict',
+      const ScoreWriteException(
+        'Điểm đã thay đổi từ thiết bị khác.',
+        statusCode: 409,
+      ),
+    ),
+  ]) {
+    test('$id is not resent and keeps the sync warning', () {
+      fakeAsync((async) {
+        final writes = _FlakyWrites(99, error: error);
+        final container = _container(writes);
+        container
+            .read(scorePanelNotifierProvider(_params).notifier)
+            .tennisAwardPoint(true);
+
+        async.elapse(const Duration(seconds: 30));
+
+        expect(writes.attempts, 1);
+        expect(
+          container.read(scorePanelNotifierProvider(_params)).errorMessage,
+          isNotNull,
+        );
+      });
+    });
+  }
 }
