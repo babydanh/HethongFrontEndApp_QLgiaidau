@@ -29,7 +29,11 @@ class CourtMenuActions {
     this.overrideEnabled = false,
     this.onForceWin,
     this.scoring,
+    this.onPickServer,
   });
+
+  /// Tennis / badminton: the next tap on a player corrects who serves.
+  final VoidCallback? onPickServer;
 
   final VoidCallback? onSwitchEnds;
   final VoidCallback? onUndo;
@@ -54,7 +58,8 @@ class CourtMenuActions {
       onRestoreAutomatic != null ||
       onToggleAutoSwitch != null ||
       onToggleOverride != null ||
-      onForceWin != null;
+      onForceWin != null ||
+      onPickServer != null;
 }
 
 /// Icon controls drawn on the net: ⋯, finish set, winner cup.
@@ -82,6 +87,7 @@ enum _MenuItem {
   override,
   forceWin,
   scoring,
+  pickServer,
 }
 
 /// The ⋯ button and its popup menu.
@@ -140,6 +146,8 @@ class CourtMenuButton extends StatelessWidget {
         actions.onForceWin?.call();
       case _MenuItem.scoring:
         actions.scoring?.onTap?.call();
+      case _MenuItem.pickServer:
+        actions.onPickServer?.call();
     }
   }
 
@@ -176,6 +184,13 @@ class CourtMenuButton extends StatelessWidget {
           enabled: actions.onToggleAutoSwitch != null,
           checked: actions.autoSwitchEnds,
         ),
+        if (actions.onPickServer != null)
+          _item(
+            _MenuItem.pickServer,
+            Icons.sports_tennis_rounded,
+            l10n.racketPickServer,
+            enabled: true,
+          ),
         if (actions.onToggleOverride != null)
           _item(
             _MenuItem.override,

@@ -88,20 +88,8 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
     if (picked != null && mounted) _notifier.racketApplyTennisAction(picked);
   }
 
-  Future<void> _openMenu() async {
-    final l10n = AppLocalizations.of(context)!;
-    final choose = await showModalBottomSheet<bool>(
-      context: context,
-      builder: (sheet) => SafeArea(
-        child: ListTile(
-          leading: const Icon(Icons.sports_tennis_rounded),
-          title: Text(l10n.racketPickServer),
-          onTap: () => Navigator.pop(sheet, true),
-        ),
-      ),
-    );
-    if (choose == true && mounted) setState(() => _correcting = true);
-  }
+  /// "Choose server" of the ⋯ menu: the next tap on a player corrects who serves.
+  void _chooseServer() => setState(() => _correcting = true);
 
   /// Reminder under the chips: why nothing is highlighted, or what to tap.
   String? _banner(
@@ -251,7 +239,8 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
         onScore: readOnly ? null : (team, inc) => _score(tennis, team, inc),
         onUndo: _notifier.racketUndoStep,
         onSwitchEnds: _notifier.racketSwitchEnds,
-        onMenu: _openMenu,
+        onMenu: _chooseServer,
+        sportIcon: tennis ? 'tennis' : 'badminton',
         onPickServer: tennisDoubles
             ? (team, i) => unawaited(_tapTennis(team, i, title(team, i)))
             : picking

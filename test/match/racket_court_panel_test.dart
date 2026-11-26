@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_racket.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/racket_court_panel.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/racket_court_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -140,6 +139,7 @@ void main() {
   testWidgets('TC-RACKET-P-01 first server is picked by tapping a player', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final c = await _pump(tester, _badminton(), doubles: true);
     expect(
       find.text('Tap a player to choose who serves first.'),
@@ -151,13 +151,17 @@ void main() {
     await tester.pump();
     expect(_read(c).racketServerTeam, 2);
     expect(_read(c).racketServerPlayerIndex(doubles: true), 1);
-    expect(find.textContaining('SERVE'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'^\w+: \w+, Serving')),
+      findsOneWidget,
+    );
     // Still 0-0, so the server can be changed again; the hint goes with the
     // first point.
-    await tester.tap(find.byKey(const ValueKey('racketPlus2')));
+    await tester.tap(find.byTooltip('Add point for team 2'));
     await tester.pump();
     expect(find.text('Tap a player to choose who serves first.'), findsNothing);
     await _flush(tester);
+    semantics.dispose();
   });
 
   testWidgets('TC-RACKET-P-02 plus adds a point and moves the call', (
@@ -166,7 +170,7 @@ void main() {
     final c = await _pump(tester, _badminton(), doubles: true);
     await tester.tap(find.text('An'));
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.tap(find.byTooltip('Add point for team 1'));
     await tester.pump();
     expect(_read(c).rally!.currentP1, 1);
     expect(find.text('1-0'), findsOneWidget);
@@ -179,10 +183,10 @@ void main() {
     final c = await _pump(tester, _badminton(), doubles: true);
     await tester.tap(find.text('An'));
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('racketPlus2')));
+    await tester.tap(find.byTooltip('Add point for team 2'));
     await tester.pump();
     expect(_read(c).racketServerTeam, 2);
-    await tester.tap(find.byKey(racketUndoKey));
+    await tester.tap(find.byTooltip('Undo'));
     await tester.pump();
     expect(_read(c).rally!.currentP2, 0);
     expect(_read(c).racketServerTeam, 1);
@@ -193,7 +197,7 @@ void main() {
     final c = await _pump(tester, _tennis(), doubles: false);
     await tester.tap(find.text('An'));
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.tap(find.byTooltip('Add point for team 1'));
     await tester.pump();
     expect(_read(c).tennis!.team1GamePoints, 1);
     expect(find.text('15-0'), findsOneWidget);
@@ -213,9 +217,9 @@ void main() {
     final c = await _pump(tester, _badminton(), doubles: true);
     await tester.tap(find.text('An'));
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.tap(find.byTooltip('Add point for team 1'));
     await tester.pump();
-    await tester.tap(find.byKey(racketMenuKey));
+    await tester.tap(find.byTooltip('More actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Choose server'));
     await tester.pumpAndSettle();
@@ -237,8 +241,8 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _badminton(), doubles: true, readOnly: true);
-    expect(find.byKey(const ValueKey('racketPlus1')), findsNothing);
-    expect(find.byKey(racketUndoKey), findsNothing);
+    expect(find.byTooltip('Add point for team 1'), findsNothing);
+    expect(find.byTooltip('Undo'), findsNothing);
   });
 
   testWidgets('TC-RACKET-P-08 doubles after minus says the server is unknown', (
@@ -247,11 +251,15 @@ void main() {
     await _pump(tester, _badminton(), doubles: true);
     await tester.tap(find.text('An'));
     await tester.pump();
-    for (final key in ['racketPlus1', 'racketPlus1', 'racketMinus1']) {
-      await tester.tap(find.byKey(ValueKey(key)));
+    for (final tip in [
+      'Add point for team 1',
+      'Add point for team 1',
+      'Remove point for team 1',
+    ]) {
+      await tester.tap(find.byTooltip(tip));
       await tester.pump();
     }
-    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.tap(find.byTooltip('Add point for team 1'));
     await tester.pump();
     expect(
       find.text('Server unknown. Undo, or ⋯ → Choose server.'),
@@ -263,15 +271,23 @@ void main() {
   testWidgets(
     'TC-RACKET-P-09 tennis doubles: pick the server, receiver shows',
     (tester) async {
+      final semantics = tester.ensureSemantics();
       final c = await _pump(tester, _tennisDoubles(), doubles: true);
       expect(find.text('Tap a player to choose who serves.'), findsOneWidget);
       await tester.tap(find.text('Binh'));
       await tester.pump();
       expect(_read(c).racketServerPlayerIndex(doubles: true), 1);
-      expect(find.textContaining('SERVE'), findsOneWidget);
-      expect(find.text('RECEIVE'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp(r'^\w+: \w+, Serving')),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel(RegExp(r'^\w+: \w+, RECEIVE')),
+        findsOneWidget,
+      );
       expect(find.text('Tap a receiver to swap who receives.'), findsOneWidget);
       await _flush(tester);
+      semantics.dispose();
     },
   );
 
@@ -286,7 +302,7 @@ void main() {
     expect(find.text('Swap right/left'), findsOneWidget);
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+    await tester.tap(find.byTooltip('Add point for team 1'));
     await tester.pump();
     await tester.tap(find.text('Chi'));
     await tester.pumpAndSettle();
@@ -324,7 +340,7 @@ void main() {
         expect(tester.takeException(), isNull);
         await tester.tap(find.text('An'));
         await tester.pump();
-        await tester.tap(find.byKey(const ValueKey('racketPlus1')));
+        await tester.tap(find.byTooltip('Add point for team 1'));
         await tester.pump();
         await tester.tap(find.text('Binh'));
         await tester.pumpAndSettle();

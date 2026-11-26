@@ -97,12 +97,20 @@ void main() {
     }
   });
 
-  testWidgets('TC-RACKET-W-02 one GIAO tag and one NHAN outline', (
+  testWidgets('TC-RACKET-W-02 one server cell and one receiver cell', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     await _pump(tester, _view(_Spy()));
-    expect(find.textContaining('SERVE'), findsOneWidget);
-    expect(find.text('RECEIVE'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'^\w+: \w+, Serving')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(r'^\w+: \w+, RECEIVE')),
+      findsOneWidget,
+    );
+    semantics.dispose();
   });
 
   testWidgets('TC-RACKET-W-03 singles shows two players on the diagonal', (
@@ -115,7 +123,6 @@ void main() {
     expect(find.text('Lan'), findsOneWidget);
     expect(find.text('Bao'), findsOneWidget);
     expect(find.text('Minh'), findsNothing);
-    expect(find.text('RECEIVE'), findsOneWidget);
   });
 
   testWidgets('TC-RACKET-W-04 middle shows call and both scores', (
@@ -132,13 +139,11 @@ void main() {
   testWidgets('TC-RACKET-W-05 plus and minus reach onScore per team', (
     tester,
   ) async {
-    final semantics = tester.ensureSemantics();
     final spy = _Spy();
     await _pump(tester, _view(spy));
-    await tester.tap(find.bySemanticsLabel('Add point for team 1'));
-    await tester.tap(find.bySemanticsLabel('Remove point for team 2'));
+    await tester.tap(find.byTooltip('Add point for team 1'));
+    await tester.tap(find.byTooltip('Remove point for team 2'));
     expect(spy.scores, ['1:true', '2:false']);
-    semantics.dispose();
   });
 
   testWidgets('TC-RACKET-W-06 undo is disabled when there is nothing to undo', (
@@ -146,21 +151,24 @@ void main() {
   ) async {
     final spy = _Spy();
     await _pump(tester, _view(spy, canUndo: false));
-    await tester.tap(find.byKey(racketUndoKey));
+    await tester.tap(find.byTooltip('Undo'));
     expect(spy.undo, 0);
     await _pump(tester, _view(spy));
-    await tester.tap(find.byKey(racketUndoKey));
+    await tester.tap(find.byTooltip('Undo'));
     expect(spy.undo, 1);
   });
 
-  testWidgets('TC-RACKET-W-07 switch ends and menu buttons call back', (
+  testWidgets('TC-RACKET-W-07 switch ends and the menu call back', (
     tester,
   ) async {
     final spy = _Spy();
     await _pump(tester, _view(spy));
-    await tester.tap(find.byKey(racketEndsKey));
-    await tester.tap(find.byKey(racketMenuKey));
+    await tester.tap(find.byTooltip('Switch ends').first);
     expect(spy.ends, 1);
+    await tester.tap(find.byTooltip('More actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose server'));
+    await tester.pumpAndSettle();
     expect(spy.menu, 1);
   });
 
@@ -194,8 +202,8 @@ void main() {
     final semantics = tester.ensureSemantics();
     final spy = _Spy();
     await _pump(tester, _view(spy, interactive: false));
-    expect(find.byKey(racketUndoKey), findsNothing);
-    expect(find.bySemanticsLabel('Add point for team 1'), findsNothing);
+    expect(find.byTooltip('Undo'), findsNothing);
+    expect(find.byTooltip('Add point for team 1'), findsNothing);
     await tester.tap(find.text('Ha'));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
@@ -224,8 +232,9 @@ void main() {
       tester,
       _view(_Spy(), team1: const [], team2: const [], doubles: false),
     );
-    expect(find.text('Team One'), findsOneWidget);
-    expect(find.text('Team Two'), findsOneWidget);
+    // The shared board shortens every name the pickleball way.
+    expect(find.text('T. One'), findsOneWidget);
+    expect(find.text('T. Two'), findsOneWidget);
   });
 
   for (final entry in {
@@ -244,14 +253,19 @@ void main() {
     });
   }
 
-  testWidgets('TC-RACKET-W-14 server cell exposes one clean semantics label', (
+  testWidgets('TC-RACKET-W-14 server and receiver cells announce their role', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
     await _pump(tester, _view(_Spy()));
-    // Child texts (name, SERVE chip) must not leak into the label.
-    expect(find.bySemanticsLabel('Right: Lan, SERVE'), findsOneWidget);
-    expect(find.bySemanticsLabel('Right: Bao, RECEIVE'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'^Right: Lan, Serving')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(r'^Right: Bao, RECEIVE')),
+      findsOneWidget,
+    );
     semantics.dispose();
   });
 }

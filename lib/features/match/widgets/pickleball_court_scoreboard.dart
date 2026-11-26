@@ -60,7 +60,28 @@ class CourtScoreboard extends StatelessWidget {
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
+    this.scoreTextOf,
+    this.canRemovePoint,
+    this.onPlayerTap,
+    this.setText,
+    this.sportIcon = 'pickleball',
   });
+
+  /// Text shown instead of the number (tennis game points: 15, 30, 40, Ad).
+  final String Function(int team)? scoreTextOf;
+
+  /// Whether the minus of a team is enabled; null means "the score is above 0".
+  final bool Function(int team)? canRemovePoint;
+
+  /// A tap on a player handled by the caller (choose the first server); null
+  /// keeps the tap for the actions dialog.
+  final void Function(int team, int playerIndex)? onPlayerTap;
+
+  /// Replaces "Set n" under the scores (tennis: games and sets won).
+  final String? setText;
+
+  /// Mark drawn in the corner of the top row.
+  final String sportIcon;
 
   /// Horizontal: halves side by side. Vertical (upright phone): halves stacked,
   /// the first team on top, the scores in a band between them.
@@ -108,6 +129,7 @@ class CourtScoreboard extends StatelessWidget {
               showUndo: onScoreChange != null,
               // Upright: no room in the bar, the clock moves to the top row.
               clockStart: upright ? startedAt : null,
+              sportIcon: sportIcon,
             ),
           ),
           Expanded(
@@ -123,6 +145,7 @@ class CourtScoreboard extends StatelessWidget {
               leftTeam: left,
               rightTeam: right,
               scoreOf: scoreOf,
+              canRemovePoint: canRemovePoint,
               lockReceiverPlus: lockReceiverPlus,
               servingTeam: layout.servingTeam,
               onScoreChange: onScoreChange,
@@ -143,11 +166,13 @@ class _TopRow extends StatelessWidget {
     required this.net,
     required this.overrideEnabled,
     required this.showUndo,
+    required this.sportIcon,
     this.clockStart,
   });
 
   final CourtNetActions net;
   final bool overrideEnabled;
+  final String sportIcon;
 
   /// Draws UNDO at the top centre; greyed while there is nothing to take back.
   final bool showUndo;
@@ -259,12 +284,12 @@ class _TopRow extends StatelessWidget {
       child: Stack(
         children: [
           // The sport shows as a mark in the corner instead of a word.
-          const Positioned(
+          Positioned(
             left: 12,
             top: 0,
             bottom: 0,
             child: Center(
-              child: SportIconWidget(iconData: 'pickleball', size: 32),
+              child: SportIconWidget(iconData: sportIcon, size: 32),
             ),
           ),
           Center(
@@ -366,6 +391,7 @@ class _CourtBlock extends StatelessWidget {
       dragEnabled: scoreboard.dragEnabled,
       resolve: scoreboard.resolve,
       onDrop: scoreboard.onDrop,
+      onPlayerTap: scoreboard.onPlayerTap,
     );
   }
 
@@ -463,6 +489,7 @@ class _ScoreboardHalf extends StatefulWidget {
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
+    this.onPlayerTap,
   });
 
   final Axis axis;
@@ -475,6 +502,7 @@ class _ScoreboardHalf extends StatefulWidget {
   final bool dragEnabled;
   final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
+  final void Function(int team, int playerIndex)? onPlayerTap;
 
   @override
   State<_ScoreboardHalf> createState() => _ScoreboardHalfState();
@@ -506,6 +534,7 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
   Widget _cell(CourtCell cell) {
     final l10n = AppLocalizations.of(context)!;
     final layout = widget.layout;
+    final tap = widget.onPlayerTap;
     final index = layout.slotsOf(widget.team).playerIn(cell);
     final isServing =
         index != null &&
@@ -529,6 +558,9 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
       isReceiving: isReceiving,
       serverNumber: layout.callServerNumber,
       dragEnabled: widget.dragEnabled,
+      onPick: tap == null || index == null || !widget.dragEnabled
+          ? null
+          : () => tap(widget.team, index),
       actions: index == null || !widget.dragEnabled
           ? const {}
           : courtPlayerActions(
@@ -644,6 +676,7 @@ class _ScoreboardCell extends StatelessWidget {
     required this.serverNumber,
     required this.dragEnabled,
     required this.actions,
+    this.onPick,
   });
 
   final CourtCell cell;
@@ -654,6 +687,9 @@ class _ScoreboardCell extends StatelessWidget {
   final bool isReceiving;
   final int? serverNumber;
   final bool dragEnabled;
+
+  /// A tap handled by the caller (choose the first server); wins over [actions].
+  final VoidCallback? onPick;
 
   /// What a tap offers (swap, give the serve); empty hides the tap.
   final Map<String, VoidCallback> actions;
@@ -731,7 +767,9 @@ class _ScoreboardCell extends StatelessWidget {
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: actions.isEmpty ? null : () => _showActions(context, name),
+        onTap:
+            onPick ??
+            (actions.isEmpty ? null : () => _showActions(context, name)),
         child: AnimatedContainer(
           duration: motion,
           color: color,
@@ -758,7 +796,10 @@ class _ScoreboardCell extends StatelessWidget {
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
                     child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.8, end: 1).animate(animation),
+                      scale: Tween<double>(
+                        begin: 0.8,
+                        end: 1,
+                      ).animate(animation),
                       child: child,
                     ),
                   ),
@@ -928,6 +969,9 @@ class _MiddleColumn extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final call = scoreboard.callText;
     final setNumber = scoreboard.setNumber;
+    final setLabel =
+        scoreboard.setText ??
+        (setNumber == null ? null : l10n.pickleballCourtSetNumber(setNumber));
     final switchEnds = scoreboard.onSwitchEnds;
     return ColoredBox(
       color: Colors.white,
@@ -971,6 +1015,7 @@ class _MiddleColumn extends StatelessWidget {
                               fit: BoxFit.scaleDown,
                               child: _ScoreChip(
                                 score: scoreboard.scoreOf(team),
+                                text: scoreboard.scoreTextOf?.call(team),
                                 isServing:
                                     scoreboard.layout.servingTeam == team,
                                 motion: scoreboard.motion,
@@ -988,9 +1033,9 @@ class _MiddleColumn extends StatelessWidget {
                     )
                   else
                     const SizedBox(height: _controlSize),
-                  if (setNumber != null)
+                  if (setLabel != null)
                     Text(
-                      l10n.pickleballCourtSetNumber(setNumber),
+                      setLabel,
                       style: const TextStyle(
                         color: Color(0xFF7A7F8A),
                         fontSize: 14,
@@ -1026,6 +1071,9 @@ class _MiddleBand extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final call = scoreboard.callText;
     final setNumber = scoreboard.setNumber;
+    final setLabel =
+        scoreboard.setText ??
+        (setNumber == null ? null : l10n.pickleballCourtSetNumber(setNumber));
     final switchEnds = scoreboard.onSwitchEnds;
     Widget score(int team, Alignment align) => Expanded(
       child: Align(
@@ -1034,6 +1082,7 @@ class _MiddleBand extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: _ScoreChip(
             score: scoreboard.scoreOf(team),
+            text: scoreboard.scoreTextOf?.call(team),
             isServing: scoreboard.layout.servingTeam == team,
             motion: scoreboard.motion,
           ),
@@ -1079,9 +1128,9 @@ class _MiddleBand extends StatelessWidget {
                           tooltip: l10n.pickleballCourtActionSwitchEnds,
                           onPressed: switchEnds,
                         ),
-                      if (setNumber != null)
+                      if (setLabel != null)
                         Text(
-                          l10n.pickleballCourtSetNumber(setNumber),
+                          setLabel,
                           style: const TextStyle(
                             color: Color(0xFF7A7F8A),
                             fontSize: 14,
@@ -1105,9 +1154,13 @@ class _ScoreChip extends StatelessWidget {
     required this.score,
     required this.isServing,
     required this.motion,
+    this.text,
   });
 
   final int score;
+
+  /// Shown instead of [score] when set (tennis game points).
+  final String? text;
   final bool isServing;
   final Duration motion;
 
@@ -1129,8 +1182,8 @@ class _ScoreChip extends StatelessWidget {
         transitionBuilder: (child, animation) =>
             ScaleTransition(scale: animation, child: child),
         child: Text(
-          '$score',
-          key: ValueKey<int>(score),
+          text ?? '$score',
+          key: ValueKey<String>(text ?? '$score'),
           style: TextStyle(
             color: context.colors.success,
             fontSize: 52,
@@ -1151,6 +1204,7 @@ class _BottomBar extends StatelessWidget {
     required this.leftTeam,
     required this.rightTeam,
     required this.scoreOf,
+    required this.canRemovePoint,
     required this.lockReceiverPlus,
     required this.servingTeam,
     required this.onScoreChange,
@@ -1163,6 +1217,7 @@ class _BottomBar extends StatelessWidget {
   final int leftTeam;
   final int rightTeam;
   final int Function(int team) scoreOf;
+  final bool Function(int team)? canRemovePoint;
   final bool lockReceiverPlus;
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
@@ -1194,7 +1249,9 @@ class _BottomBar extends StatelessWidget {
       tooltip: l10n.pickleballCourtRemovePoint(team),
       color: Color.lerp(accent, Colors.white, 0.3)!,
       minWidth: buttonWidth,
-      onPressed: scoreOf(team) > 0 ? () => change(team, false) : null,
+      onPressed: (canRemovePoint?.call(team) ?? scoreOf(team) > 0)
+          ? () => change(team, false)
+          : null,
       child: const Icon(Icons.remove_rounded, color: Colors.white, size: 28),
     );
     return plusFirst ? [plus, minus] : [minus, plus];
