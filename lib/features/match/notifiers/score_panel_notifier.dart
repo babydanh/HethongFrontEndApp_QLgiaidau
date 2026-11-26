@@ -2105,10 +2105,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       }
       if (!msg.contains('409') && !msg.contains('thay đổi từ thiết bị khác')) {
         ref.invalidate(singleMatchProvider(arg));
-        // The write did not land (timeout, dropped connection, 5xx). The
-        // stale server snapshot is ignored while this tap is pending, so
-        // without a resend the Backend keeps the old point until the next
-        // tap — or forever when the referee stops tapping.
+      }
+      // The write did not land (timeout, dropped connection, 5xx). The stale
+      // server snapshot is ignored while this tap is pending, so without a
+      // resend the Backend keeps the old point until the next tap — or
+      // forever when the referee stops tapping. A conflict refetches instead,
+      // and a tournament that has not started will not accept a resend.
+      if (!msg.contains('409') &&
+          !msg.contains('thay đổi từ thiết bị khác') &&
+          e is! TournamentNotStartedException) {
         _liveSyncPending = true;
         final last = _liveSyncRetryDelay;
         _liveSyncRetryDelay = last == null
