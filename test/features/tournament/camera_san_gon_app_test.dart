@@ -47,18 +47,25 @@ class _Venues implements TournamentManagementRepository {
 }
 
 class _Cameras implements ICourtCameraRepository {
+  _Cameras({this.gate});
+
+  /// When set, listCameras waits for it: the "cameras still loading" state.
+  final Completer<void>? gate;
+
   @override
-  Future<List<TournamentCameraModel>> listCameras(String tournamentId) async =>
-      const [
-        TournamentCameraModel(
-          id: 'cam-1',
-          name: 'Camera 1',
-          mode: 'PULL',
-          status: 'IDLE',
-          courtId: 'court-1',
-          playbackUrl: 'https://p.example/1.m3u8',
-        ),
-      ];
+  Future<List<TournamentCameraModel>> listCameras(String tournamentId) async {
+    await gate?.future;
+    return const [
+      TournamentCameraModel(
+        id: 'cam-1',
+        name: 'Camera 1',
+        mode: 'PULL',
+        status: 'IDLE',
+        courtId: 'court-1',
+        playbackUrl: 'https://p.example/1.m3u8',
+      ),
+    ];
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -96,6 +103,7 @@ Future<void> _pumpTab(
   WidgetTester tester,
   _Venues venues, {
   bool settle = true,
+  Completer<void>? camerasGate,
 }) async {
   tester.view.physicalSize = const Size(390, 2400);
   tester.view.devicePixelRatio = 1;
@@ -106,7 +114,7 @@ Future<void> _pumpTab(
       const TournamentManagementCameraSection(tournamentId: 't1'),
       overrides: [
         tournamentManagementRepositoryProvider.overrideWithValue(venues),
-        courtCameraRepositoryProvider.overrideWithValue(_Cameras()),
+        courtCameraRepositoryProvider.overrideWithValue(_Cameras(gate: camerasGate)),
         matchRecordingCatalogRepositoryProvider.overrideWithValue(_Catalog()),
         facebookCameraLiveRepositoryProvider.overrideWithValue(_Live()),
         managedMatchesWithDivisionProvider.overrideWith(
@@ -202,6 +210,30 @@ void main() {
     gate.complete();
     await tester.pumpAndSettle();
     expect(_plus(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('TC-CAMTAB-APP-06 + is disabled until the camera list has loaded '
+      'so the default name counts real cameras', (tester) async {
+    final camerasGate = Completer<void>();
+    await _pumpTab(
+      tester,
+      _Venues(const [_courtOne]),
+      settle: false,
+      camerasGate: camerasGate,
+    );
+    // Courts are in, cameras are not: "+" must stay off.
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(_plus(tester).onPressed, isNull);
+
+    camerasGate.complete();
+    await tester.pumpAndSettle();
+    expect(_plus(tester).onPressed, isNotNull);
+    await tester.tap(find.byTooltip('Tạo camera'));
+    await tester.pumpAndSettle();
+    final name = tester.widget<TextField>(
+      find.byKey(const ValueKey('camera-editor-name')),
+    );
+    expect(name.controller!.text, 'Cam 2');
   });
 
   testWidgets('TC-CAMTAB-APP-04 the camera block sits above the court cards', (
