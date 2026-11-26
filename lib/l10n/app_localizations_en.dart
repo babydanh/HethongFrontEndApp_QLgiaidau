@@ -12876,6 +12876,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'You do not have permission to operate this tournament.';
 
   @override
+  String get refereeModeNotice =>
+      'You are viewing as Referee: you can change match times and courts and enter results. Everything else is up to the organizers.';
+
+  @override
+  String get dashboard_refereeTournaments => 'Tournaments you referee';
+
+  @override
   String get opsLoadFailed => 'Could not load tournament operations.';
 
   @override

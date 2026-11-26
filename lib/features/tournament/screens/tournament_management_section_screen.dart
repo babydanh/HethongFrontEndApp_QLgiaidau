@@ -182,10 +182,7 @@ typedef _InfoValues = ({
 /// with an accent arrow toggle, open by default; the body stays mounted while
 /// hidden so unsaved edits survive a collapse.
 class _InfoGroup extends StatefulWidget {
-  const _InfoGroup({
-    required this.title,
-    required this.children,
-  });
+  const _InfoGroup({required this.title, required this.children});
 
   final String title;
   final List<Widget> children;
@@ -342,7 +339,9 @@ class _TournamentSettingsFormState
 
   void _endDateDirect(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
     Navigator.of(context).pop();
   }
 
@@ -471,10 +470,7 @@ class _TournamentSettingsFormState
             ),
           ),
         ),
-        _StickySaveBar(
-          error: _errorMessage,
-          button: _saveButton(l10n),
-        ),
+        _StickySaveBar(error: _errorMessage, button: _saveButton(l10n)),
       ],
     );
   }
@@ -692,9 +688,7 @@ class _TournamentSettingsFormState
             ),
             ButtonSegment(
               value: 'INVITE_ONLY',
-                label: Text(
-                  l10n.tournamentManagementRegistrationModeInviteOnly,
-                ),
+              label: Text(l10n.tournamentManagementRegistrationModeInviteOnly),
             ),
           ],
           selected: {_registrationMode},
@@ -1174,12 +1168,16 @@ class TournamentLifecycleCard extends ConsumerStatefulWidget {
     this.onShare,
     this.onDelete,
     this.onStepTap,
+    this.readOnly = false,
   });
 
   final Tournament tournament;
 
   /// Tapped step of the progress bar (index 0..3); null keeps the bar read-only.
   final ValueChanged<int>? onStepTap;
+
+  /// Shows the progress bar without the next-step buttons (referee view).
+  final bool readOnly;
 
   /// False renders only the "Khác" group (the step bar and the next-step
   /// button then live in the page header instead).
@@ -1214,6 +1212,11 @@ class _TournamentLifecycleCardState
     final status = StatusHelper.normalizeTournamentStatus(
       widget.tournament.status,
     );
+    if (widget.readOnly) {
+      // Progress only: every lifecycle button is organizer-only.
+      if (lifecycleStepIndex(status) == null) return const SizedBox.shrink();
+      return LifecycleStepBar(status: status, onStepTap: widget.onStepTap);
+    }
     final divisionMatches = widget.tournament.divisions.isEmpty
         ? null
         : ref.watch(matchesProvider(id)).asData?.value;

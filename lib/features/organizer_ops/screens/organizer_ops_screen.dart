@@ -26,6 +26,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,7 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
     this.isEmbedded = false,
     this.overlapHandles = const [],
     this.initialMatchesView = OrganizerOpsMatchesView.list,
+    this.manageRole = ManageRole.manager,
   });
 
   final String tournamentId;
@@ -78,6 +80,10 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
 
   /// Hub quản lý truyền `grid` để vào tab là thấy lưới sân ngay.
   final OrganizerOpsMatchesView initialMatchesView;
+
+  /// A referee only moves matches (time/court) and scores; the standalone
+  /// route is organizer-only, so it keeps the manager default.
+  final ManageRole manageRole;
 
   @override
   ConsumerState<OrganizerOpsScreen> createState() => _OrganizerOpsScreenState();
@@ -120,6 +126,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     // vào bằng lưới; người dùng vẫn đổi bộ lọc được như thường.
     if (_matchesView == OrganizerOpsMatchesView.grid) _opsMatchFilter = 'all';
   }
+
+  bool _can(ManageAction action) => canManageAction(widget.manageRole, action);
 
   @override
   void didUpdateWidget(OrganizerOpsScreen oldWidget) {
@@ -2297,6 +2305,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
           void applyDraft() => _applyDraft(context: context);
 
+          final canPlan = !readOnly && _can(ManageAction.autoSchedule);
+          final canSetHours = !readOnly && _can(ManageAction.manageCourts);
+
           void cancelDraft() => setState(() {
             _draftMatches = const [];
             _draftSkipped = 0;
@@ -2325,18 +2336,18 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   onBulkSchedule: readOnly ? null : bulkSchedule,
                   onBulkDuration: readOnly ? null : bulkDuration,
                   onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
-                  onAutoSchedule: readOnly ? null : openAutoSchedule,
-                  onAiSchedule: readOnly || !_aiScheduleAvailable
-                      ? null
-                      : openAiSchedule,
-                  onOpenScheduleSettings: readOnly
-                      ? null
-                      : _showScheduleSettingsSheet,
+                  onAutoSchedule: canPlan ? openAutoSchedule : null,
+                  onAiSchedule: canPlan && _aiScheduleAvailable
+                      ? openAiSchedule
+                      : null,
+                  onOpenScheduleSettings: canSetHours
+                      ? _showScheduleSettingsSheet
+                      : null,
                   draftMatches: _draftMatches,
                   draftSkippedCount: _draftSkipped,
                   draftProgress: _draftProgress,
-                  onApplyDraft: readOnly ? null : applyDraft,
-                  onCancelDraft: readOnly ? null : cancelDraft,
+                  onApplyDraft: canPlan ? applyDraft : null,
+                  onCancelDraft: canPlan ? cancelDraft : null,
                   divisions: divisionOptions,
                   selectedDivisionId: divisionId,
                   onDivisionSelected: selectDivision,
@@ -2361,9 +2372,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                         onBulkDuration: readOnly ? null : bulkDuration,
                         onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
                         onTapMatch: readOnly ? null : openMatch,
-                        onOpenScheduleSettings: readOnly
-                            ? null
-                            : _showScheduleSettingsSheet,
+                        onOpenScheduleSettings: canSetHours
+                            ? _showScheduleSettingsSheet
+                            : null,
                       ),
                     ),
                   ),
@@ -2557,6 +2568,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required String? divisionId,
   }) async {
     final l10n = AppLocalizations.of(context)!;
+    // The ops bracket page and special operations are organizer-only.
+    final canEditBracket = _can(ManageAction.editBracket);
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -2570,11 +2583,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 title: Text(l10n.matchStartMatch),
                 onTap: () => Navigator.pop(sheetContext, 'start'),
               ),
-            ListTile(
-              leading: const Icon(Icons.account_tree_outlined),
-              title: Text(l10n.opsOpenBracket),
-              onTap: () => Navigator.pop(sheetContext, 'bracket'),
-            ),
+            if (canEditBracket)
+              ListTile(
+                leading: const Icon(Icons.account_tree_outlined),
+                title: Text(l10n.opsOpenBracket),
+                onTap: () => Navigator.pop(sheetContext, 'bracket'),
+              ),
             ListTile(
               leading: const Icon(Icons.schedule_rounded),
               title: Text(l10n.matchScheduledTime),
@@ -2585,11 +2599,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               title: Text(l10n.opsOpenScoreboard),
               onTap: () => Navigator.pop(sheetContext, 'score'),
             ),
-            ListTile(
-              leading: const Icon(Icons.gavel_rounded),
-              title: Text(l10n.opsSpecialOperation),
-              onTap: () => Navigator.pop(sheetContext, 'special'),
-            ),
+            if (canEditBracket)
+              ListTile(
+                leading: const Icon(Icons.gavel_rounded),
+                title: Text(l10n.opsSpecialOperation),
+                onTap: () => Navigator.pop(sheetContext, 'special'),
+              ),
           ],
         ),
       ),
@@ -2911,6 +2926,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       stepMinutes: scheduleStepMinutesOf(settings),
     );
     final current = match.scheduledTime?.toLocal();
+    // A referee's write must not carry `refereeId` (the Backend rejects it).
+    final canAssignReferee = _can(ManageAction.assignReferee);
     final initialRefereeId = match.refereeId;
     var courtId = courts.any((court) => court.id == match.courtId)
         ? match.courtId!
@@ -3110,7 +3127,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     if (value != null) setSheetState(() => duration = value);
                   },
                 ),
-                if (referees.isNotEmpty) ...[
+                if (canAssignReferee && referees.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: refereeId,
@@ -3183,7 +3200,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                                   courtId: chosen.id,
                                   courtName: chosen.name,
                                   scheduledAt: scheduledAt,
-                                  refereeId: refereeId,
+                                  refereeId: canAssignReferee
+                                      ? refereeId
+                                      : null,
                                   durationMinutes: duration,
                                 ),
                             requested: ScheduleSlot(

@@ -32,9 +32,13 @@ class TournamentManagementAthletesTab extends ConsumerStatefulWidget {
     required this.tournament,
     this.selectedDivisionId,
     this.onDivisionChanged,
+    this.readOnly = false,
   });
 
   final Tournament tournament;
+
+  /// View only (referee): names, teams and check-in state, no write action.
+  final bool readOnly;
 
   /// Nội dung do host chọn (hub dùng chung một lựa chọn cho các tab); null thì
   /// tab tự giữ lựa chọn, mặc định nội dung đầu tiên.
@@ -348,6 +352,7 @@ class _TournamentManagementAthletesTabState
                         presence: _presence,
                         onPresenceChanged: (id, present) =>
                             setState(() => _presence[id] = present),
+                        readOnly: widget.readOnly,
                       ),
               ),
             ],
@@ -376,6 +381,7 @@ class _DivisionBody extends StatelessWidget {
     required this.onOpenPairMove,
     required this.presence,
     required this.onPresenceChanged,
+    required this.readOnly,
   });
 
   final TournamentDivision division;
@@ -391,6 +397,7 @@ class _DivisionBody extends StatelessWidget {
   final VoidCallback onOpenPairMove;
   final Map<String, bool> presence;
   final void Function(String participantId, bool present) onPresenceChanged;
+  final bool readOnly;
 
   bool _isPending(OrganizerOpsParticipant item) => const {
     'PENDING',
@@ -419,10 +426,7 @@ class _DivisionBody extends StatelessWidget {
               Expanded(
                 child: Text(
                   '${l10n.athletesPresentCount} $present/$count',
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 11.5,
-                  ),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 11.5),
                 ),
               ),
               if (pending > 0)
@@ -450,27 +454,29 @@ class _DivisionBody extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-          child: _AthleteActionRow(
-            showPairing: division.isDoubles,
-            waitingPartner: waitingPartner,
-            onImportExcel: onImportExcel,
-            onOpenPairing: onOpenPairing,
-            onAutoPair: onAutoPair,
-            onOpenPairMove: onOpenPairMove,
-            onAddAthlete: () => onAddAthlete(participants),
-            onDownloadTemplate: onDownloadTemplate,
-            onOpenWildcard: onOpenWildcard,
-            onOpenMockParticipants: onOpenMockParticipants,
+        if (!readOnly)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+            child: _AthleteActionRow(
+              showPairing: division.isDoubles,
+              waitingPartner: waitingPartner,
+              onImportExcel: onImportExcel,
+              onOpenPairing: onOpenPairing,
+              onAutoPair: onAutoPair,
+              onOpenPairMove: onOpenPairMove,
+              onAddAthlete: () => onAddAthlete(participants),
+              onDownloadTemplate: onDownloadTemplate,
+              onOpenWildcard: onOpenWildcard,
+              onOpenMockParticipants: onOpenMockParticipants,
+            ),
           ),
-        ),
         TournamentManagementPeopleSection(
           tournament: tournament,
           showRegistration: true,
           divisionId: division.id,
           divisionName: division.name,
           embedded: true,
+          readOnly: readOnly,
           onPresenceChanged: onPresenceChanged,
           // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
           pairFormat:

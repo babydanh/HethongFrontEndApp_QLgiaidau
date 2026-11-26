@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
 import 'package:app_quanly_giaidau/data/models/camera_live_status_model.dart';
@@ -147,6 +148,7 @@ void main() {
             )).overrideWith((ref) => Stream.value({'awards': const []})),
           ],
           home: TournamentManagementHubScreen(
+            role: ManageRole.manager,
             tournament: _tournament(),
             actionRouteBase: '/organizer/tournaments/$_tournamentId/manage',
             opsWorkspaceRoute: '/organizer/tournaments/$_tournamentId/ops',

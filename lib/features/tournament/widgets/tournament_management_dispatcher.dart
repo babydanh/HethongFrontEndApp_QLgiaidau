@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manager_guard.dart';
 
 /// Preserves club Super Lite management and routes other tournament types to the shared hub.
 class TournamentManagementDispatcher extends ConsumerWidget {
@@ -34,16 +35,27 @@ class TournamentManagementDispatcher extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     Widget managementWorkspace(Tournament tournament) {
+      // Not every entry route has a guard: resolve the role here so the hub
+      // follows it. Lite workspaces have no referee mode: organizers only.
       if (tournament.isClubLite ||
           (showLiteWorkspace && tournament.isSuperLite)) {
-        return LiteManagementScreen(tournamentId: tournamentId);
+        return TournamentManagerGuard(
+          tournamentId: tournamentId,
+          managerOnly: true,
+          builder: (_, _) => LiteManagementScreen(tournamentId: tournamentId),
+        );
       }
-
-      return TournamentManagementHubScreen(
-        tournament: tournament,
-        actionRouteBase: actionRouteBase,
-        opsWorkspaceRoute: opsWorkspaceRoute,
-        liteWorkspaceRoute: liteWorkspaceRoute,
+      return TournamentManagerGuard(
+        tournamentId: tournamentId,
+        builder: (_, role) => TournamentManagementHubScreen(
+          // A new role needs a new tab controller.
+          key: ValueKey('management-hub-${role.name}'),
+          tournament: tournament,
+          role: role,
+          actionRouteBase: actionRouteBase,
+          opsWorkspaceRoute: opsWorkspaceRoute,
+          liteWorkspaceRoute: liteWorkspaceRoute,
+        ),
       );
     }
 
@@ -87,10 +99,8 @@ class TournamentManagementDispatcher extends ConsumerWidget {
     if (lastTournament != null) return workspaceFrame(lastTournament);
 
     return tournamentAsync.when(
-      loading: () => _StateScaffold(
-        title: l10n.unnamed,
-        child: const BoneDetailLoading(),
-      ),
+      loading: () =>
+          _StateScaffold(title: l10n.unnamed, child: const BoneDetailLoading()),
       error: (error, _) => errorState(error),
       data: (tournament) {
         if (tournament == null) {

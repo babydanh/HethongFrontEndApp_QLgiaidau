@@ -12834,6 +12834,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoPermission => 'Bạn không có quyền vận hành giải đấu này.';
 
   @override
+  String get refereeModeNotice =>
+      'Bạn đang xem với vai Trọng tài: được đổi giờ, sân và nhập kết quả trận. Việc khác do ban tổ chức thực hiện.';
+
+  @override
+  String get dashboard_refereeTournaments => 'Giải làm trọng tài';
+
+  @override
   String get opsLoadFailed => 'Không thể tải dữ liệu vận hành giải.';
 
   @override

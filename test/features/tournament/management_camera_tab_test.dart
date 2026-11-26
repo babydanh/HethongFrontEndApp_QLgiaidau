@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
@@ -136,6 +137,7 @@ Future<(AppLocalizations, _Venues)> _pumpHub(
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
         home: TournamentManagementHubScreen(
+          role: ManageRole.manager,
           tournament: _tournament(status),
           actionRouteBase: '/admin/tournament/$_tid',
           opsWorkspaceRoute: '/organizer/tournaments/$_tid/ops',

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/services/manage_role_access.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -113,6 +114,7 @@ Widget _app(
     supportedLocales: AppLocalizations.supportedLocales,
     locale: locale,
     home: TournamentManagementHubScreen(
+      role: ManageRole.manager,
       tournament: tournament,
       actionRouteBase: '/admin/tournament/tournament-1',
       opsWorkspaceRoute: '/organizer/tournaments/tournament-1/ops',
@@ -788,7 +790,7 @@ void main() {
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentManageAccessProvider(
           'tournament-1',
-        ).overrideWith((ref) async => true),
+        ).overrideWith((ref) async => ManageRole.manager),
         tournamentProvider('tournament-1').overrideWith(
           (ref) => Stream.value(_tournament('in_progress', quick: true)),
         ),
@@ -845,6 +847,9 @@ void main() {
             _tournament('in_progress', superLite: true, communityId: 'club-1'),
           ),
         ),
+        tournamentManageAccessProvider(
+          'tournament-1',
+        ).overrideWith((ref) async => ManageRole.manager),
         regionRepositoryProvider.overrideWith(
           (ref) => _EmptyRegionRepository(),
         ),
@@ -884,7 +889,7 @@ void main() {
         authProvider.overrideWith(_AuthenticatedAdmin.new),
         tournamentManageAccessProvider(
           'tournament-1',
-        ).overrideWith((ref) async => true),
+        ).overrideWith((ref) async => ManageRole.manager),
         tournamentProvider(
           'tournament-1',
         ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
@@ -928,6 +933,9 @@ void main() {
               roles: ['ADMIN'],
             ),
           ),
+          tournamentManageAccessProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => ManageRole.manager),
           tournamentProvider('tournament-1').overrideWith((ref) {
             tournamentReads += 1;
             return Stream.value(
@@ -1037,6 +1045,7 @@ void main() {
           builder: (context, state) {
             final id = state.pathParameters['id']!;
             return TournamentManagementHubScreen(
+              role: ManageRole.manager,
               tournament: tournament,
               actionRouteBase: '/organizer/tournaments/$id/manage',
               opsWorkspaceRoute: '/organizer/tournaments/$id/ops',
@@ -1336,6 +1345,9 @@ void main() {
           tournamentProvider(
             'tournament-1',
           ).overrideWith((ref) => tournaments.stream),
+          tournamentManageAccessProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => ManageRole.manager),
           tournamentManagementRepositoryProvider.overrideWithValue(
             _EmptyTournamentManagementRepository(),
           ),

@@ -23320,6 +23320,18 @@ abstract class AppLocalizations {
   /// **'Bạn không có quyền vận hành giải đấu này.'**
   String get opsNoPermission;
 
+  /// No description provided for @refereeModeNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đang xem với vai Trọng tài: được đổi giờ, sân và nhập kết quả trận. Việc khác do ban tổ chức thực hiện.'**
+  String get refereeModeNotice;
+
+  /// No description provided for @dashboard_refereeTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải làm trọng tài'**
+  String get dashboard_refereeTournaments;
+
   /// No description provided for @opsLoadFailed.
   ///
   /// In vi, this message translates to:
