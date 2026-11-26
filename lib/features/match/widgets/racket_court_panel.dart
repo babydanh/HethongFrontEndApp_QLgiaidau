@@ -78,8 +78,9 @@ class _RacketCourtPanelState extends ConsumerState<RacketCourtPanel> {
   /// stood. The rules would put the server in the cell of the point parity.
   bool _pickInPlace(int team, int index, bool Function() pick) {
     final before = ref.read(scorePanelNotifierProvider(widget.params));
+    // Read the cells as drawn now, so a second pick keeps the cell shown.
     final right = before
-        .racketCells(doubles: true)
+        .racketCells(doubles: true, serverRight: _serverRightOverride(before))
         .where((c) => c.team == team && c.playerIndex == index)
         .map((c) => c.rightCourt)
         .firstOrNull;

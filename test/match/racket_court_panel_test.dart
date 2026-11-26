@@ -313,6 +313,27 @@ void main() {
     await _flush(tester);
   });
 
+  testWidgets('TC-RACKET-P-12 picking the server twice moves nobody', (
+    tester,
+  ) async {
+    final c = await _pump(tester, _tennisDoubles(), doubles: true);
+    final an = tester.getCenter(find.text('An'));
+    final binh = tester.getCenter(find.text('Binh'));
+    await tester.tap(find.text('Binh'));
+    await tester.pump();
+    expect(_read(c).racketServerPlayerIndex(doubles: true), 1);
+    expect(tester.getCenter(find.text('An')), an);
+    expect(tester.getCenter(find.text('Binh')), binh);
+    await tester.tap(find.text('An'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('This player serves'));
+    await tester.pumpAndSettle();
+    expect(_read(c).racketServerPlayerIndex(doubles: true), 0);
+    expect(tester.getCenter(find.text('An')), an);
+    expect(tester.getCenter(find.text('Binh')), binh);
+    await _flush(tester);
+  });
+
   testWidgets('TC-RACKET-P-11 No-Ad 40-40 offers the deciding receiver', (
     tester,
   ) async {
