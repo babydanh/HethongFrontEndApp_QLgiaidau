@@ -128,9 +128,19 @@ class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
     final server = params.rtmpServer.replaceAll(RegExp(r'/+$'), '');
     final rtmpUrl = '$server/${params.rtmpStreamKey}';
 
+    final FfmpegRunner runner;
+    try {
+      runner = ref.read(ffmpegRunnerFactoryProvider)();
+    } on UnimplementedError {
+      state = const CameraBridgeState(
+        status: BridgeStatus.error,
+        failure: BridgeFailure.unsupported,
+      );
+      return;
+    }
     final runId = ++_runId;
     _attempt = 0;
-    _runner = ref.read(ffmpegRunnerFactoryProvider)();
+    _runner = runner;
     state = const CameraBridgeState(status: BridgeStatus.connecting);
     await _loop(rtspUrl, rtmpUrl, runId);
   }
@@ -167,6 +177,7 @@ class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
     int runId,
   ) async {
     final runner = _runner!;
+    BridgeFailure? failure;
     await for (final event in runner.run(rtspUrl, rtmpUrl)) {
       switch (event) {
         case BridgeLive():
@@ -174,11 +185,14 @@ class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
           if (runId == _runId) {
             state = const CameraBridgeState(status: BridgeStatus.live);
           }
-        case BridgeFailed(:final failure):
-          await runner.stop();
-          return failure;
+        case BridgeFailed(failure: final reported):
+          failure = reported;
       }
+      if (failure != null) break;
     }
-    return null;
+    // Stop only after leaving the loop: a runner that waits for its stream to
+    // close would otherwise wait on this very subscription.
+    if (failure != null) await runner.stop();
+    return failure;
   }
 }

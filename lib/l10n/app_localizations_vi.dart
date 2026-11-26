@@ -20847,4 +20847,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cameraBridge_errorSetup =>
       'Chưa lấy được khoá phát của giải. Thử lại sau.';
+
+  @override
+  String get cameraBridge_errorUnsupported =>
+      'Bản này chưa hỗ trợ phát từ camera IP.';
 }

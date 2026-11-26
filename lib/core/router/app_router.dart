@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/camera_bridge/camera_bridge_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart';
@@ -391,6 +392,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tournaments/create',
         builder: (context, state) => const CreatePublicQuickTournamentScreen(),
+      ),
+
+      GoRoute(
+        path: '/organizer/tournaments/:id/camera-ip',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return TournamentManagerGuard(
+            tournamentId: id,
+            managerOnly: true,
+            builder: (_, _) => CameraBridgeScreen(tournamentId: id),
+          );
+        },
       ),
 
       // ─── Advanced Organizer Operations ───

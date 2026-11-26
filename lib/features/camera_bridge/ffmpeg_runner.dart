@@ -15,6 +15,9 @@ enum BridgeFailure {
   /// The camera data the user typed cannot form an address.
   invalidInput(retryable: false),
 
+  /// This build has no FFmpeg runner wired in yet.
+  unsupported(retryable: false),
+
   other(retryable: true);
 
   const BridgeFailure({required this.retryable});

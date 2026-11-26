@@ -20936,4 +20936,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cameraBridge_errorSetup =>
       'Could not get the tournament\'s push key. Try again later.';
+
+  @override
+  String get cameraBridge_errorUnsupported =>
+      'This version cannot stream from an IP camera yet.';
 }
