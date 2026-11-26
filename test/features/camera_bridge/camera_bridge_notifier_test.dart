@@ -191,7 +191,9 @@ void main() {
       unawaited(notifier.start(_params));
       await pump();
 
-      expect(s.runner.runs, hasLength(2));
+      // Each start asks the factory for a fresh runner.
+      expect(s.runners, hasLength(2));
+      expect(s.runners[1].runs, hasLength(1));
       expect(s.container.read(cameraBridgeProvider(_cam)).status, BridgeStatus.connecting);
     });
   });

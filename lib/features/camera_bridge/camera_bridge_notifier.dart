@@ -190,9 +190,9 @@ class CameraBridgeNotifier extends Notifier<CameraBridgeState> {
       }
       if (failure != null) break;
     }
-    // Stop only after leaving the loop: a runner that waits for its stream to
-    // close would otherwise wait on this very subscription.
-    if (failure != null) await runner.stop();
+    // Not awaited: the screen must show the failure now, not after the process
+    // has finished shutting down. The next run starts after a backoff.
+    if (failure != null) unawaited(runner.stop());
     return failure;
   }
 }
