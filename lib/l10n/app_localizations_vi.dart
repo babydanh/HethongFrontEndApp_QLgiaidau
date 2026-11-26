@@ -20762,4 +20762,103 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get chatRoomEvictedNotice =>
       'Đăng ký giải của bạn không còn hiệu lực nên bạn đã rời phòng giải.';
+
+  @override
+  String get cameraBridge_title => 'Camera IP';
+
+  @override
+  String cameraBridge_cameraN(int n) {
+    return 'Camera $n';
+  }
+
+  @override
+  String get cameraBridge_fieldHost => 'IP camera';
+
+  @override
+  String get cameraBridge_fieldBrand => 'Hãng camera';
+
+  @override
+  String get cameraBridge_fieldPort => 'Cổng RTSP';
+
+  @override
+  String get cameraBridge_fieldUser => 'Tài khoản';
+
+  @override
+  String get cameraBridge_fieldPassword => 'Mật khẩu';
+
+  @override
+  String get cameraBridge_showPassword => 'Hiện mật khẩu';
+
+  @override
+  String get cameraBridge_hidePassword => 'Ẩn mật khẩu';
+
+  @override
+  String get cameraBridge_brandDahua => 'Dahua';
+
+  @override
+  String get cameraBridge_brandHikvision => 'Hikvision';
+
+  @override
+  String get cameraBridge_streamMain => 'Luồng chính';
+
+  @override
+  String get cameraBridge_streamSub => 'Luồng phụ';
+
+  @override
+  String get cameraBridge_start => 'Bắt đầu';
+
+  @override
+  String get cameraBridge_stop => 'Dừng';
+
+  @override
+  String get cameraBridge_addCamera2 => 'Thêm camera 2';
+
+  @override
+  String get cameraBridge_removeCamera => 'Gỡ camera';
+
+  @override
+  String get cameraBridge_statusIdle => 'Chưa kết nối';
+
+  @override
+  String get cameraBridge_statusConnecting => 'Đang kết nối';
+
+  @override
+  String get cameraBridge_statusLive => 'Đang phát';
+
+  @override
+  String get cameraBridge_statusError => 'Lỗi';
+
+  @override
+  String get cameraBridge_hostRequired => 'Nhập IP camera, ví dụ 192.168.1.50';
+
+  @override
+  String get cameraBridge_portInvalid => 'Cổng từ 1 đến 65535';
+
+  @override
+  String get cameraBridge_userRequired => 'Nhập tài khoản camera';
+
+  @override
+  String get cameraBridge_passwordRequired => 'Nhập mật khẩu camera';
+
+  @override
+  String get cameraBridge_errorAuth => 'Sai tài khoản hoặc mật khẩu camera.';
+
+  @override
+  String get cameraBridge_errorUnreachable =>
+      'Không thấy camera. Máy này phải dùng chung wifi với camera.';
+
+  @override
+  String get cameraBridge_errorCodec =>
+      'Camera đang phát H.265. Hãy chọn luồng phụ (H.264).';
+
+  @override
+  String get cameraBridge_errorInvalid => 'Thông tin camera chưa đúng.';
+
+  @override
+  String get cameraBridge_errorOther =>
+      'Không đẩy được hình lên. Đang thử nối lại.';
+
+  @override
+  String get cameraBridge_errorSetup =>
+      'Chưa lấy được khoá phát của giải. Thử lại sau.';
 }
