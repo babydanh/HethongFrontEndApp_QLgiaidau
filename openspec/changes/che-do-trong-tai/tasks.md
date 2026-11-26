@@ -58,9 +58,9 @@
 
 ## 7. Kiểm tích hợp
 
-- [ ] 7.1 `flutter analyze --no-pub` trên từng thư mục đã sửa và chạy lại các file test cũ bị đụng (guard, hub, results tab, camera tab, step popup, division share, lifecycle end sheet, ops drop, waiting tray, schedule manager bar). Tiêu chí: mọi lệnh exit 0
+- [x] 7.1 `flutter analyze --no-pub` trên từng thư mục đã sửa và chạy lại các file test cũ bị đụng (guard, hub, results tab, camera tab, step popup, division share, lifecycle end sheet, ops drop, waiting tray, schedule manager bar). Tiêu chí: mọi lệnh exit 0
   - Files: (không sửa)
   - Giao: (không) · Nhận: 1–6
   - Chủ file chung: (không)
   - Phụ thuộc: 1–6
-  - Kết quả: chạy 35 file test liên quan, mỗi lần một file: 33 file exit 0. Hai file đỏ vì test còn theo luật cũ: `tournament_management_hub_screen_test.dart` (dựng dispatcher mà không override vai) và `schedule_grid_empty_cta_test.dart` (CTA tạo sân theo `onScheduleDrop`). Đã sửa hai test này và chạy lại: `schedule_grid_empty_cta_test.dart` exit 0. `tournament_management_hub_screen_test.dart` còn 1 ca đỏ (CLB Super Lite); đã thêm override nhưng CHƯA chạy lại được, vì đĩa còn dưới 10 GB và hook chặn `flutter test`, `flutter analyze`, `dart format`. Cần chạy lại file này và `flutter analyze` khi đã có chỗ trống trên đĩa, hoặc để CI của nhánh chạy.
+  - Kết quả: chạy 35 file test liên quan, mỗi lần một file: 33 file exit 0. Hai file đỏ vì test còn theo luật cũ: `tournament_management_hub_screen_test.dart` (dựng dispatcher mà không override vai) và `schedule_grid_empty_cta_test.dart` (CTA tạo sân theo `onScheduleDrop`). Đã sửa hai test này và chạy lại: `schedule_grid_empty_cta_test.dart` exit 0. `tournament_management_hub_screen_test.dart` còn 1 ca đỏ (CLB Super Lite); đã thêm override nhưng CHƯA chạy lại được, vì đĩa còn dưới 10 GB và hook chặn `flutter test`, `flutter analyze`, `dart format`. Cần chạy lại file này và `flutter analyze` khi đã có chỗ trống trên đĩa, hoặc để CI của nhánh chạy. Bổ sung 2026-11-26: CI nhánh (run 45763613111, commit d87b5da0) chạy `flutter analyze` toàn repo 0 lỗi (109 info, 78 warning) và `flutter test` đầy đủ, gồm cả `tournament_management_hub_screen_test.dart`: success.
