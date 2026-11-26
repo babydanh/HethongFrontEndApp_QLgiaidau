@@ -1999,6 +1999,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _liveSyncTimer?.cancel();
     _liveSyncTimer = null;
     _liveSyncPending = false;
+    // The set write carries the whole score; the next live tap starts fresh.
+    _liveSyncRetryDelay = null;
   }
 
   void setOverride(bool enabled, String reason) {
@@ -2109,11 +2111,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // The write did not land (timeout, dropped connection, 5xx). The stale
       // server snapshot is ignored while this tap is pending, so without a
       // resend the Backend keeps the old point until the next tap — or
-      // forever when the referee stops tapping. A conflict refetches instead,
-      // and a tournament that has not started will not accept a resend.
-      if (!msg.contains('409') &&
-          !msg.contains('thay đổi từ thiết bị khác') &&
-          e is! TournamentNotStartedException) {
+      // forever when the referee stops tapping. Only a write that may succeed
+      // again is resent; a refusal (4xx: no right, conflict, invalid, not
+      // started) keeps the warning instead.
+      if (e is ScoreWriteException && e.transient) {
         _liveSyncPending = true;
         final last = _liveSyncRetryDelay;
         _liveSyncRetryDelay = last == null

@@ -1314,10 +1314,20 @@ class ApiMatchRepository implements IMatchRepository {
                 .map((item) => item.toString())
                 .join('\n')
           : rawMessage?.toString();
-      throw Exception(
-        message?.trim().isNotEmpty == true
+      final status = error.response?.statusCode;
+      throw ScoreWriteException(
+        message != null && message.trim().isNotEmpty
             ? message
             : _l10n.matchScoreUpdateError,
+        statusCode: status,
+        // Same write may succeed if sent again: no answer, or a server fault.
+        transient:
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.sendTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.unknown ||
+            (status != null && status >= 500),
       );
     }
   }
