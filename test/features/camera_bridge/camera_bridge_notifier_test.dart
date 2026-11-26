@@ -196,6 +196,27 @@ void main() {
     });
   });
 
+  group('without a real ffmpeg runner', () {
+    test('TC-CAMBR-22 start reports unsupported instead of throwing', () async {
+      final container = ProviderContainer(
+        overrides: [
+          ffmpegRunnerFactoryProvider.overrideWithValue(
+            () => throw UnimplementedError(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(cameraBridgeProvider(_cam).notifier);
+
+      await notifier.start(_params);
+
+      final state = container.read(cameraBridgeProvider(_cam));
+      expect(state.status, BridgeStatus.error);
+      expect(state.failure, BridgeFailure.unsupported);
+      expect(BridgeFailure.unsupported.retryable, isFalse);
+    });
+  });
+
   group('two cameras of one tournament', () {
     test('TC-CAMBR-20 each camera runs and stops on its own', () async {
       final s = _setup();
