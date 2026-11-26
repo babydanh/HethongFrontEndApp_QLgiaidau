@@ -13,11 +13,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// [CameraEditorSheet], tạo camera, làm mới danh sách, báo snackbar, rồi mở
 /// popup QR stream key khi camera là PUSH (như Web `handleCreateCamera`), hoặc
 /// sheet "Camera đã sẵn sàng" khi camera vừa tạo bằng nút live Facebook một chạm.
+/// [cameraCount] is the number of cameras today: the name starts as "Cam N+1".
 Future<void> runCreateCameraFlow({
   required BuildContext context,
   required WidgetRef ref,
   required String tournamentId,
   required List<TournamentCourtRef> courts,
+  required int cameraCount,
   required Future<void> Function() refresh,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
@@ -27,6 +29,7 @@ Future<void> runCreateCameraFlow({
   final saved = await CameraEditorSheet.show(
     context,
     courts: courts,
+    initialName: l10n.tournamentCameraDefaultName(cameraCount + 1),
     facebookLiveTournamentId: tournamentId,
     facebookLiveRepository: ref.read(facebookCameraLiveRepositoryProvider),
     onSubmit: (value) async {

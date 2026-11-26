@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
@@ -64,6 +65,7 @@ class CameraEditorSheet extends StatefulWidget {
     required this.courts,
     required this.onSubmit,
     this.camera,
+    this.initialName,
     this.previewBuilder = _defaultPreview,
     this.facebookLiveTournamentId,
     this.facebookLiveRepository,
@@ -78,6 +80,9 @@ class CameraEditorSheet extends StatefulWidget {
   final CameraEditorSubmit onSubmit;
   final TournamentCameraModel? camera;
 
+  /// Name the field starts with when creating ("Cam 3"); ignored when editing.
+  final String? initialName;
+
   /// Drag is off from the start: the sheet can turn busy right after opening
   /// and the route's drag flags are fixed at push time.
   static Future<bool?> show(
@@ -85,6 +90,7 @@ class CameraEditorSheet extends StatefulWidget {
     required List<TournamentCourtRef> courts,
     required CameraEditorSubmit onSubmit,
     TournamentCameraModel? camera,
+    String? initialName,
     LivePreviewBuilder previewBuilder = _defaultPreview,
     String? facebookLiveTournamentId,
     IFacebookCameraLiveRepository? facebookLiveRepository,
@@ -97,6 +103,7 @@ class CameraEditorSheet extends StatefulWidget {
       courts: courts,
       onSubmit: onSubmit,
       camera: camera,
+      initialName: initialName,
       previewBuilder: previewBuilder,
       facebookLiveTournamentId: facebookLiveTournamentId,
       facebookLiveRepository: facebookLiveRepository,
@@ -108,7 +115,9 @@ class CameraEditorSheet extends StatefulWidget {
 }
 
 class _CameraEditorSheetState extends State<CameraEditorSheet> {
-  final _nameController = TextEditingController();
+  late final _nameController = TextEditingController(
+    text: widget.camera == null ? widget.initialName : null,
+  );
   final _linkController = TextEditingController();
   bool _liveSource = false;
   late String? _courtId = widget.camera?.courtId;
@@ -393,7 +402,9 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
                 DropdownMenuItem<String?>(
                   value: court.id,
                   child: Text(
-                    court.name.isEmpty ? court.id : court.name,
+                    court.name.isEmpty
+                        ? court.id
+                        : courtDisplayName(court.name),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

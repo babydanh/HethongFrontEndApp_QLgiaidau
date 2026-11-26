@@ -126,6 +126,7 @@ Future<void> _openFlow(
               ref: ref,
               tournamentId: 't1',
               courts: const [_court],
+              cameraCount: 0,
               refresh: refresh ?? () async {},
             ),
             child: const Text('open'),
@@ -162,6 +163,8 @@ void main() {
     final live = _LiveRepo();
     final admin = _Admin();
     await _openFlow(tester, live, admin);
+    // The field starts as "Cam 1"; clearing it is what brings the fallback name.
+    await tester.enterText(find.byKey(const ValueKey('camera-editor-name')), '');
     final court = find.byKey(const ValueKey('camera-editor-court'));
     await tester.ensureVisible(court);
     await tester.tap(court);
@@ -183,6 +186,15 @@ void main() {
     expect(find.text('Camera is ready'), findsOneWidget);
     expect(_field(tester, 'fb-live-rtmp').controller.text, _server);
     expect(_field(tester, 'fb-live-key').obscureText, isTrue);
+  });
+
+  testWidgets('TC-CAM-NAME-APP-03 untouched prefilled name is kept for a live '
+      'camera', (tester) async {
+    final admin = _Admin();
+    await _openFlow(tester, _LiveRepo(), admin);
+    await _tapCreate(tester);
+    await tester.pumpAndSettle();
+    expect(admin.created.single['name'], 'Cam 1');
   });
 
   testWidgets('TC-FBONE-APP-02b a typed name is kept', (tester) async {

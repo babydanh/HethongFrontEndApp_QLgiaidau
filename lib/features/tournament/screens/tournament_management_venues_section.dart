@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_count_stepper.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
@@ -369,7 +370,7 @@ class _VenueDialog extends StatefulWidget {
 class _VenueDialogState extends State<_VenueDialog> {
   late final _name = TextEditingController(text: widget.initialName);
   late final _address = TextEditingController(text: widget.initialAddress);
-  late final _count = TextEditingController();
+  int _courtCount = courtCountMin;
   // Same default as the Web and the Backend, so the field is never blank.
   late final _prefix = TextEditingController(text: 'Sân');
   bool _default = false;
@@ -389,7 +390,6 @@ class _VenueDialogState extends State<_VenueDialog> {
   void dispose() {
     _name.dispose();
     _address.dispose();
-    _count.dispose();
     _prefix.dispose();
     super.dispose();
   }
@@ -398,7 +398,6 @@ class _VenueDialogState extends State<_VenueDialog> {
       _name.text.trim().isNotEmpty && _address.text.trim().isNotEmpty;
 
   void _submit() {
-    final parsedCount = int.tryParse(_count.text.trim());
     final venueId = _pickedVenueId;
     Navigator.pop(
       context,
@@ -407,12 +406,8 @@ class _VenueDialogState extends State<_VenueDialog> {
         address: _address.text,
         isDefault: _default,
         // An existing directory venue already has its own courts.
-        initialCourtCount:
-            widget.showCourtFields &&
-                venueId == null &&
-                parsedCount != null &&
-                parsedCount > 0
-            ? parsedCount
+        initialCourtCount: widget.showCourtFields && venueId == null
+            ? _courtCount
             : null,
         courtPrefix: _prefix.text,
         venueId: venueId,
@@ -482,6 +477,33 @@ class _VenueDialogState extends State<_VenueDialog> {
     );
   }
 
+  /// Label above a [CourtCountStepper], laid out like [_field].
+  Widget _stepperField(LavishColors colors, String label) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: colors.text,
+        ),
+      ),
+      const SizedBox(height: 6),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: CourtCountStepper(
+          fieldKey: const ValueKey('venue-dialog-count'),
+          initialValue: _courtCount,
+          onChanged: (value) => setState(() => _courtCount = value),
+        ),
+      ),
+    ],
+  );
+
   Widget _header(LavishColors colors, AppLocalizations l10n) => Padding(
     padding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
     child: Row(
@@ -537,11 +559,9 @@ class _VenueDialogState extends State<_VenueDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _field(
-                key: const ValueKey('venue-dialog-count'),
-                label: l10n.tournamentManagementInitialCourtCount,
-                controller: _count,
-                keyboardType: TextInputType.number,
+              child: _stepperField(
+                colors,
+                l10n.tournamentManagementInitialCourtCount,
               ),
             ),
             const SizedBox(width: 12),

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
@@ -137,7 +138,7 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
             value: '$_courtPrefix${court.id}',
             child: Text(
               l10n.camMatchMoveCourt(
-                court.name.isEmpty ? court.id : court.name,
+                court.name.isEmpty ? court.id : courtDisplayName(court.name),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -184,7 +185,7 @@ class _CameraMatchRowState extends ConsumerState<CameraMatchRow> {
       if (widget.showCourtChip)
         courtName.isEmpty
             ? l10n.tournamentManagementCameraUnassigned
-            : courtName,
+            : courtDisplayName(courtName),
       if (time != null) DateFormat('HH:mm').format(time.toLocal()),
     ];
 

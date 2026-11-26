@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -20251,6 +20252,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get camTabCreateTooltip => 'Tạo camera';
+
+  @override
+  String get camTabAddCourtFirst => 'Thêm sân trước khi tạo camera';
+
+  @override
+  String tournamentCameraDefaultName(int number) {
+    return 'Cam $number';
+  }
+
+  @override
+  String get courtCountDecrease => 'Giảm số sân';
+
+  @override
+  String get courtCountIncrease => 'Tăng số sân';
 
   @override
   String get camTabMenuTooltip => 'Thêm tuỳ chọn';

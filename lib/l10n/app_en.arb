@@ -7981,6 +7981,15 @@
   "camTabSearchTooltip": "Search matches",
   "camTabFilterTooltip": "Filter matches",
   "camTabCreateTooltip": "Create camera",
+  "camTabAddCourtFirst": "Add a court before creating a camera",
+  "tournamentCameraDefaultName": "Cam {number}",
+  "@tournamentCameraDefaultName": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "courtCountDecrease": "Decrease court count",
+  "courtCountIncrease": "Increase court count",
   "camTabMenuTooltip": "More options",
   "camTabSearchHint": "Search player, team, code",
   "camTabCloseSearch": "Close search",

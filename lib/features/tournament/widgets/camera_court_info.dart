@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
@@ -41,7 +42,9 @@ class _CameraCourtInfoState extends ConsumerState<CameraCourtInfo> {
   bool _busy = false;
 
   String get _courtTitle =>
-      widget.court.name.isEmpty ? widget.court.id : widget.court.name;
+      widget.court.name.isEmpty
+          ? widget.court.id
+          : courtDisplayName(widget.court.name);
 
   void _toast(String text) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -290,7 +293,7 @@ class _CameraPickSheet extends StatelessWidget {
           children: [
             Text(
               l10n.tournamentCameraPickTitle(
-                court.name.isEmpty ? court.id : court.name,
+                court.name.isEmpty ? court.id : courtDisplayName(court.name),
               ),
               style: Theme.of(
                 context,

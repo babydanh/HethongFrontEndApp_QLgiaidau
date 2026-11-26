@@ -218,6 +218,55 @@ void main() {
     expect(repo.created.single['prefix'], 'Sân');
   });
 
+  testWidgets('TC-COURT-STEP-APP-04 the court count starts at 1 and plus raises '
+      'what is sent', (tester) async {
+    final repo = await _pump(tester);
+    await _openAddDialog(tester);
+
+    final count = tester.widget<TextField>(
+      find.byKey(const ValueKey('venue-dialog-count')),
+    );
+    expect(count.controller!.text, '1');
+    await tester.tap(find.byKey(const ValueKey('court-count-plus')));
+    await tester.tap(find.byKey(const ValueKey('court-count-plus')));
+    await tester.pump();
+    expect(count.controller!.text, '3');
+
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-name')),
+      'Sunrise Club',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-address')),
+      '1 Lake Road',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-submit')));
+    await tester.pumpAndSettle();
+
+    expect(repo.created.single['courts'], 3);
+  });
+
+  testWidgets('TC-COURT-STEP-APP-05 untouched stepper creates one court', (
+    tester,
+  ) async {
+    final repo = await _pump(tester);
+    await _openAddDialog(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-name')),
+      'Sunrise Club',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-address')),
+      '1 Lake Road',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-submit')));
+    await tester.pumpAndSettle();
+
+    expect(repo.created.single['courts'], 1);
+  });
+
   testWidgets('TC-VENUE-DLG-02 footer buttons stay above the keyboard', (
     tester,
   ) async {

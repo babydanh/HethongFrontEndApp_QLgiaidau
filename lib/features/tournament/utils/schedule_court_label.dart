@@ -13,6 +13,14 @@ String formatCourtShortName(String? name) {
   return withoutPrefix.isEmpty ? trimmed : withoutPrefix;
 }
 
+/// Court label for lists and cards: a name that is only digits ("3") shows as
+/// "Sân 3"; any other name is returned as is. Display only, the stored name
+/// (and the `courtName` sent to the API) is untouched.
+String courtDisplayName(String name, {String prefix = 'Sân'}) {
+  final trimmed = name.trim();
+  return RegExp(r'^\d+$').hasMatch(trimmed) ? '$prefix $trimmed' : name;
+}
+
 /// Tints that tell courts apart (same 8 as the web). Rose/red and violet are
 /// left out: those hues already mean "live" and "draft" on a card.
 const List<CourtChipColors> _courtChipPalette = [

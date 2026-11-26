@@ -36397,6 +36397,30 @@ abstract class AppLocalizations {
   /// **'Tạo camera'**
   String get camTabCreateTooltip;
 
+  /// No description provided for @camTabAddCourtFirst.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm sân trước khi tạo camera'**
+  String get camTabAddCourtFirst;
+
+  /// No description provided for @tournamentCameraDefaultName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cam {number}'**
+  String tournamentCameraDefaultName(int number);
+
+  /// No description provided for @courtCountDecrease.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm số sân'**
+  String get courtCountDecrease;
+
+  /// No description provided for @courtCountIncrease.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng số sân'**
+  String get courtCountIncrease;
+
   /// No description provided for @camTabMenuTooltip.
   ///
   /// In vi, this message translates to:

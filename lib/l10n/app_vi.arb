@@ -8009,6 +8009,15 @@
   "camTabSearchTooltip": "Tìm trận",
   "camTabFilterTooltip": "Lọc trận",
   "camTabCreateTooltip": "Tạo camera",
+  "camTabAddCourtFirst": "Thêm sân trước khi tạo camera",
+  "tournamentCameraDefaultName": "Cam {number}",
+  "@tournamentCameraDefaultName": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "courtCountDecrease": "Giảm số sân",
+  "courtCountIncrease": "Tăng số sân",
   "camTabMenuTooltip": "Thêm tuỳ chọn",
   "camTabSearchHint": "Tìm VĐV, đội, mã trận",
   "camTabCloseSearch": "Đóng tìm kiếm",
