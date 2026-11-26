@@ -20,6 +20,7 @@ import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.da
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 /// TC-CAMTAB-APP-01..05: Camera tab keeps "+" without courts, camera block on
