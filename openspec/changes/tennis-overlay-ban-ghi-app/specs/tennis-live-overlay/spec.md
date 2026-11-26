@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Every tennis point reaches the Backend
-The score panel SHALL send each live point to `PATCH /matches/:id/score` and, when a live write fails for a reason other than a 409 conflict, SHALL resend the newest local score with backoff (0.5 s doubling to 8 s) without waiting for another tap. Writes MUST stay one at a time and the last write MUST carry the newest score.
+The score panel SHALL send each live point to `PATCH /matches/:id/score` and, when a live write fails transiently (timeout, dropped connection, unknown network error or 5xx), SHALL resend the newest local score with backoff (0.5 s doubling to 8 s) without waiting for another tap. A refused write (4xx, including 403 and 409) MUST NOT be resent and the sync warning MUST stay. Writes MUST stay one at a time and the last write MUST carry the newest score.
 
 #### Scenario: Write fails, referee stops tapping
 - **WHEN** the write of 30-0 → 40-0 times out twice and the referee taps nothing more
 - **THEN** the panel resends and the Backend receives 40-0, and the sync warning clears
+
+#### Scenario: Refused write
+- **WHEN** the write is refused with 403 or 409
+- **THEN** it is sent once only and the sync warning stays
 
 #### Scenario: Taps during a write
 - **WHEN** three points are taken while a write is in flight

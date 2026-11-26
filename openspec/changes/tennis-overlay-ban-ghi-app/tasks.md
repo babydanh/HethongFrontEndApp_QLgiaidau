@@ -1,7 +1,7 @@
 ## 1. Điểm từng pha lên Backend
-- [x] 1.1 Ghi điểm live lỗi tự gửi lại bản mới nhất có lùi thời gian. Tiêu chí: `test/match/score_panel_live_sync_retry_test.dart` (TC-TENNIS-OVL-APP-01, 02) xanh trên CI nhánh
-  - Files: sửa `lib/features/match/notifiers/score_panel_notifier.dart`; test `test/match/score_panel_live_sync_retry_test.dart`
-  - Giao: (không đổi API) · Nhận: (không)
+- [x] 1.1 Ghi điểm live lỗi tạm tự gửi lại bản mới nhất có lùi thời gian; 4xx/409 không gửi lại. Tiêu chí: `test/match/score_panel_live_sync_retry_test.dart` (TC-TENNIS-OVL-APP-01, 02, 09, 10) xanh trên CI nhánh
+  - Files: sửa `lib/features/match/notifiers/score_panel_notifier.dart`, `lib/data/repositories/api/api_match_repository.dart` (ném `ScoreWriteException` giữ status), `lib/domain/repositories/match_repository.dart` (lớp `ScoreWriteException`); test `test/match/score_panel_live_sync_retry_test.dart`
+  - Giao: `ScoreWriteException(message, statusCode, transient)`, `toString()` giữ dạng `Exception: message` · Nhận: (không)
   - Chủ file chung: 1.1 giữ `score_panel_notifier.dart`
   - Phụ thuộc: (không)
 
