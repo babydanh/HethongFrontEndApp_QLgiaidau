@@ -31,6 +31,7 @@ class CameraTabHeader extends StatefulWidget {
     required this.onWatchCameras,
     this.readOnly = false,
     this.onCreateCamera,
+    this.createEnabled = true,
     this.onOpenStreaming,
   });
 
@@ -44,6 +45,9 @@ class CameraTabHeader extends StatefulWidget {
   final VoidCallback onRefresh;
   final VoidCallback onWatchCameras;
   final VoidCallback? onCreateCamera;
+
+  /// False while the courts are still loading: the ＋ button shows but is off.
+  final bool createEnabled;
   final VoidCallback? onOpenStreaming;
 
   @override
@@ -65,7 +69,7 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
   Widget _iconButton({
     required String tooltip,
     required IconData icon,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
   }) => IconButton(
     tooltip: tooltip,
     constraints: const BoxConstraints.tightFor(
@@ -116,7 +120,7 @@ class _CameraTabHeaderState extends State<CameraTabHeader> {
           _iconButton(
             tooltip: l10n.camTabCreateTooltip,
             icon: Icons.add_rounded,
-            onPressed: widget.onCreateCamera!,
+            onPressed: widget.createEnabled ? widget.onCreateCamera : null,
           ),
         if (list != null && list.isNotEmpty)
           _iconButton(

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/camera_patch.dart';
@@ -50,7 +51,7 @@ class _CameraListSectionState extends ConsumerState<CameraListSection> {
   String _courtName(String? courtId) {
     for (final court in widget.courts) {
       if (court.id != courtId) continue;
-      return court.name.isEmpty ? court.id : court.name;
+      return court.name.isEmpty ? court.id : courtDisplayName(court.name);
     }
     return courtId ?? '';
   }

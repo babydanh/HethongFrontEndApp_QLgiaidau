@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -33,7 +34,7 @@ class CameraCourtTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final title = court.name.isEmpty ? court.id : court.name;
+    final title = court.name.isEmpty ? court.id : courtDisplayName(court.name);
     final cam = camera;
     return Semantics(
       button: true,
@@ -154,7 +155,7 @@ class _CameraCourtSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final title = court.name.isEmpty ? court.id : court.name;
+    final title = court.name.isEmpty ? court.id : courtDisplayName(court.name);
     final open = courtMatches.where((match) => !match.isCompleted).toList()
       ..sort(_byScheduledTime);
     final finished = courtMatches.where((match) => match.isCompleted).toList()

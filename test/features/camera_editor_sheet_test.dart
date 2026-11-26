@@ -27,6 +27,7 @@ Future<List<bool?>> _open(
   WidgetTester tester,
   CameraEditorSubmit onSubmit, {
   TournamentCameraModel? camera,
+  String? initialName,
 }) async {
   final popped = <bool?>[];
   await tester.pumpWidget(
@@ -44,6 +45,7 @@ Future<List<bool?>> _open(
                   context,
                   courts: _courts,
                   camera: camera,
+                  initialName: initialName,
                   onSubmit: onSubmit,
                 ),
               ),
@@ -70,6 +72,41 @@ Future<void> _pickCourt(WidgetTester tester, String name) async {
 }
 
 void main() {
+  testWidgets('TC-CAM-NAME-APP-01 a new camera starts with the given name and '
+      'saves it unchanged', (tester) async {
+    final values = <CameraEditorValue>[];
+    await _open(tester, (value) async => values.add(value), initialName: 'Cam 3');
+
+    expect(tester.widget<TextField>(_name).controller!.text, 'Cam 3');
+    await tester.tap(_submit);
+    await tester.pumpAndSettle();
+
+    expect(values.single.name, 'Cam 3');
+  });
+
+  testWidgets('TC-CAM-NAME-APP-02 the prefilled name can be edited, and editing '
+      'a camera shows no name field', (tester) async {
+    final values = <CameraEditorValue>[];
+    await _open(tester, (value) async => values.add(value), initialName: 'Cam 3');
+    await tester.enterText(_name, 'Sân chính');
+    await tester.tap(_submit);
+    await tester.pumpAndSettle();
+    expect(values.single.name, 'Sân chính');
+
+    await _open(
+      tester,
+      (value) async {},
+      initialName: 'Cam 3',
+      camera: const TournamentCameraModel(
+        id: 'cam-1',
+        name: 'Existing',
+        mode: 'PUSH',
+        status: 'IDLE',
+      ),
+    );
+    expect(_name, findsNothing);
+  });
+
   testWidgets('a camera on a court missing from the list still opens the sheet', (
     tester,
   ) async {

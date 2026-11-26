@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
@@ -270,6 +271,29 @@ class _TournamentManagementCameraSectionState
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
 
+  /// A camera needs a court to belong to: with none, point the organizer to
+  /// the venues tab instead of opening a form that cannot be saved usefully.
+  Future<void> _createCamera(
+    AppLocalizations l10n,
+    List<TournamentCourtRef> courts,
+    int cameraCount,
+  ) async {
+    if (courts.isEmpty) {
+      _showMessage(l10n.camTabAddCourtFirst);
+      return;
+    }
+    await runCreateCameraFlow(
+      context: context,
+      ref: ref,
+      tournamentId: widget.tournamentId,
+      courts: courts,
+      cameraCount: cameraCount,
+      refresh: () => ref
+          .read(tournamentCamerasProvider(widget.tournamentId).notifier)
+          .refresh(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -345,21 +369,14 @@ class _TournamentManagementCameraSectionState
               stages: cameraMatchStages(assignable, stageOf),
               onFilterChanged: (value) => setState(() => _filter = value),
               readOnly: widget.readOnly,
-              onCreateCamera: widget.readOnly || courts.isEmpty
+              onCreateCamera: widget.readOnly
                   ? null
-                  : () => runCreateCameraFlow(
-                      context: context,
-                      ref: ref,
-                      tournamentId: widget.tournamentId,
-                      courts: courts,
-                      refresh: () => ref
-                          .read(
-                            tournamentCamerasProvider(
-                              widget.tournamentId,
-                            ).notifier,
-                          )
-                          .refresh(),
-                    ),
+                  : () => _createCamera(l10n, courts, cameras.length),
+              // Needs both reads: courts to pick from, and the camera count
+              // for the default "Cam N" name (a loading or failed list reads 0).
+              createEnabled:
+                  snapshot.connectionState != ConnectionState.waiting &&
+                  camerasAsync.hasValue,
               onRefresh: () => ref
                   .read(tournamentCamerasProvider(widget.tournamentId).notifier)
                   .refresh(),
@@ -374,11 +391,24 @@ class _TournamentManagementCameraSectionState
                 divisionId: widget.divisionId,
                 courtNames: {
                   for (final court in courts)
-                    court.id: court.name.isEmpty ? court.id : court.name,
+                    court.id: court.name.isEmpty
+                        ? court.id
+                        : courtDisplayName(court.name),
                 },
                 matchLabelOf: (match) => _matchLabel(l10n, match),
               ),
             ),
+            // Wait for the first read so an empty list is not shown by mistake.
+            if (camerasAsync.hasValue) ...[
+              const SizedBox(height: AppTheme.spacingMD),
+              CameraListSection(
+                tournamentId: widget.tournamentId,
+                cameras: cameras,
+                courts: courts,
+                readOnly: widget.readOnly,
+              ),
+              const SizedBox(height: AppTheme.spacingMD),
+            ],
             if (courts.length > 1)
               _CourtChips(
                 courts: courts,
@@ -412,16 +442,6 @@ class _TournamentManagementCameraSectionState
                   onAssign: _assignToCourt,
                 ),
               ],
-            ],
-            // Wait for the first read so an empty list is not shown by mistake.
-            if (camerasAsync.hasValue) ...[
-              const SizedBox(height: AppTheme.spacingMD),
-              CameraListSection(
-                tournamentId: widget.tournamentId,
-                cameras: cameras,
-                courts: courts,
-                readOnly: widget.readOnly,
-              ),
             ],
           ],
         );
@@ -462,7 +482,9 @@ class _CourtChips extends StatelessWidget {
             ChoiceChip(
               key: ValueKey('camera-court-chip-${court.id}'),
               visualDensity: VisualDensity.compact,
-              label: Text(court.name.isEmpty ? court.id : court.name),
+              label: Text(
+                court.name.isEmpty ? court.id : courtDisplayName(court.name),
+              ),
               selected: selectedId == court.id,
               onSelected: (_) => onSelected(court.id),
             ),
