@@ -372,8 +372,11 @@ class _TournamentManagementCameraSectionState
               onCreateCamera: widget.readOnly
                   ? null
                   : () => _createCamera(l10n, courts, cameras.length),
+              // Needs both reads: courts to pick from, and the camera count
+              // for the default "Cam N" name (a loading or failed list reads 0).
               createEnabled:
-                  snapshot.connectionState != ConnectionState.waiting,
+                  snapshot.connectionState != ConnectionState.waiting &&
+                  camerasAsync.hasValue,
               onRefresh: () => ref
                   .read(tournamentCamerasProvider(widget.tournamentId).notifier)
                   .refresh(),
