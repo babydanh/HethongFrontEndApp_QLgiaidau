@@ -35,6 +35,17 @@
   - Chủ file chung: 4.2 giữ `AndroidManifest.xml`
   - Phụ thuộc: sau 4.1
 
+- [ ] 4.3 Lưu cấu hình hai camera theo từng giải trên tablet (mã hoá bằng `flutter_secure_storage` đã có trong `pubspec.yaml`), mở lại giải thì điền sẵn; mật khẩu không gửi lên server. Tiêu chí: `flutter test --no-pub test/features/camera_bridge/camera_bridge_config_store_test.dart` → exit 0
+  - Files: tạo `lib/features/camera_bridge/camera_bridge_config_store.dart`; test `test/features/camera_bridge/camera_bridge_config_store_test.dart` (TC-CAMBR-30..)
+  - Giao: `abstract class CameraBridgeConfigStore { Future<List<SavedBridgeCamera>> load(String tournamentId); Future<void> save(String tournamentId, List<SavedBridgeCamera> cameras); Future<void> clear(String tournamentId); }` · Nhận: (không)
+  - Chủ file chung: 4.3 giữ `camera_bridge_config_store.dart`
+  - Phụ thuộc: sau 3.1
+- [ ] 4.4 Trạng thái online/offline: dùng lại route `GET /livestream/cameras/{id}/status` và huy hiệu trạng thái sẵn có, không thêm endpoint; mất kết nối thì màn hiện Đang nối lại. Tiêu chí: `flutter test --no-pub test/features/camera_bridge/camera_bridge_screen_test.dart` → exit 0
+  - Files: sửa `lib/features/camera_bridge/camera_bridge_screen.dart` (cùng task 4.1)
+  - Giao: (không) · Nhận: `ICameraAdminRepository` (đã có), `CameraBridgeState` (3.1)
+  - Chủ file chung: 4.1 giữ `camera_bridge_screen.dart`
+  - Phụ thuộc: sau 4.1
+
 ## 5. Kiểm tra cuối
 - [ ] 5.1 Phân tích tĩnh và test liên quan. Tiêu chí: `flutter analyze --no-pub lib/features/camera_bridge lib/domain/services` → exit 0 và CI nhánh xanh
   - Files: (không sửa)
