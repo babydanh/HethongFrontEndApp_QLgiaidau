@@ -9,6 +9,25 @@ class TournamentNotStartedException implements Exception {
   const TournamentNotStartedException();
 }
 
+/// A score write the server refused or that did not reach it. [transient] is
+/// true for a timeout, a dropped connection or a 5xx: the same write may
+/// succeed if sent again. Prints like `Exception(message)` so screens that
+/// strip the "Exception: " prefix keep showing the same text.
+class ScoreWriteException implements Exception {
+  const ScoreWriteException(
+    this.message, {
+    this.statusCode,
+    this.transient = false,
+  });
+
+  final String message;
+  final int? statusCode;
+  final bool transient;
+
+  @override
+  String toString() => 'Exception: $message';
+}
+
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
   Stream<List<MatchModel>> watchByTournament(

@@ -53,6 +53,8 @@ import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_comment_in
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_h2h_overlay.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/scoreboard_set_columns.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/tennis_live_scoreboard_overlay.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/tennis_scoreboard_columns.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_chat_grouping.dart';
@@ -2407,6 +2409,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final videoPlayer = LiveVideoBox(
       key: _videoKey,
       matchId: widget.matchId,
+      matchStatus: match.status,
       showStreamStats: _canSeeStreamStats(effectiveId),
       fill: landscape,
       fullscreen: landscape,
@@ -3180,6 +3183,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       ),
     );
 
+    if (isTennisScoreboardMatch(match)) {
+      return _tennisScoreOverlay(match, score as SetScoreData, sideName);
+    }
+
     return LiveScoreboardOverlay(
       team1: sideName(1),
       team2: sideName(2),
@@ -3190,6 +3197,41 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       semanticsLabel:
           '${matchSideLabel(match, 1)} ${score.score1}, '
           '${matchSideLabel(match, 2)} ${score.score2}',
+    );
+  }
+
+  /// Tennis board: games of each started set and the point of the game (live
+  /// or, in a replay, as recorded at that second). [live] is the open set's
+  /// games, so a local optimistic game shows before the server echo.
+  Widget _tennisScoreOverlay(
+    MatchModel match,
+    SetScoreData live,
+    Widget Function(int side) sideName,
+  ) {
+    final sets = _scoreDetailsSets(match);
+    final activeIdx = activeSetIndex(sets);
+    if (sets.isNotEmpty && !sets[activeIdx].isFinished) {
+      sets[activeIdx] = SetScoreData(score1: live.score1, score2: live.score2);
+    }
+    final points = tennisScoreboardPoints(match);
+    final columns = tennisScoreboardSetColumns(
+      sets,
+      pointsInPlay:
+          points != null && (points.team1 != '0' || points.team2 != '0'),
+      matchFinished: match.isCompleted,
+    );
+    String games(int side) => columns
+        .map((c) => side == 1 ? c.team1 : c.team2)
+        .join(' ');
+    return TennisLiveScoreboardOverlay(
+      team1: sideName(1),
+      team2: sideName(2),
+      sets: columns,
+      point1: points?.team1,
+      point2: points?.team2,
+      semanticsLabel:
+          '${matchSideLabel(match, 1)} ${games(1)} ${points?.team1 ?? ''}, '
+          '${matchSideLabel(match, 2)} ${games(2)} ${points?.team2 ?? ''}',
     );
   }
 

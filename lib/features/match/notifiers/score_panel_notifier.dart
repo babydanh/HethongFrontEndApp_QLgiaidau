@@ -99,6 +99,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   int? _pendingBaseRevision;
   bool _liveSyncPending = false;
   bool _liveSyncInFlight = false;
+
+  /// Wait before resending a live score write that failed; null after a
+  /// write succeeded. Doubles up to [_liveSyncRetryMax].
+  Duration? _liveSyncRetryDelay;
+  static const _liveSyncRetryFirst = Duration(milliseconds: 500);
+  static const _liveSyncRetryMax = Duration(seconds: 8);
   int? _lastLocalWriteRevision;
   bool _isDisposed = false;
 
@@ -1993,6 +1999,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _liveSyncTimer?.cancel();
     _liveSyncTimer = null;
     _liveSyncPending = false;
+    // The set write carries the whole score; the next live tap starts fresh.
+    _liveSyncRetryDelay = null;
   }
 
   void setOverride(bool enabled, String reason) {
@@ -2081,6 +2089,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // A tap may have arrived while this request was in flight. Keep the
       // pending flag in that case so the latest local snapshot is sent next.
       _liveSyncPending = _scoreSignature(state) != requestSignature;
+      _liveSyncRetryDelay = null;
+      if (state.errorMessage == _l10n.scorePanel_liveSyncError) {
+        state = state.copyWith(errorMessage: null);
+      }
       // The websocket remains the fast path for other viewers. Do not
       // invalidate this provider for every tap: the panel already owns the
       // optimistic local state and a refetch here causes visible jitter and
@@ -2096,6 +2108,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (!msg.contains('409') && !msg.contains('thay đổi từ thiết bị khác')) {
         ref.invalidate(singleMatchProvider(arg));
       }
+      // The write did not land (timeout, dropped connection, 5xx). The stale
+      // server snapshot is ignored while this tap is pending, so without a
+      // resend the Backend keeps the old point until the next tap — or
+      // forever when the referee stops tapping. Only a write that may succeed
+      // again is resent; a refusal (4xx: no right, conflict, invalid, not
+      // started) keeps the warning instead.
+      if (e is ScoreWriteException && e.transient) {
+        _liveSyncPending = true;
+        final last = _liveSyncRetryDelay;
+        _liveSyncRetryDelay = last == null
+            ? _liveSyncRetryFirst
+            : (last * 2 > _liveSyncRetryMax ? _liveSyncRetryMax : last * 2);
+      }
       _log.error('Lỗi đồng bộ điểm live', e, stack);
       state = state.copyWith(errorMessage: _l10n.scorePanel_liveSyncError);
     } finally {
@@ -2103,7 +2128,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       if (!_isDisposed && _liveSyncPending && !state.isMatchComplete) {
         _liveSyncTimer?.cancel();
         _liveSyncTimer = Timer(
-          const Duration(milliseconds: 50),
+          _liveSyncRetryDelay ?? const Duration(milliseconds: 50),
           _syncLiveScore,
         );
       }
